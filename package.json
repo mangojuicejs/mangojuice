@@ -25,6 +25,14 @@
       "git add"
     ]
   },
+  "pre-commit": {
+    "silent": true,
+    "run": [
+      "lint-staged",
+      "lint",
+      "test"
+    ]
+  },
   "scripts": {
     "clean": "lerna exec -- rimraf dist",
     "coveralls": "coveralls < coverage/lcov.info || true",
@@ -116,9 +124,7 @@
     "typedoc": "^0.7.1",
     "typedoc-plugin-external-module-name": "^1.0.9",
     "typescript": "^2.3.4",
-    "union-type-es": "^0.1.0"
-  },
-  "dependencies": {
+    "union-type-es": "^0.1.0",
     "babel-plugin-external-helpers": "^6.22.0",
     "rollup-plugin-babel": "^2.7.1"
   }

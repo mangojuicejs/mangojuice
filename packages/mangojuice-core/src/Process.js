@@ -6,7 +6,7 @@ import {
   maybeMap,
   maybeForEach,
   emptyArray
-} from "./utils";
+} from "./Utils";
 
 // Constants
 export const MODEL_UPDATED_EVENT = "updated";

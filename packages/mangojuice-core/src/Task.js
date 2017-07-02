@@ -1,4 +1,4 @@
-import { sym, is } from "./utils";
+import { sym, is } from "./Utils";
 
 /**
  * A symbol for setting custom promise cancel function.
