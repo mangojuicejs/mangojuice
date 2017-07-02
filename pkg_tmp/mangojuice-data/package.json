@@ -1,0 +1,19 @@
+{
+  "name": "mangojuice-core",
+  "version": "0.1.0",
+  "description": "",
+  "author": {
+    "name": "Artem Artemev",
+    "email": "viiv.c58@gmail.com"
+  },
+  "bugs": {
+    "url": "https://github.com/mangojuicejs/mangojuice/issues"
+  },
+  "homepage": "https://github.com/mangojuicejs/mangojuice#readme",
+  "repository": "https://github.com/mangojuicejs/mangojuice",
+  "license": "MIT",
+  "main": "index.js",
+  "rollup": {
+    "moduleName": "Mjs"
+  }
+}

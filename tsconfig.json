@@ -1,0 +1,39 @@
+{
+	"version": "2.3.4",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"mangojuice-core": [ "packages/mangojuice-core/src" ],
+      "mangojuice-data": [ "packages/mangojuice-data/src" ],
+      "mangojuice-form": [ "packages/mangojuice-form/src" ],
+      "mangojuice-intl": [ "packages/mangojuice-intl/src" ],
+      "mangojuice-lazy": [ "packages/mangojuice-lazy/src" ],
+      "mangojuice-react": [ "packages/mangojuice-react/src" ],
+      "mangojuice-router": [ "packages/mangojuice-router/src" ],
+      "mangojuice-dom": [ "packages/mangojuice-dom/src" ]
+		},
+		"allowSyntheticDefaultImports": true,
+		"declaration": true,
+		"target": "es6",
+		"module": "es6",
+		"allowJs": false,
+		"moduleResolution": "node",
+		"preserveConstEnums": true,
+		"outDir": "build",
+		"sourceMap": false,
+		"lib": [
+			"es6",
+			"es7",
+			"dom"
+		],
+		"jsx": "preserve",
+		"noUnusedLocals": true,
+		"strictNullChecks": true,
+		"removeComments": false,
+		"rootDir": "."
+	},
+	"include": [
+		"packages/*/src",
+		"packages/*/__tests__"
+	]
+}

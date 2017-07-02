@@ -1,0 +1,31 @@
+{
+  "name": "mangojuice-router",
+  "version": "0.1.0",
+  "description": "",
+  "author": {
+    "name": "Artem Artemev",
+    "email": "viiv.c58@gmail.com"
+  },
+  "bugs": {
+    "url": "https://github.com/mangojuicejs/mangojuice/issues"
+  },
+  "homepage": "https://github.com/mangojuicejs/mangojuice#readme",
+  "repository": "https://github.com/mangojuicejs/mangojuice",
+  "license": "MIT",
+  "main": "index.js",
+  "rollup": {
+    "moduleName": "Mjs.Router",
+    "bundledDependencies": [
+      "mangojuice-core"
+    ],
+    "moduleGlobals": {
+      "mangojuice": "Mjs"
+    }
+  },
+  "dependencies": {
+    "history": "4.4.0",
+    "qs": "6.3.0",
+    "url-pattern": "1.0.3",
+    "mangojuice-core": "0.1.0"
+  }
+}
