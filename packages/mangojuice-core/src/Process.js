@@ -265,7 +265,7 @@ export class Process {
 
   emit(event, arg) {
     const handlers = this.eventHandlers && this.eventHandlers[event];
-    maybeForEach(handlers, handler => handler(arg));
+    return maybeMap(handlers, handler => handler(arg));
   }
 
   mapChildren(model, iterator, iterKeys) {
@@ -379,8 +379,8 @@ export class Process {
     // Run subscriptions if model updated
     if (modelUpdated) {
       this.logger.onEmitSubscriptions(cmd, this.model);
-      this.emit(MODEL_UPDATED_EVENT, cmd);
-      this.rootProc.emit(CHILD_MODEL_UPDATED_EVENT, cmd);
+      resPromise.add(this.emit(MODEL_UPDATED_EVENT, cmd));
+      resPromise.add(this.rootProc.emit(CHILD_MODEL_UPDATED_EVENT, cmd));
     }
 
     this.logger.onEndExec(cmd, this.model);
