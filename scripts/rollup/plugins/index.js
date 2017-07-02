@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const babelPlugin = require("rollup-plugin-babel");
 const commonjs = require("rollup-plugin-commonjs");
 const nodeResolve = require("rollup-plugin-node-resolve");
@@ -7,6 +9,7 @@ const uglify = require("rollup-plugin-uglify");
 
 const aliasPlugin = require("./alias");
 const optJSPlugin = require("./optimize");
+const babelrc = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', '..', '.babelrc')));
 
 module.exports = function(version, options) {
   const plugins = [
@@ -25,7 +28,11 @@ module.exports = function(version, options) {
       clean: true,
       exclude: ["*.spec*", "**/*.spec*"]
     }),
-    babelPlugin()
+    babelPlugin({
+      babelrc: false,
+      presets: [['es2015', {'modules': false}]].concat(babelrc.presets.slice(1)),
+      plugins: ['external-helpers'].concat(babelrc.plugins)
+    })
   ];
 
   const replaceValues = {

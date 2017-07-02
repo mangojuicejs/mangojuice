@@ -25,14 +25,6 @@
       "git add"
     ]
   },
-  "pre-commit": {
-    "silent": true,
-    "run": [
-      "lint-staged",
-      "lint",
-      "test"
-    ]
-  },
   "scripts": {
     "clean": "lerna exec -- rimraf dist",
     "coveralls": "coveralls < coverage/lcov.info || true",

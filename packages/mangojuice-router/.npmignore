@@ -10,3 +10,4 @@ __benchmarks__
 __tests__
 src
 package-lock.json
+yarn.lock

@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 module.exports = {
-  collectCoverageFrom: ["packages/*/src/**/*.ts", "!**/*.ts.js"],
+  collectCoverageFrom: ["packages/*/src/**/*.js", "!**/*.ts.js"],
   coverageDirectory: "coverage",
   coverageReporters: ["html", "lcov", "text"],
   coverageThreshold: {
@@ -25,7 +25,8 @@ module.exports = {
     "^mangojuice-intl": "<rootDir>/packages/mangojuice-intl/src",
     "^mangojuice-lazy": "<rootDir>/packages/mangojuice-lazy/src",
     "^mangojuice-react": "<rootDir>/packages/mangojuice-react/src",
-    "^mangojuice-router": "<rootDir>/packages/mangojuice-router/src"
+    "^mangojuice-router": "<rootDir>/packages/mangojuice-router/src",
+    "^mangojuice-dom": "<rootDir>/packages/mangojuice-dom/src",
   },
   projects: [
     "<rootDir>/packages/mangojuice-core",
@@ -34,7 +35,8 @@ module.exports = {
     "<rootDir>/packages/mangojuice-intl",
     "<rootDir>/packages/mangojuice-lazy",
     "<rootDir>/packages/mangojuice-react",
-    "<rootDir>/packages/mangojuice-router"
+    "<rootDir>/packages/mangojuice-router",
+    "<rootDir>/packages/mangojuice-dom"
   ],
   rootDir: __dirname,
   testMatch: [

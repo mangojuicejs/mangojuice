@@ -3,7 +3,7 @@ import DefaultLogger from "./DefaultLogger";
 /**
  * Simple console logger with stack support
  */
-export default class SimpleStackLogger extends DefaultLogger {
+export class SimpleStackLogger extends DefaultLogger {
   constructor(...args) {
     super(...args);
     this.stack = [];
@@ -31,3 +31,5 @@ export default class SimpleStackLogger extends DefaultLogger {
     console.log(`[${this.name}]${levelDisplay}${text}`, ...args);
   }
 }
+
+export default SimpleStackLogger;

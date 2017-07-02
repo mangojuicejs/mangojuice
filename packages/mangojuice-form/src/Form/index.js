@@ -1,10 +1,10 @@
-import { Logic } from "./Logic";
-import { createModel } from "./Model";
+import { createModel } from './Model';
+import { Logic } from './Logic';
 import * as Utils from './Utils';
 
 
 export default {
   ...Utils,
-  Logic,
   createModel,
+  Logic
 };

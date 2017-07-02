@@ -2,7 +2,7 @@
  * Empty process logger class.
  * Defines an interface of commands execution logger.
  */
-export default class DefaultLogger {
+export class DefaultLogger {
   constructor(name, model) {
     this.name = name;
     this.model = model;
@@ -20,3 +20,5 @@ export default class DefaultLogger {
 
   onEndExec(cmd, model) {}
 }
+
+export default DefaultLogger;
