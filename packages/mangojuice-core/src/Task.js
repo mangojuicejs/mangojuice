@@ -56,7 +56,7 @@ export function registerCancelHandler(callback) {
 export function getInitContext() {
   const token = new CancellationToken();
   return {
-    cancelRoot: token.cancel,
+    cancelTask: token.cancel,
     onCancel: registerCancelHandler,
     token,
     call

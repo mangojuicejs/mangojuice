@@ -113,7 +113,7 @@ export function execTask(props) {
     this.opts.cancelAll(props);
   }
 
-  const cancel = () => proc && proc.cancelTask();
+  const cancel = () => proc && proc.cancel();
   const done = new Promise((resolve, reject) => {
     const handleFail = err => {
       this.opts.cleanupExec(procId, execId);

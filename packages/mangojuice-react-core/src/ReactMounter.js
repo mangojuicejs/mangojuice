@@ -25,7 +25,7 @@ export default reactImpl => {
         nest,
         props
       };
-      return createElement(this.ViewWrapper, viewProps);
+      return createElement(ViewWrapper, viewProps);
     }
 
     mount(proc, view) {

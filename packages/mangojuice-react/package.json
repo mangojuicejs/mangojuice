@@ -25,9 +25,7 @@
   },
   "dependencies": {
     "mangojuice-core": "0.1.0",
-    "mangojuice-react-core": "0.1.0"
-  },
-  "peerDependencies": {
+    "mangojuice-react-core": "0.1.0",
     "react": "15.x.x",
     "react-dom": "15.x.x"
   }

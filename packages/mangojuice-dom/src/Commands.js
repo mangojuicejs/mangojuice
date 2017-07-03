@@ -1,10 +1,10 @@
-import { Task } from 'mangojuice-core';
-
+import { Task, Cmd } from "mangojuice-core";
+import * as Tasks from "./Tasks";
 
 export function focus(selector) {
   function focusTask(ctx, opts = {}) {
     return this.call(
-      findDomNodes,
+      Tasks.findDomNodes,
       selector,
       opts.attempts,
       opts.wait
@@ -17,6 +17,6 @@ export function focus(selector) {
   }
   return function(obj, name, descr) {
     descr.value = focusTaskCommand;
-    return Task.execLatest(obj, name, descr);
+    return Cmd.execLatest(obj, name, descr);
   };
 }

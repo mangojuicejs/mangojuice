@@ -41,10 +41,11 @@ export const fastMap = (subject, iterator) => {
 export const runOnMixed = (mapper, val, fn) => {
   if (is.array(val)) {
     return mapper(val, x => x && fn(x));
-  } else if (val) {
+  } else if (is.notUndef(val)) {
     const res = fn(val);
     return mapper === fastMap ? [res] : undefined;
   }
+  return mapper === fastMap ? [] : undefined;
 };
 
 export const maybeMap = runOnMixed.bind(null, fastMap);

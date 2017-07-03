@@ -265,7 +265,7 @@ export class Process {
 
   emit(event, arg) {
     const handlers = this.eventHandlers && this.eventHandlers[event];
-    return maybeMap(handlers, handler => handler(arg));
+    return Promise.all(maybeMap(handlers, handler => handler(arg)));
   }
 
   mapChildren(model, iterator, iterKeys) {

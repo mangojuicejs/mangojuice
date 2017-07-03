@@ -1,12 +1,11 @@
-import Data from 'mangojuice-data';
-import { Cmd, Task } from 'mangojuice-core';
-import * as Tasks from './Tasks';
-import * as Utils from './Utils';
-
+import Data from "mangojuice-data";
+import { Cmd, Task } from "mangojuice-core";
+import * as Tasks from "./Tasks";
+import * as Utils from "./Utils";
 
 // Logic
 export const Logic = {
-  name: 'Field',
+  name: "Field",
 
   config({ nest }, opts = {}) {
     const meta = {
@@ -34,7 +33,7 @@ export const Logic = {
   },
 
   // Options
-  @Cmd.handle
+  @Cmd.batch
   HandleOption(ctx, cmd) {
     if (cmd.is(this.SelectOption)) {
       return [
@@ -54,7 +53,7 @@ export const Logic = {
   @Cmd.update
   ValidationFinished(ctx, error) {
     return {
-      state: 'Typing',
+      state: "Typing",
       error: (error && error.message) || error,
       valid: !error
     };
@@ -69,7 +68,7 @@ export const Logic = {
 
   @Cmd.update
   SetValidationState() {
-    return { state: 'Validating' };
+    return { state: "Validating" };
   },
 
   @Cmd.batch
@@ -97,16 +96,16 @@ export const Logic = {
     const val = e && e.target ? e.target.value : e;
     let nextVal = val;
     if (meta.valueSep || meta.multiselect) {
-      if (typeof val === 'string') {
+      if (typeof val === "string") {
         if (meta.valueSep && val.endsWith(meta.valueSep)) {
           const sep = meta.valueSep;
           const finalVal = val.substr(0, val.length - sep.length);
-          nextVal = Utils.valueTail(model).concat(finalVal, '');
+          nextVal = Utils.valueTail(model).concat(finalVal, "");
         } else {
           nextVal = Utils.valueTail(model).concat(val);
         }
       } else {
-        nextVal = Utils.valueTail(model).concat(val, '');
+        nextVal = Utils.valueTail(model).concat(val, "");
       }
     }
     return { value: meta.normalize(nextVal) };
@@ -140,10 +139,7 @@ export const Logic = {
 
   @Cmd.batch
   HandleBlur() {
-    return [
-      this.TouchField(),
-      this.Validate()
-    ];
+    return [this.TouchField(), this.Validate()];
   },
 
   @Cmd.update
@@ -154,9 +150,6 @@ export const Logic = {
   @Cmd.batch
   InitField({ meta, model }) {
     const loadOptions = meta.optionsGetter && Data.isNotAsked(model.options);
-    return [
-      loadOptions && this.LoadOptions(),
-      this.Validate()
-    ];
+    return [loadOptions && this.LoadOptions(), this.Validate()];
   }
 };

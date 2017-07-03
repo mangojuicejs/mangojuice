@@ -1,10 +1,9 @@
-import { Cmd, Task } from 'mangojuice-core';
-import Field from '../Field';
-import * as Utils from './Utils';
-
+import { Cmd, Task } from "mangojuice-core";
+import Field from "../Field";
+import * as Utils from "./Utils";
 
 export const Logic = {
-  name: 'Form',
+  name: "Form",
 
   config(ctx, { validateForm, submitForm } = {}) {
     return { meta: { validateForm, submitForm } };
@@ -28,11 +27,11 @@ export const Logic = {
     return fields.map(f => Field.Logic.TouchField().model(f));
   },
 
-  @Cmd.handle
+  @Cmd.batch
   HandleField({ model }, cmd) {
     if (cmd.is(Field.Logic.HandleChange)) {
       return [
-        Utils.isInvalid(model) && this.SetFormState('Typing')
+        Utils.isInvalid(model) && this.SetFormState("Typing")
         // isSubmitting(model) && cmd.Terminate() TODO
       ];
     }
@@ -48,7 +47,7 @@ export const Logic = {
 
   @Cmd.batch
   ValidationError() {
-    return this.SetFormState('Invalid');
+    return this.SetFormState("Invalid");
   },
 
   @Cmd.execLatest
@@ -65,7 +64,7 @@ export const Logic = {
       e.preventDefault();
     }
     return [
-      this.SetFormState('Submitting'),
+      this.SetFormState("Submitting"),
       this.TouchForm(),
       this.ValidateForm()
     ];
@@ -73,12 +72,10 @@ export const Logic = {
 
   @Cmd.batch
   SubmitSuccess() {
-    return this.SetFormState('Typing');
+    return this.SetFormState("Typing");
   },
 
-  @Cmd.nope
-  SubmitFailed() {
-  },
+  @Cmd.nope SubmitFailed() {},
 
   @Cmd.execLatest
   DoSubmitForm({ meta }) {

@@ -12,7 +12,7 @@ export default reactImpl => {
     componentDidMount() {
       const { proc } = this.props;
       this.unmounted = false;
-      proc.on(MODEL_UPDATED_EVENT, this.updateView);
+      proc.addListener(MODEL_UPDATED_EVENT, this.updateView);
     }
 
     componentWillUnmount() {

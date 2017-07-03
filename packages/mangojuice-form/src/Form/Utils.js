@@ -1,4 +1,4 @@
-export const getFormFieldModels = (model) => {
+export const getFormFieldModels = model => {
   const isFieldModel = f => f && f.__field;
   return Object.keys(model).reduce((acc, k) => {
     if (Array.isArray(model[k]) && isFieldModel(model[k][0])) {
@@ -10,13 +10,12 @@ export const getFormFieldModels = (model) => {
   }, []);
 };
 
-export const isSubmitting = (model: Model) => model.state === 'Submitting';
+export const isSubmitting = model => model.state === "Submitting";
 
-export const isInvalid = (model: Model) => model.state === 'Invalid';
+export const isInvalid = model => model.state === "Invalid";
 
-export const isTyping = (model: Model) => model.state === 'Typing';
+export const isTyping = model => model.state === "Typing";
 
-export const submitting = (model: Model, fn: Function) =>
-  isSubmitting(model) && fn();
+export const submitting = (model, fn) => isSubmitting(model) && fn();
 
-export const invalid = (model: Model, fn: Function) => isInvalid(model) && fn();
+export const invalid = (model, fn) => isInvalid(model) && fn();
