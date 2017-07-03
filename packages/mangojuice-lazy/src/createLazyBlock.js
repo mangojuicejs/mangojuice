@@ -1,5 +1,4 @@
-import { Utils, Cmd, Task, MODEL_UPDATED_EVENT } from 'mangojuice-core';
-
+import { Utils, Cmd, Task, MODEL_UPDATED_EVENT } from "mangojuice-core";
 
 export function createBlockResolver(asyncRequire, lazyBlock) {
   let required = false;
@@ -65,23 +64,23 @@ export function createLazyLogic(resolver) {
       if (Utils.is.notUndef(target[name])) {
         return target[name];
       }
-      const WrapperCmd = Cmd.createBatchCmd(
-        `Lazy.${name}.Wrapper`,
-        function(ctx, ...args) {
-          const readyBlock = args[args.length - 1];
-          const actualArgs = args.slice(0, args.length - 1);
-          target[name] = readyBlock.Logic[name];
-          return readyBlock.Logic[name](...actualArgs);
-        }
-      );
-      target[name] = Cmd.createTaskCmd(
-        `Lazy.${name}.Resolver`,
-        function(props, ...args) {
-          return Task.create(async function({ model }) {
-            return await resolver(model);
-          }).success(WrapperCmd(...args));
-        }
-      );
+      const WrapperCmd = Cmd.createBatchCmd(`Lazy.${name}.Wrapper`, function(
+        ctx,
+        ...args
+      ) {
+        const readyBlock = args[args.length - 1];
+        const actualArgs = args.slice(0, args.length - 1);
+        target[name] = readyBlock.Logic[name];
+        return readyBlock.Logic[name](...actualArgs);
+      });
+      target[name] = Cmd.createTaskCmd(`Lazy.${name}.Resolver`, function(
+        props,
+        ...args
+      ) {
+        return Task.create(function({ model }) {
+          return resolver(model);
+        }).success(WrapperCmd(...args));
+      });
       return target[name];
     }
   };
@@ -93,9 +92,7 @@ export function createLazyLogic(resolver) {
     __get: commandsProxy.get
   };
 
-  return typeof Proxy !== "undefined"
-    ? new Proxy(logic, commandsProxy)
-    : logic;
+  return typeof Proxy !== "undefined" ? new Proxy(logic, commandsProxy) : logic;
 }
 
 export function createLazyBlock(blockRequire) {
