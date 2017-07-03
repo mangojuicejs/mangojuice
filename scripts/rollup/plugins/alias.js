@@ -13,6 +13,10 @@ module.exports = alias({
     ROOT,
     "packages/mangojuice-react/dist/index.es.js"
   ),
+  "mangojuice-react-core": resolve(
+    ROOT,
+    "packages/mangojuice-react-core/dist/index.es.js"
+  ),
   "mangojuice-router": resolve(
     ROOT,
     "packages/mangojuice-router/dist/index.es.js"

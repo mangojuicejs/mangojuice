@@ -16,8 +16,6 @@
   "rollup": {
     "moduleName": "Mjs.Form",
     "bundledDependencies": [
-      "mangojuice-core",
-      "mangojuice-data"
     ],
     "moduleGlobals": {
       "mangojuice": "Mjs"

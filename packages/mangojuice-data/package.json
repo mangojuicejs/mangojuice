@@ -16,7 +16,6 @@
   "rollup": {
     "moduleName": "Mjs.Data",
     "bundledDependencies": [
-      "mangojuice-core"
     ],
     "moduleGlobals": {
       "mangojuice": "Mjs"

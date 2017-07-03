@@ -11,18 +11,14 @@ import * as Utils from "./Utils";
 import * as Task from "./Task";
 import * as Run from "./Run";
 
-export default {
-  // Constants
+export {
   MODEL_UPDATED_EVENT,
   CHILD_MODEL_UPDATED_EVENT,
-  CANCEL: Task.CANCEL,
-
   // Classes
   Process,
   DefaultViewMounter,
   DefaultLogger,
   SimpleStackLogger,
-
   // Tools
   Cmd,
   Utils,

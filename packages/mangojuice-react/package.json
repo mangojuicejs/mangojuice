@@ -16,14 +16,16 @@
   "rollup": {
     "moduleName": "Mjs.React",
     "bundledDependencies": [
-      "mangojuice-core"
     ],
     "moduleGlobals": {
-      "mangojuice": "Mjs"
+      "mangojuice": "Mjs",
+      "react": "React",
+      "react-dom": "ReactDOM"
     }
   },
   "dependencies": {
-    "mangojuice-core": "0.1.0"
+    "mangojuice-core": "0.1.0",
+    "mangojuice-react-core": "0.1.0"
   },
   "peerDependencies": {
     "react": "15.x.x",

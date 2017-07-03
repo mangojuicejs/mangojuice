@@ -1,4 +1,4 @@
-module.exports = function(block, cmdName) {
+export function getLazyCommand(block, cmdName) {
   var Logic = block.Logic;
   if (Logic[cmdName]) {
     return Logic[cmdName];
@@ -7,4 +7,4 @@ module.exports = function(block, cmdName) {
   } else {
     throw new Error(`There is no command "${cmdName}" in`, block);
   }
-};
+}

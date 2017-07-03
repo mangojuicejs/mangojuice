@@ -16,7 +16,6 @@
   "rollup": {
     "moduleName": "Mjs.Lazy",
     "bundledDependencies": [
-      "mangojuice-core"
     ],
     "moduleGlobals": {
       "mangojuice": "Mjs"
@@ -27,6 +26,6 @@
   },
   "devDependencies": {
     "bundle-loader": "^0.5.4",
-    "loader-utils": "^0.2.16",
+    "loader-utils": "^0.2.16"
   }
 }

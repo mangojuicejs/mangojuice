@@ -40,7 +40,6 @@
     "postbuild": "rimraf build",
     "build": "npm-run-all -l build:**",
     "prebuild:typings": "rimraf build",
-    "build:typings": "tsc && lerna exec -- node ../../scripts/typings/build.js",
     "build:es": "npm run rollup -- --format=es --optimize=false --name=index.es --uglify=false",
     "build:node": "npm run rollup -- --format=cjs --replace=false --name=index --uglify=false",
     "build:umd:dev": "npm run rollup -- --uglify=false",

@@ -1,5 +1,5 @@
 {
-  "name": "mangojuice-intl",
+  "name": "mangojuice-react-core",
   "version": "0.1.0",
   "description": "",
   "author": {
@@ -14,7 +14,7 @@
   "license": "MIT",
   "main": "index.js",
   "rollup": {
-    "moduleName": "Mjs.Intl",
+    "moduleName": "Mjs.ReactCore",
     "bundledDependencies": [
     ],
     "moduleGlobals": {

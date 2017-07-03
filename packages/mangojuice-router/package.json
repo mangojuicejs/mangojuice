@@ -16,7 +16,6 @@
   "rollup": {
     "moduleName": "Mjs.Router",
     "bundledDependencies": [
-      "mangojuice-core"
     ],
     "moduleGlobals": {
       "mangojuice": "Mjs"
