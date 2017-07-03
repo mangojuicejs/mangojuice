@@ -1,6 +1,6 @@
 {
   "name": "mangojuice-router",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "author": {
     "name": "Artem Artemev",
@@ -15,16 +15,15 @@
   "main": "index.js",
   "rollup": {
     "moduleName": "Mjs.Router",
-    "bundledDependencies": [
-    ],
+    "bundledDependencies": [],
     "moduleGlobals": {
       "mangojuice": "Mjs"
     }
   },
   "dependencies": {
     "history": "4.4.0",
+    "mangojuice-core": "0.1.0-0",
     "qs": "6.3.0",
-    "url-pattern": "1.0.3",
-    "mangojuice-core": "0.1.0"
+    "url-pattern": "1.0.3"
   }
 }

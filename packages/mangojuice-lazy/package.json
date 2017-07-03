@@ -1,6 +1,6 @@
 {
   "name": "mangojuice-lazy",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "author": {
     "name": "Artem Artemev",
@@ -15,17 +15,16 @@
   "main": "index.js",
   "rollup": {
     "moduleName": "Mjs.Lazy",
-    "bundledDependencies": [
-    ],
+    "bundledDependencies": [],
     "moduleGlobals": {
       "mangojuice": "Mjs"
     }
   },
   "dependencies": {
-    "mangojuice-core": "0.1.0"
+    "mangojuice-core": "0.1.0-0"
   },
   "devDependencies": {
-    "bundle-loader": "^0.5.4",
-    "loader-utils": "^0.2.16"
+    "bundle-loader": "^0.5.5",
+    "loader-utils": "^1.1.0"
   }
 }

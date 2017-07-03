@@ -1,6 +1,6 @@
 {
   "name": "mangojuice-react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "author": {
     "name": "Artem Artemev",
@@ -15,8 +15,7 @@
   "main": "index.js",
   "rollup": {
     "moduleName": "Mjs.React",
-    "bundledDependencies": [
-    ],
+    "bundledDependencies": [],
     "moduleGlobals": {
       "mangojuice": "Mjs",
       "react": "React",
@@ -24,9 +23,11 @@
     }
   },
   "dependencies": {
-    "mangojuice-core": "0.1.0",
-    "mangojuice-react-core": "0.1.0",
-    "react": "15.x.x",
-    "react-dom": "15.x.x"
+    "mangojuice-core": "0.1.0-0",
+    "mangojuice-react-core": "0.1.1"
+  },
+  "peerDependencies": {
+    "react": "x.x.x",
+    "react-dom": "x.x.x"
   }
 }
