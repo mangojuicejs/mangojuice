@@ -383,6 +383,8 @@ export class Process {
       resPromise.add(this.rootProc.emit(CHILD_MODEL_UPDATED_EVENT, cmd));
     }
 
+    // Move back id of the cmd (to make cmd object reusable)
+    cmd.id = cmd.beforeId;
     this.logger.onEndExec(cmd, this.model);
     return resPromise.get();
   }

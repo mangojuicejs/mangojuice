@@ -11,6 +11,7 @@ export function createCommand(name, func, exec, opts) {
       opts,
       isCmd: true,
       id: creator.id,
+      beforeId: creator.id,
       afterId: creator.After.id,
       funcName: name,
       name: getCommandName(name, this),
