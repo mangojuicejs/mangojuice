@@ -10,9 +10,6 @@
 * **Lightweight** (zero dependencies, around **6kb minified gzipped**)
 * **Easy to learn and fun to use**
 
-## Philosophy
-TODO
-
 ## Installation
 ```bash
 npm install mangojuice-core  # general set of tools
