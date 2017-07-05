@@ -6,7 +6,7 @@
 * **Forces you to write good decomposed code**, which is easy to scale, test and debug.
 * **Fully-featured core**, no need to add any middlewares to do just regular things
 * **View library agnostic**
-* **Support for server-rendering**, but depends of your V lib, of course
+* **Support for server-rendering**, but depends on your V lib, of course
 * **Lightweight** (zero dependencies, around **6kb minified gzipped**)
 * **Easy to learn and fun to use**
 
@@ -19,7 +19,7 @@ npm install babel-plugin-transform-decorators-legacy
 MangoJuice relies on decorators, so you should add decorators transformer to your babel configuration.
 
 
-## Quick start (block, cmd, task, run)
+## Quick start (block, cmd, async tasks, run)
 MangoJuice (MJS) consists of three main parts:
 * **Model** – plain function `const createModel = () => ({ ... })`, which defines initial model state of your logical block.
 * **Logic** - plain object `const Logic = { ... };` with a set of commands inside.
@@ -66,6 +66,8 @@ Module `SearchForm.js` is a `Block`. It exports `createModel`, `View` and `Logic
 For instance, if you will call `Logic.SetQuery(1,2,3)` it will return you a plain object (command), which contains original function, array of arguments `[1,2,3]` and some other internally used information, that defines that this is a command for updating a model.
 
 If you are familiar with Redux, then you can think about it as about action creator tied with function that will actually handle the action.
+
+**`ctx`** as first argument of each command is just an object with `model` field. So you can use it to define next state of a model, or to take some information to decide what command should be executed next.
 
 **`@Cmd.nope`** just do nothing. We will see why this is useful a bit later. And there is some more command types in MJS core and we will meet them a bit later too.
 
@@ -161,8 +163,6 @@ export const View = ({ model, exec }) => (
 **`@Cmd.execLatest`**. There is also `@Cmd.execEvery`. It is a command for executing async function. Command of this type should return a `Task` object, which defines what async function should be executed and what is success/fail handler commands. Success command will be executed with returned value from async function, and fail command will be executed with throwed error object. Success and fail commands is optional (will be executed a nope command instead of some not defined cmd). The task function gets the same arguments as command function which created a task.
 
 **`this.call(fetch, 'www.google.com/search')`** in task. This thing inspired by `redux-saga` and needed to achive two goals: (1) it creates task cancellation point and (2) it makes easier to test a task (you can pass some testing `call` func in a context which will mock results of some executions). If some task marked as `execLatest` and it will be called before previos one returned some results (before success/fail cmd executed), then previous task will be canceled and new one started.
-
-**`ctx`** as first argument of each command is just an object with `model` field. So you can use it to define next state of a model, or to take some information to decide what command should be executed next.
 
 #### All together
 ```js
@@ -350,7 +350,7 @@ Run.mount({
 **`shared: Shared`** saying to a runner that we have a shared block that should be initiated with app block and tied together.
 
 ```js
-// Search.js
+// Main.js
 import * as User from './User';
 ...
 export const View = ({ model, shared, nest, exec }) => (
@@ -414,8 +414,8 @@ export const Logic = {
 ```
 **`port({ model, destroy, exec })`** is a special function of logic object, that is aimed to subscribe to some global events and execute commands. In above example we just made an interval for refreshing search results every 10 secs. Also we subscribed to a destroy Promise, which will be resolved when block will be removed.
 
-#### Conclusion
-That is all about basics of MJS. It was inspired by many existing frameworks/languages that the author used for a while. So probably there is no something extremly new. MJS is all about defining scalable, flexible way of implementing logic of your app in MVC manner with help of Command Pattern.
+## Conclusion
+That is all about basics of MJS. It was inspired by many existing frameworks/languages that the author used for a while. So probably there is no something extremly new. MJS is all about defining scalable, flexible way of implementing logic of your app in MVC manner with help of Command Pattern and of the latest available ES6/ES7 features, like decorators or async/await.
 
 ## Documentation
 TODO
