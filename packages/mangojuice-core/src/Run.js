@@ -2,6 +2,13 @@ import { Process, createContext } from "./Process";
 import { NopeCmd } from "./Cmd";
 import DefaultLogger from "./DefaultLogger";
 
+// Constants
+const EMPTY_BLOCK = {
+  createModel: () => ({}),
+  Logic: {},
+  View: () => {}
+};
+
 /**
  * Create model and `Process` object and bind model to process.
  * Returns an object with process instance and model object.
@@ -19,8 +26,8 @@ export const initProcess = (
   { Logic, createModel, configArgs },
   sharedModel,
   appContext,
-  LoggerClass,
-  blockName
+  LoggerClass = DefaultLogger,
+  blockName = "app"
 ) => {
   const model = createModel();
   const logger = new LoggerClass(blockName, model);
@@ -42,12 +49,12 @@ export const initProcess = (
  * with `run` field, which is Promise that will be resolved
  * when blocks will be succesfully ran.
  *
- * @param  {Object} options.shared
- * @param  {Object} options.app
- * @param  {?Function} options.logger
+ * @param  {?Object} options.shared
+ * @param  {?Object} options.app
+ * @param  {Class} options.logger
  * @return {Object}
  */
-export const run = ({ shared, app, logger = DefaultLogger }) => {
+export const run = ({ app = EMPTY_BLOCK, shared = EMPTY_BLOCK, logger }) => {
   // Initizlize Process objects and bind to models
   const appContext = createContext();
   const sharedRes = initProcess(shared, null, appContext, logger, "shared");
@@ -67,8 +74,8 @@ export const run = ({ shared, app, logger = DefaultLogger }) => {
  * function and `restart` with funciton to restart (re-run) the app
  * with current model.
  *
- * @param  {Object} props.app
- * @param  {Object} props.shared
+ * @param  {?Object} props.app
+ * @param  {?Object} props.shared
  * @param  {?Function} props.logger
  * @param  {Mounter} props.mounter
  * @return {Object}
@@ -86,7 +93,17 @@ export const mount = props => {
   return { app, shared, view, restart };
 };
 
-export const rehydrate = (appModel, sharedModel, props) => {
+/**
+ * By given app model and shared model "rehydrate" the app –
+ * run it using provided models instead of creating new
+ * model in process initiation stage.
+ *
+ * @param  {Object} appModel
+ * @param  {OBject} sharedModel
+ * @param  {Object} props
+ * @return {Object}
+ */
+export const rehydrate = (appModel = {}, sharedModel = {}, props) => {
   return mount({
     ...props,
     app: { ...props.app, createModel: () => appModel },
@@ -94,6 +111,16 @@ export const rehydrate = (appModel, sharedModel, props) => {
   });
 };
 
+/**
+ * Render app once. It is different from `mount` because this
+ * function returns a Promise that will be resolved when all
+ * commands, started at startup of the app, will be executed.
+ * In resolved object you can find app, shared and `html` – the
+ * result returned by provided mounter.
+ *
+ * @param  {Object} props
+ * @return {Promise}
+ */
 export const render = props => {
   const { app, shared } = run(props);
   const runPromise = Promise.all([app.run, shared.run]);
