@@ -167,11 +167,16 @@ export class Process {
     }) => {
       const proc = model.__proc;
       const subHandler = cmd => {
+        const resPromise = createResultPromise();
         if (handler) {
-          this.exec(Cmd.appendArgs(handler.clone(), [cmd, model]));
-        } else {
-          this.emit(MODEL_UPDATED_EVENT, cmd);
+          resPromise.add(
+            this.exec(Cmd.appendArgs(handler.clone(), [cmd, model]))
+          );
         }
+        if (!handler || this.config.manualSharedSubscribe) {
+          resPromise.add(this.emit(MODEL_UPDATED_EVENT, cmd));
+        }
+        return resPromise.get();
       };
       const subStopper = () => proc.removeListener(subEvent, subHandler);
       proc.addListener(subEvent, subHandler);
@@ -380,7 +385,9 @@ export class Process {
     if (modelUpdated) {
       this.logger.onEmitSubscriptions(cmd, this.model);
       resPromise.add(this.emit(MODEL_UPDATED_EVENT, cmd));
-      resPromise.add(this.rootProc.emit(CHILD_MODEL_UPDATED_EVENT, cmd));
+      if (!this.config.disableRootUpdate) {
+        resPromise.add(this.rootProc.emit(CHILD_MODEL_UPDATED_EVENT, cmd));
+      }
     }
 
     // Move back id of the cmd (to make cmd object reusable)
