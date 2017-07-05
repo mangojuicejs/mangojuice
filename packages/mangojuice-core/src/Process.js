@@ -5,7 +5,8 @@ import {
   is,
   maybeMap,
   maybeForEach,
-  emptyArray
+  emptyArray,
+  ensureCmdObject
 } from "./Utils";
 
 // Constants
@@ -16,17 +17,6 @@ export const CHILD_MODEL_UPDATED_EVENT = "childUpdated";
 export const createContext = () => ({
   bindings: {}
 });
-export const ensureCmdObject = cmd => {
-  if (!cmd) return null;
-  if (!cmd.isCmd) {
-    if (cmd.id && is.func(cmd)) {
-      return cmd();
-    } else {
-      throw new Error("You passed something weird instead of cmd");
-    }
-  }
-  return cmd;
-};
 
 /**
  * Process class for executing logic on a model
@@ -241,12 +231,12 @@ export class Process {
   }
 
   destroy(deep = true) {
+    delete this.model.__proc;
     this.stopSubscriptions();
     this.stopPorts();
     if (deep) {
       this.mapChildren(this.model, x => x.__proc.destroy(true));
     }
-    delete this.model.__proc;
   }
 
   addListener(event, listener) {

@@ -1447,10 +1447,8 @@ command-join@^2.0.0:
   resolved "https://registry.yarnpkg.com/command-join/-/command-join-2.0.0.tgz#52e8b984f4872d952ff1bdc8b98397d27c7144cf"
 
 commander@^2.8.1, commander@^2.9.0:
-  version "2.10.0"
-  resolved "https://registry.yarnpkg.com/commander/-/commander-2.10.0.tgz#e1f5d3245de246d1a5ca04702fa1ad1bd7e405fe"
-  dependencies:
-    graceful-readlink ">= 1.0.0"
+  version "2.11.0"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-2.11.0.tgz#157152fd1e7a6c8d98a5b715cf376df928004563"
 
 commander@~2.9.0:
   version "2.9.0"
@@ -3192,8 +3190,8 @@ json5@^0.5.0, json5@^0.5.1:
   resolved "https://registry.yarnpkg.com/json5/-/json5-0.5.1.tgz#1eade7acc012034ad84e2396767ead9fa5495821"
 
 jsonfile@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/jsonfile/-/jsonfile-3.0.0.tgz#92e7c7444e5ffd5fa32e6a9ae8b85034df8347d0"
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/jsonfile/-/jsonfile-3.0.1.tgz#a5ecc6f65f53f662c4415c7675a0331d0992ec66"
   optionalDependencies:
     graceful-fs "^4.1.6"
 
@@ -4563,8 +4561,8 @@ rollup-plugin-replace@^1.1.1:
     rollup-pluginutils "^1.5.0"
 
 rollup-plugin-typescript2@^0.4.4:
-  version "0.4.5"
-  resolved "https://registry.yarnpkg.com/rollup-plugin-typescript2/-/rollup-plugin-typescript2-0.4.5.tgz#b0fd6f987013558b4f510879d2f115021a8fc763"
+  version "0.4.6"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-typescript2/-/rollup-plugin-typescript2-0.4.6.tgz#9cf9ea4cae4b61d50dab653ff308c0ceab638e23"
   dependencies:
     colors "^1.1.2"
     fs-extra "^3.0.1"
@@ -4619,8 +4617,8 @@ rx-lite@*, rx-lite@^4.0.8:
   resolved "https://registry.yarnpkg.com/rx-lite/-/rx-lite-4.0.8.tgz#0b1e11af8bc44836f04a6407e92da42467b79444"
 
 rxjs@^5.0.0-beta.11:
-  version "5.4.1"
-  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-5.4.1.tgz#b62f757f279445d265a18a58fb0a70dc90e91626"
+  version "5.4.2"
+  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-5.4.2.tgz#2a3236fcbf03df57bae06fd6972fd99e5c08fcf7"
   dependencies:
     symbol-observable "^1.0.1"
 
@@ -5116,8 +5114,10 @@ tslint@^5.4.3:
     tsutils "^2.3.0"
 
 tsutils@^2.3.0:
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/tsutils/-/tsutils-2.5.0.tgz#4d11d627f8c166433bebe8c7b74858d617dd8670"
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/tsutils/-/tsutils-2.5.1.tgz#c2001390c79eec1a5ccfa7ac12d599639683e0cf"
+  dependencies:
+    tslib "^1.7.1"
 
 tunnel-agent@^0.6.0:
   version "0.6.0"
@@ -5203,8 +5203,8 @@ uglify-js@^2.6:
     uglify-to-browserify "~1.0.0"
 
 uglify-js@^3.0.9:
-  version "3.0.22"
-  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.0.22.tgz#0a4d957cf381b38c3f40e9295c442043f04f5805"
+  version "3.0.23"
+  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.0.23.tgz#a58c6b97e6d6763d94dbc265fe8e8c1725e64666"
   dependencies:
     commander "~2.9.0"
     source-map "~0.5.1"

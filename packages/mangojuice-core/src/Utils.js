@@ -64,3 +64,15 @@ export const createResultPromise = () => {
     }
   };
 };
+
+export const ensureCmdObject = cmd => {
+  if (!cmd) return null;
+  if (!cmd.isCmd) {
+    if (cmd.id && is.func(cmd)) {
+      return cmd();
+    } else {
+      throw new Error("You passed something weird instead of cmd");
+    }
+  }
+  return cmd;
+};

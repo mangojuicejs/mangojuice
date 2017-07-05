@@ -19,7 +19,7 @@ module.exports = {
   },
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
   moduleNameMapper: {
-    "^mangojuice-core$": "<rootDir>/packages/mangojuice-core/src",
+    "^mangojuice-core": "<rootDir>/packages/mangojuice-core/src",
     "^mangojuice-data": "<rootDir>/packages/mangojuice-data/src",
     "^mangojuice-form": "<rootDir>/packages/mangojuice-form/src",
     "^mangojuice-intl": "<rootDir>/packages/mangojuice-intl/src",

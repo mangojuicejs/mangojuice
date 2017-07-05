@@ -1,4 +1,4 @@
-import { nextId, is, maybeForEach } from "./Utils";
+import { nextId, is, maybeForEach, ensureCmdObject } from "./Utils";
 import * as Task from "./Task";
 
 // Utils
@@ -35,11 +35,13 @@ export function createCommand(name, func, exec, opts) {
 }
 
 export function appendArgs(cmd, args) {
+  cmd = ensureCmdObject(cmd);
   cmd.args = cmd.args.concat(args);
   return cmd;
 }
 
 export function setContext(cmd, ctx) {
+  cmd = ensureCmdObject(cmd);
   cmd.context = ctx;
   cmd.name = getCommandName(cmd.funcName, ctx);
   return cmd;
@@ -47,6 +49,7 @@ export function setContext(cmd, ctx) {
 
 export function hash(cmd) {
   // TODO optimize for primitives
+  cmd = ensureCmdObject(cmd);
   const argsHash = cmd.args.length > 0 ? JSON.stringify(cmd.args) : "";
   return `${cmd.id}${argsHash}`;
 }
