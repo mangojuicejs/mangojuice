@@ -5,6 +5,7 @@ import ReactMounterCreator from "mangojuice-react-core";
 const reactImpl = {
   Component: React.Component,
   createElement: React.createElement,
+  unmountComponentAtNode: ReactDOM.unmountComponentAtNode,
   render: ReactDOM.render
 };
 
