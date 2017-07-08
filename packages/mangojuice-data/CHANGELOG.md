@@ -8,6 +8,32 @@ See [standard-version](https://github.com/conventional-changelog/standard-versio
 
 
 
+<a name="0.1.2"></a>
+## 0.1.2 (2017-07-08)
+
+
+
+<a name="0.1.2-beta.1"></a>
+## 0.1.2-beta.1 (2017-07-03)
+
+
+
+<a name="0.1.2-beta.0"></a>
+## 0.1.2-beta.0 (2017-07-03)
+
+
+
+<a name="0.1.1"></a>
+## 0.1.1 (2017-07-03)
+
+
+
+
+<a name="0.1.2"></a>
+## 0.1.2 (2017-07-08)
+
+
+
 <a name="0.1.2-beta.1"></a>
 ## 0.1.2-beta.1 (2017-07-03)
 

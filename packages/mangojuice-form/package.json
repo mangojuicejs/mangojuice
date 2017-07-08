@@ -21,6 +21,7 @@
     }
   },
   "dependencies": {
-    "mangojuice-core": "0.1.2"
+    "mangojuice-core": "0.1.2",
+    "mangojuice-data": "0.1.2"
   }
 }
