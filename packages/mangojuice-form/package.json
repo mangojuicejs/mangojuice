@@ -1,5 +1,6 @@
 {
-	"dependencies": {
-		"mangojuice-core": "0.1.0-0"
-	}
+  "dependencies": {
+    "mangojuice-core": "0.1.2"
+  },
+  "version": "0.1.2"
 }

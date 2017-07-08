@@ -1,5 +1,5 @@
 {
-  "name": "mangojuice-dom",
+  "name": "mangojuice-redux",
   "version": "0.1.2",
   "description": "",
   "author": {
@@ -14,7 +14,7 @@
   "license": "MIT",
   "main": "index.js",
   "rollup": {
-    "moduleName": "Mjs.Dom",
+    "moduleName": "Mjs.Redux",
     "bundledDependencies": [],
     "moduleGlobals": {
       "mangojuice": "Mjs"

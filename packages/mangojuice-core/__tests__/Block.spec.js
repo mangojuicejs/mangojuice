@@ -322,7 +322,7 @@ describe("Block specs", () => {
       expect(app.model.d).toEqual(13);
     });
 
-    it("should be able to JSON strigify model with computed", async () => {
+    it("should be able to JSON stringify model with computed", async () => {
       const { app, shared } = await runWithTracking({
         app: AppBlock,
         shared: SharedBlock
