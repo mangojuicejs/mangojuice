@@ -16,7 +16,7 @@ const runWithTracking = async props => {
 };
 
 describe("Block specs", () => {
-  describe("Init process", () => {
+  describe("Init commands execution", () => {
     const AsyncTaskDelayed = function() {
       return this.call(Task.delay, 50);
     };
@@ -248,6 +248,83 @@ describe("Block specs", () => {
       expect(app.model.arr).toBeNull();
       expect(oldArr[0].deleted).toBeTruthy();
       expect(oldArr[1].deleted).toBeTruthy();
+    });
+  });
+
+  describe("Computed fields", async () => {
+    const SharedBlock = {
+      createModel: () => ({ e: 0, f: 4, g: 6 }),
+      Logic: {
+        name: "SharedBlock",
+        computed({ model }) {
+          return {
+            e: () => model.f + model.g
+          };
+        },
+        @Cmd.update
+        SetField(ctx, name, value) {
+          return { [name]: value };
+        }
+      }
+    };
+    const AppBlock = {
+      createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
+      Logic: {
+        name: "AppBlock",
+        computed({ model, shared }) {
+          return {
+            c: () => model.a + model.b,
+            d: () => model.a + shared.e
+          };
+        },
+        @Cmd.update
+        SetField(ctx, name, value) {
+          return { [name]: value };
+        }
+      }
+    };
+
+    it("should provide a way to define computed fields of the model", async () => {
+      const { app } = await runWithTracking({
+        app: AppBlock,
+        shared: SharedBlock
+      });
+
+      expect(app.model.c).toEqual(3);
+      expect(app.model.d).toEqual(11);
+    });
+
+    it("should reflect changes of model to computed fields", async () => {
+      const { app, shared } = await runWithTracking({
+        app: AppBlock,
+        shared: SharedBlock
+      });
+
+      await app.proc.exec(AppBlock.Logic.SetField("a", 5));
+
+      expect(app.model.c).toEqual(7);
+      expect(app.model.d).toEqual(15);
+    });
+
+    it("should reflect changes of shared to computed fields", async () => {
+      const { app, shared } = await runWithTracking({
+        app: AppBlock,
+        shared: SharedBlock
+      });
+
+      await shared.proc.exec(SharedBlock.Logic.SetField("f", 6));
+
+      expect(app.model.d).toEqual(13);
+    });
+
+    it("should be able to JSON strigify model with computed", async () => {
+      const { app, shared } = await runWithTracking({
+        app: AppBlock,
+        shared: SharedBlock
+      });
+
+      expect(JSON.stringify(app.model)).toEqual('{"a":1,"b":2,"c":3,"d":11}');
+      expect(JSON.stringify(shared.model)).toEqual('{"e":10,"f":4,"g":6}');
     });
   });
 });

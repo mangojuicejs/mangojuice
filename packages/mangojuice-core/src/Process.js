@@ -50,6 +50,7 @@ export class Process {
   bind(model) {
     this.prepareConfig();
     this.bindModel(model);
+    this.bindComputed();
     this.bindCommands();
     this.bindChildren();
   }
@@ -111,6 +112,18 @@ export class Process {
           if (cmd && cmd.id) {
             this.appContext.bindings[cmd.id] = this.model;
           }
+        });
+      });
+    }
+  }
+
+  bindComputed() {
+    if (!this.logic.computed) return;
+    const computedFields = this.logic.computed(this.execProps);
+    if (computedFields) {
+      maybeForEach(Object.keys(computedFields), k => {
+        Object.defineProperty(this.model, k, {
+          get: computedFields[k]
         });
       });
     }
