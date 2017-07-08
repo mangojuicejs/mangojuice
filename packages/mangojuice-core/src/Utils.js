@@ -76,3 +76,20 @@ export const ensureCmdObject = cmd => {
   }
   return cmd;
 };
+
+export const memoize = func => {
+  let data;
+  let computed = false;
+  const momoizer = (...args) => {
+    if (!computed) {
+      computed = true;
+      data = func(...args);
+    }
+    return data;
+  };
+  momoizer.reset = () => {
+    data = undefined;
+    computed = false;
+  };
+  return momoizer;
+};

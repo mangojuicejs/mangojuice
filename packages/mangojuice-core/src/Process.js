@@ -6,7 +6,8 @@ import {
   maybeMap,
   maybeForEach,
   emptyArray,
-  ensureCmdObject
+  ensureCmdObject,
+  memoize
 } from "./Utils";
 
 // Constants
@@ -121,10 +122,10 @@ export class Process {
     if (!this.logic.computed) return;
     const computedFields = this.logic.computed(this.execProps);
     if (computedFields) {
-      maybeForEach(Object.keys(computedFields), k => {
-        Object.defineProperty(this.model, k, {
-          get: computedFields[k]
-        });
+      this.computedFields = maybeMap(Object.keys(computedFields), k => {
+        const get = memoize(computedFields[k]);
+        Object.defineProperty(this.model, k, { get });
+        return get;
       });
     }
   }
@@ -177,6 +178,7 @@ export class Process {
           );
         }
         if (!handler || this.config.manualSharedSubscribe) {
+          this.resetComputedFields();
           resPromise.add(this.emit(MODEL_UPDATED_EVENT, cmd));
         }
         return resPromise.get();
@@ -243,6 +245,10 @@ export class Process {
     }
   }
 
+  resetComputedFields() {
+    maybeForEach(this.computedFields, f => f.reset());
+  }
+
   destroy(deep = true) {
     delete this.model.__proc;
     this.stopSubscriptions();
@@ -307,15 +313,20 @@ export class Process {
     const tick = nextId();
     const updateKeys = Object.keys(updateObj);
     const updateMarker = (x, k) => {
-      if (this.bindChild(x, k)) x.__proc.run();
+      if (this.bindChild(x, k)) {
+        x.__proc.run();
+      }
       x.__proc.tick = tick;
     };
     const unmarkedDestroyer = x => {
-      if (x.__proc.tick !== tick) x.__proc.destroy();
+      if (x.__proc.tick !== tick) {
+        x.__proc.destroy();
+      }
     };
 
     this.mapChildren(updateObj, updateMarker);
     this.mapChildren(this.model, unmarkedDestroyer, updateKeys);
+    this.resetComputedFields();
     Object.assign(this.model, updateObj);
     return true;
   }

@@ -300,6 +300,9 @@ describe("Block specs", () => {
         shared: SharedBlock
       });
 
+      expect(app.model.c).toEqual(3);
+      expect(app.model.d).toEqual(11);
+
       await app.proc.exec(AppBlock.Logic.SetField("a", 5));
 
       expect(app.model.c).toEqual(7);
@@ -311,6 +314,8 @@ describe("Block specs", () => {
         app: AppBlock,
         shared: SharedBlock
       });
+
+      expect(app.model.d).toEqual(11);
 
       await shared.proc.exec(SharedBlock.Logic.SetField("f", 6));
 
