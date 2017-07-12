@@ -475,7 +475,6 @@ export class Process {
       configArgs,
       logic
     });
-    proc.prepareConfig();
     return proc;
   };
 

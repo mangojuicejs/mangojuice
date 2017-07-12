@@ -48,8 +48,7 @@ module.exports = {
     "<rootDir>/packages/*/__tests__/**/*spec.browser.ts?(x)"
   ],
   transform: {
-    "^.+\\.jsx?$": "babel-jest",
-    "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    "^.+\\.jsx?$": "babel-jest"
   },
   transformIgnorePatterns: ["<rootDir>/node_modules/(?!lodash-es)"]
 };

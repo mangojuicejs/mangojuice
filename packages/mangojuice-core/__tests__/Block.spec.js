@@ -249,6 +249,39 @@ describe("Block specs", () => {
       expect(oldArr[0].deleted).toBeTruthy();
       expect(oldArr[1].deleted).toBeTruthy();
     });
+
+    it("should be able to nest itself", async () => {
+      const RecursiveBlock = {
+        createModel: () => ({ recursive: null, a: 0 }),
+        Logic: {
+          name: "AppBlock",
+          config({ nest }) {
+            return {
+              children: {
+                recursive: nest(null, RecursiveBlock.Logic)
+              }
+            };
+          },
+          @Cmd.update
+          SetField(ctx, name, value) {
+            return { [name]: value };
+          }
+        }
+      };
+
+      const { app } = await runWithTracking({ app: RecursiveBlock });
+      await app.proc.exec(RecursiveBlock.Logic.SetField('recursive',
+        RecursiveBlock.createModel()));
+      await app.model.recursive.__proc.exec(RecursiveBlock.Logic.SetField('recursive',
+        RecursiveBlock.createModel()));
+      await app.model.recursive.recursive.__proc.exec(RecursiveBlock.Logic.SetField('a', 2));
+      await app.model.recursive.__proc.exec(RecursiveBlock.Logic.SetField('a', 1));
+      await app.proc.exec(RecursiveBlock.Logic.SetField('a', 0));
+
+      expect(app.model.a).toEqual(0);
+      expect(app.model.recursive.a).toEqual(1);
+      expect(app.model.recursive.recursive.a).toEqual(2);
+    });
   });
 
   describe("Computed fields", async () => {
