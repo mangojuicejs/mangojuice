@@ -376,7 +376,7 @@ export class Process {
     const resPromise = createResultPromise();
     resPromise.add(this.handleCommand(this.model, cmd, true));
 
-    // Run the coomand
+    // Run the command
     let modelUpdated = false;
     const result = Cmd.setContext(cmd, this.logic).exec(this.execProps);
     if (result) {
