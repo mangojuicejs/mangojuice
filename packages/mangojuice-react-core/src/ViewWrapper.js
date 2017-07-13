@@ -1,4 +1,4 @@
-import { Cmd, MODEL_UPDATED_EVENT } from "mangojuice-core";
+import { Cmd, Utils, MODEL_UPDATED_EVENT } from "mangojuice-core";
 import ViewPortCreator from "./ViewPort";
 
 export default reactImpl => {
@@ -42,7 +42,10 @@ export default reactImpl => {
       this.execsMap[cmdHash] =
         this.prevExecsMap[cmdHash] ||
         ((...args) => {
-          this.props.proc.exec(Cmd.appendArgs(cmd.clone(), args));
+          const callCmd = !Utils.is.func(cmd)
+            ? Cmd.appendArgs(Utils.ensureCmdObject(cmd).clone(), args)
+            : cmd(...args);
+          this.props.proc.exec(callCmd);
         });
       return this.execsMap[cmdHash];
     };

@@ -51,9 +51,13 @@ export function setContext(cmd, ctx) {
 
 export function hash(cmd) {
   // TODO optimize for primitives
-  cmd = ensureCmdObject(cmd);
-  const argsHash = cmd.args.length > 0 ? JSON.stringify(cmd.args) : "";
-  return `${cmd.id}${argsHash}`;
+  if (is.func(cmd)) {
+    return `${cmd.id}`;
+  } else {
+    cmd = ensureCmdObject(cmd);
+    const argsHash = cmd.args.length > 0 ? JSON.stringify(cmd.args) : "";
+    return `${cmd.id}${argsHash}`;
+  }
 }
 
 export function getCommandName(funcName, ctx) {
