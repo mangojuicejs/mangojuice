@@ -124,7 +124,10 @@ export class Process {
     if (computedFields) {
       this.computedFields = maybeMap(Object.keys(computedFields), k => {
         const get = memoize(computedFields[k]);
-        Object.defineProperty(this.model, k, { get });
+        Object.defineProperty(this.model, k, {
+          configurable: true,
+          get
+        });
         return get;
       });
     }
