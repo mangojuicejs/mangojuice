@@ -20,8 +20,10 @@ export function createCommand(name, func, exec, opts) {
         this._model = modelObj;
         return this;
       },
-      is(cmd) {
-        return cmd && (this.id === cmd.id || this.name === cmd);
+      is(cmd, model) {
+        return cmd &&
+          (this.id === cmd.id || this.name === cmd) &&
+          (!model || this._model === model);
       },
       clone() {
         return Object.assign({}, this);

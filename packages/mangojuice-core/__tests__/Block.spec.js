@@ -251,20 +251,31 @@ describe("Block specs", () => {
     });
 
     it("should be able to nest itself", async () => {
+      let idCounter = 0;
       const RecursiveBlock = {
-        createModel: () => ({ recursive: null, a: 0 }),
+        createModel: () => ({ recursive: null, a: 0, id: idCounter++ }),
         Logic: {
           name: "AppBlock",
           config({ nest }) {
             return {
               children: {
-                recursive: nest(null, RecursiveBlock.Logic)
+                recursive: nest(this.HandleChange, RecursiveBlock.Logic)
               }
             };
           },
           @Cmd.update
-          SetField(ctx, name, value) {
+          SetField({ model }, name, value) {
             return { [name]: value };
+          },
+          @Cmd.update
+          Increment({ model }, name, value) {
+            return { [name]: model[name] + value };
+          },
+          @Cmd.batch
+          HandleChange({ model }, cmd) {
+            if (cmd.is(this.Increment.Before, model.recursive)) {
+              return this.Increment('a', cmd.args[1]);
+            }
           }
         }
       };
@@ -274,12 +285,12 @@ describe("Block specs", () => {
         RecursiveBlock.createModel()));
       await app.model.recursive.__proc.exec(RecursiveBlock.Logic.SetField('recursive',
         RecursiveBlock.createModel()));
-      await app.model.recursive.recursive.__proc.exec(RecursiveBlock.Logic.SetField('a', 2));
-      await app.model.recursive.__proc.exec(RecursiveBlock.Logic.SetField('a', 1));
-      await app.proc.exec(RecursiveBlock.Logic.SetField('a', 0));
+      await app.model.recursive.recursive.__proc.exec(RecursiveBlock.Logic.Increment('a', 2));
+      await app.model.recursive.__proc.exec(RecursiveBlock.Logic.Increment('a', 3));
+      await app.proc.exec(RecursiveBlock.Logic.Increment('a', 4));
 
-      expect(app.model.a).toEqual(0);
-      expect(app.model.recursive.a).toEqual(1);
+      expect(app.model.a).toEqual(9);
+      expect(app.model.recursive.a).toEqual(5);
       expect(app.model.recursive.recursive.a).toEqual(2);
     });
   });

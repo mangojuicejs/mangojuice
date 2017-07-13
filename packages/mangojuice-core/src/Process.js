@@ -163,32 +163,6 @@ export class Process {
     this.stopSubscriptions();
     this.subscriptions = [];
 
-    const doSubscribe = ({
-      model,
-      handler,
-      initRun = true,
-      subEvent = MODEL_UPDATED_EVENT
-    }) => {
-      const proc = model.__proc;
-      const subHandler = cmd => {
-        const resPromise = createResultPromise();
-        if (handler) {
-          resPromise.add(
-            this.exec(Cmd.appendArgs(handler.clone(), [cmd, model]))
-          );
-        }
-        if (!handler || this.config.manualSharedSubscribe) {
-          this.resetComputedFields();
-          resPromise.add(this.emit(MODEL_UPDATED_EVENT, cmd));
-        }
-        return resPromise.get();
-      };
-      const subStopper = () => proc.removeListener(subEvent, subHandler);
-      proc.addListener(subEvent, subHandler);
-      this.subscriptions.push(subStopper);
-      return initRun && subHandler(Cmd.defaultNopeCmd());
-    };
-
     // Reflect to any update of the shared model if this behaviour
     // is not disabled by `manualSharedSubscribe` config field.
     if (
@@ -196,7 +170,7 @@ export class Process {
       this.sharedModel !== this.rootProc.model &&
       !this.config.manualSharedSubscribe
     ) {
-      doSubscribe({
+      this.doSubscribe({
         model: this.sharedModel,
         handler: null,
         initRun: false,
@@ -207,8 +181,34 @@ export class Process {
     // Reflect to changes of specific shared sub-model by
     // given subscriptions array in the config
     if (this.config.subscriptions) {
-      return Promise.all(maybeMap(this.config.subscriptions, doSubscribe));
+      return Promise.all(maybeMap(this.config.subscriptions, this.doSubscribe));
     }
+  }
+
+  doSubscribe = ({
+    model,
+    handler,
+    initRun = true,
+    subEvent = MODEL_UPDATED_EVENT
+  }) => {
+    const proc = model.__proc;
+    const subHandler = cmd => {
+      const resPromise = createResultPromise();
+      if (handler) {
+        resPromise.add(
+          this.exec(Cmd.appendArgs(handler.clone(), [cmd, model]))
+        );
+      }
+      if (!handler || this.config.manualSharedSubscribe) {
+        this.resetComputedFields();
+        resPromise.add(this.emit(MODEL_UPDATED_EVENT, cmd));
+      }
+      return resPromise.get();
+    };
+    const subStopper = () => proc.removeListener(subEvent, subHandler);
+    proc.addListener(subEvent, subHandler);
+    this.subscriptions.push(subStopper);
+    return initRun && subHandler(Cmd.defaultNopeCmd());
   }
 
   runPorts() {
@@ -370,6 +370,7 @@ export class Process {
    * @return {Promise}
    */
   doExecCmd(cmd) {
+    cmd = Cmd.setContext(cmd, this.logic).model(this.model);
     this.logger.onStartExec(cmd, this.model);
 
     // Run before handlers
@@ -378,7 +379,7 @@ export class Process {
 
     // Run the command
     let modelUpdated = false;
-    const result = Cmd.setContext(cmd, this.logic).exec(this.execProps);
+    const result = cmd.exec(this.execProps);
     if (result) {
       if (cmd.exec === Cmd.execBatch) {
         const batchRes = maybeMap(result, x => x.exec && this.exec(x));
