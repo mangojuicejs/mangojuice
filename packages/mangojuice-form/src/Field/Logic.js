@@ -46,7 +46,9 @@ export const Logic = {
 
   @Cmd.batch
   LoadOptions({ model }) {
-    return Data.Logic.Retreive(Utils.valueHead(model)).model(model.options);
+    return Data.Logic
+      .Retreive(Utils.valueHead(model), model)
+      .model(model.options);
   },
 
   // Validation
@@ -93,22 +95,26 @@ export const Logic = {
   // Field change handling
   @Cmd.update
   SetFieldValue({ meta, model }, e) {
-    const val = e && e.target ? e.target.value : e;
+    const val = e && e.target ? e.target.files || e.target.value : e;
+    const valueSep = Utils.resolve(meta.valueSep, model);
+    const emptyValue = Utils.resolve(meta.emptyValue, model);
+    const multiselect = Utils.resolve(meta.multiselect, model);
     let nextVal = val;
-    if (meta.valueSep || meta.multiselect) {
+
+    if (valueSep || multiselect) {
       if (typeof val === "string") {
-        if (meta.valueSep && val.endsWith(meta.valueSep)) {
-          const sep = meta.valueSep;
+        if (valueSep && val.endsWith(valueSep)) {
+          const sep = valueSep;
           const finalVal = val.substr(0, val.length - sep.length);
-          nextVal = Utils.valueTail(model).concat(finalVal, "");
+          nextVal = Utils.valueTail(model).concat(finalVal, emptyValue || '');
         } else {
           nextVal = Utils.valueTail(model).concat(val);
         }
       } else {
-        nextVal = Utils.valueTail(model).concat(val, "");
+        nextVal = Utils.valueTail(model).concat(val, emptyValue);
       }
     }
-    return { value: meta.normalize(nextVal) };
+    return { value: meta.normalize(nextVal, model) };
   },
 
   @Cmd.update

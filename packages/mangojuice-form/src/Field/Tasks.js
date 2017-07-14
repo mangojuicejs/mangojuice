@@ -1,3 +1,3 @@
 export function validatorTask({ meta, model }) {
-  return this.call(meta.validator, model.value);
+  return this.call(meta.validator, model.value, model);
 }
