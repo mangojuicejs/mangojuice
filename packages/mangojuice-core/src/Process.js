@@ -126,6 +126,7 @@ export class Process {
         const get = memoize(computedFields[k]);
         Object.defineProperty(this.model, k, {
           configurable: true,
+          set: () => {},
           get
         });
         return get;
