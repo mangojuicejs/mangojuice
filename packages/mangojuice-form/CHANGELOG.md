@@ -3,6 +3,37 @@
 All notable changes to this project will be documented in this file.
 See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.1.5"></a>
+## 0.1.5 (2017-07-14)
+
+
+
+<a name="0.1.4"></a>
+## 0.1.4 (2017-07-14)
+
+
+### Bug Fixes
+
+* **form:** added more flexibility in field block ([92753f6](https://github.com/mangojuicejs/mangojuice/commit/92753f6))
+
+
+
+<a name="0.1.2-beta.1"></a>
+## 0.1.2-beta.1 (2017-07-03)
+
+
+
+<a name="0.1.2-beta.0"></a>
+## 0.1.2-beta.0 (2017-07-03)
+
+
+
+<a name="0.1.1"></a>
+## 0.1.1 (2017-07-03)
+
+
+
+
 <a name="0.1.4"></a>
 ## 0.1.4 (2017-07-14)
 
