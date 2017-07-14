@@ -7,6 +7,37 @@ See [standard-version](https://github.com/conventional-changelog/standard-versio
 ## 0.1.4 (2017-07-14)
 
 
+
+<a name="0.1.4"></a>
+## 0.1.4 (2017-07-14)
+
+
+### Bug Fixes
+
+* **lazy:** proxy babel plugin works now ([1ad78fe](https://github.com/mangojuicejs/mangojuice/commit/1ad78fe))
+
+
+
+<a name="0.1.2-beta.1"></a>
+## 0.1.2-beta.1 (2017-07-03)
+
+
+
+<a name="0.1.2-beta.0"></a>
+## 0.1.2-beta.0 (2017-07-03)
+
+
+
+<a name="0.1.1"></a>
+## 0.1.1 (2017-07-03)
+
+
+
+
+<a name="0.1.4"></a>
+## 0.1.4 (2017-07-14)
+
+
 ### Bug Fixes
 
 * **lazy:** proxy babel plugin works now ([1ad78fe](https://github.com/mangojuicejs/mangojuice/commit/1ad78fe))
