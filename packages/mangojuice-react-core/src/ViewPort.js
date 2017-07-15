@@ -1,7 +1,7 @@
 export default ({ Component, createElement }) =>
   class ViewPort extends Component {
     componentDidMount() {
-      const { props, View } = this.props;
+      const { props, View, proc } = this.props;
       this.mounted = props.mounter.mount(proc, View);
     }
 

@@ -1,5 +1,7 @@
 import { Cmd, Utils, MODEL_UPDATED_EVENT } from "mangojuice-core";
 import ViewPortCreator from "./ViewPort";
+import { runInContext } from './ViewRenderContext';
+
 
 export default reactImpl => {
   const ViewPort = ViewPortCreator(reactImpl);
@@ -63,7 +65,7 @@ export default reactImpl => {
       } = this.props;
       const nestProps = { model, shared, nest, props, exec: this.execCommand };
       nestProps.all = nestProps;
-      return createElement(View, nestProps);
+      return runInContext(View, nestProps);
     }
 
     render() {
