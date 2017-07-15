@@ -353,7 +353,7 @@ export class Process {
     this.logger.onStartHandling(cmd, this.model, isBefore);
     const resPromise = createResultPromise();
     maybeForEach(this.execHandlers, ({ handler, proc }) => {
-      const handlerCmd = Cmd.appendArgs(handler.clone(), [cmd, model]);
+      const handlerCmd = Cmd.appendArgs(handler.clone(), [cmd, model, isBefore]);
       handlerCmd.isHandler = true;
       const execRes = proc.exec(handlerCmd);
       resPromise.add(execRes);
