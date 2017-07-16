@@ -2,7 +2,7 @@
   "name": "mangojuice-build",
   "private": true,
   "license": "MIT",
-  "version": "0.1.6",
+  "version": "0.1.7-beta1",
   "author": {
     "name": "Artem Artemev",
     "email": "artem@artemevs.com"
@@ -31,6 +31,7 @@
     "docs": "typedoc",
     "examples": "npm run --prefix examples start",
     "publish": "npm run build && npm run test && lerna publish --exact --force-publish=* --conventional-commits",
+    "prerelease": "npm run build && npm run test && lerna publish --exact --force-publish=* --npm-tag=next",
     "prepublishOnly": "npm run build",
     "prettier": "npm-run-all prettier:src:*",
     "prettier:src:js": "prettier --write --single-quote --list-different packages/*/__tests__/**/*.{js,jsx}",
