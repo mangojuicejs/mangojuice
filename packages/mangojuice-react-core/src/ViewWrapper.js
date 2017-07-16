@@ -1,10 +1,11 @@
 import { Cmd, Utils, MODEL_UPDATED_EVENT } from "mangojuice-core";
 import ViewPortCreator from "./ViewPort";
-import { runInContext } from './ViewRenderContext';
+import ViewInContextCreator from "./ViewInContext";
 
 
 export default reactImpl => {
   const ViewPort = ViewPortCreator(reactImpl);
+  const ViewInContext = ViewInContextCreator(reactImpl);
   const { Component, createElement } = reactImpl;
 
   class ViewWrapper extends Component {
@@ -69,7 +70,7 @@ export default reactImpl => {
         exec: this.execCommand
       };
       nestProps.all = nestProps;
-      return runInContext(View, nestProps);
+      return createElement(ViewInContext, { View, props: nestProps });
     }
 
     render() {
