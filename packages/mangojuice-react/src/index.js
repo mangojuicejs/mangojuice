@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { ReactMounter, getContext } from "mangojuice-react-core";
+import { ReactMounter, getContext, ViewInContext } from "mangojuice-react-core";
 
 // React interface implementation
 const reactImpl = {
@@ -10,9 +10,12 @@ const reactImpl = {
   render: ReactDOM.render
 };
 
+// Component for nesting views for the same model
+const ViewInContextComp = ViewInContext(reactImpl);
+
 // Patching createElement fuction to support
 // commands and command creators as a prop
-React.createElement = function(elem, props, ...args) {
+React.createElement = function(View, props, ...args) {
   const context = getContext();
   if (props && context) {
     for (let k in props) {
@@ -31,12 +34,12 @@ React.createElement = function(elem, props, ...args) {
         props.exec = context.exec;
         props.nest = context.nest;
         props.all = props;
-      } else {
-        return context.nest(props.model, elem, props);
+        return React.createElement(ViewInContextComp, { View, props });
       }
+      return context.nest(props.model, View, props);
     }
   }
-  return reactImpl.createElement(elem, props, ...args);
+  return reactImpl.createElement(View, props, ...args);
 };
 
 export default ReactMounter(reactImpl);
