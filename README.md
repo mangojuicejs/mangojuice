@@ -27,7 +27,7 @@ MangoJuice (MJS) consists of three main parts:
 
 All these three parts are together called a `Block`. For example, let's say you have a page with a very complicated search form and a results list. In this case you will probably have three logical blocks: (1) Search form, (2) Results list and (3) Block that manage search form and results (parent for 1 and 2).
 
-#### Search Form example
+### Search Form example
 ```js
 // SearchForm.js
 import { Cmd } from 'mangojuice-core';
@@ -73,7 +73,7 @@ If you are familiar with Redux, then you can think about it as an action creator
 
 **`const View = ({ model }) =>`** is just a pure-functional React component, which renders the form. MJS passes a `props` object  with the model.
 
-#### Runing the block
+### Runing the block
 ```js
 // index.js
 import { Run } from 'mangojuice-core';
@@ -90,7 +90,7 @@ Run.mount({
 
 **`new ReactMounter('#container')`** contains a logic for mapping a model to DOM changes via a View function. Mounter actually defines how View functions should be writtern, what they should return, what arguments they should accept, etc. Actual mounters are not a part of the MJS core. In a core you can find just an interface for a mounter. In the example above we are using React for writing Views and hence we are using ReactMounter.
 
-#### Search Results example
+### Search Results example
 ```js
 // SearchForm.js
 import { Cmd, Task } from 'mangojuice-core';
@@ -155,13 +155,13 @@ export const View = ({ model }) => (
   </div>
 )
 ```
-**`@Cmd.batch`** is a command type aimed to execute other commands. Commands of this type should decide what should be done next and in waht order. Returned value can be an array, a command or null/undefined.
+**`@Cmd.batch`** is a command type aimed to execute other commands. `batch` commands should decide what will be done next and in what order. Returned value can be an array, a command or null/undefined.
 
-**`@Cmd.execLatest`**. There is also `@Cmd.execEvery`. It is a command for executing an async function. A command of this type should return a `Task` object, which defines what async function should be executed and what is success/fail handler commands. Success command will be executed with value returned by async function, and fail command will be executed with error object throwed by async function. Success and fail commands are optional (will be executed a no-op command instead of not defined command). The task function gets the same arguments as the command function which created the task.
+**`@Cmd.execLatest`**. There is also `@Cmd.execEvery`. It is a command for executing an async function. A command of this type should return a `Task` object, which defines what async function should be executed and what is success/fail handler commands. Success command will be executed with a value returned by async function, and fail command will be executed with an error object throwed by async function. Success and fail commands are optional (will be executed a no-op command instead of not defined handler). A task function gets the same arguments as the command function which created the task.
 
 **`this.call(fetch, 'www.google.com/search')`** in the task. This thing inspired by `redux-saga` and needed to achive two goals: (1) it creates a task cancellation point and (2) it makes easier to test a task (you can pass some testing `call` func in a context which will mock results of `call`s). If some task marked as `execLatest`, then only one async fucnction can be executing at one point in time.
 
-#### All together
+### All together
 ```js
 // Main.js
 import { Cmd } from 'mangojuice-core';
@@ -198,23 +198,25 @@ export const View = ({ model }) => (
   </div>
 )
 ```
-This block contains the form and the results block and ties them together.
+The block contains the form, the results block and ties them together.
 
-**`const createModel = () =>`** is making initial block's model as usual, but it also creates models for children blocks using their own `createModel` functions.
+**`const createModel = () =>`** as usual makes the initial block's model, but it also creates models for children blocks using their own `createModel` functions.
 
-**`config({ nest })`** helps to define what logic should be binded to what model. We are saying that this block have two child blocks.
+**`config({ nest })`** helps to define what logic should be associated with what model. In the example above we are saying that the block have two child blocks.
 
-**`form: nest(this.HandleSearchForm(), SearchForm.Logic),`** not only defines that `SearchForm.Logic` will be binded to `form` model field, but also set a handler command that will be executed before and after each command from `SearchForm` block (and all nested blocks if they will be).
+**`form: nest(this.HandleSearchForm(), SearchForm.Logic),`** not only defines that `SearchForm.Logic` will be associated with the `form` model's field, but also set a handler command that will be executed before and after each command from `SearchForm` block. The handler will be also called for every nested block.
 
-**`if (cmd.is(SearchForm.Logic.Search.Before))`** in handler catching `Search` command from `SearchForm` block before it is actually executed. There is also `SearchForm.Logic.Search.After` to handle command after execution. The handler returns a command of child block `SearchResults` with query string from `form` field binded to a child model `results`. That model binding is required because by default all commands returned by `Cmd.batch` executed in context of current model (in this case with model of `Main` block). But we wanted to run the command on `results` model.
+**`if (cmd.is(SearchForm.Logic.Search.Before))`** catch `Search` command from `SearchForm` block before the execution. There is also `SearchForm.Logic.Search.After` to handle the command after execution.
 
-**`nest(model.form, SearchForm.View)`** is showing View of `SearchForm` for model `form`.
+**`SearchResults.Logic.Search(model.form.query).model(model.results)`** creates a command associated with some exact model. It means that the command will be executed with some exact model passed in a first argument. By default all commands returned by some command of `Main` block associated with `Main`'s model. But in the example we want to trigger a command of a child block, and `.model(model.results)` helps to do it.
 
-As you can see, to nest one block to another you have to nest all three parts of a block separately: model, logic, view. It is a bit overhead, but it makes nesting very flexible. For example you can use Logic of one block and compelely replace View of this block to something more suitable in some concrete situation. Or you can create a model for a child block in some specific way.
+**`<SearchForm.View model={model.form} />`** shows View of `SearchForm` for a model `form`.
+
+As you can see, to nest one block to another you have to nest all three parts of a block separately: model, logic, view. It is a bit overhead, but it makes nesting very flexible. For example, you can use a Logic of one block and compelely replace a View of this block to something more suitable in some concrete situation. Or you can create a model for a child block in some specific way.
 
 
-#### Multiple counter problem (solved easily)
-What if each result item should have some specific logic, like a counter? In MJS that is not a problem:
+### Multiple counter problem
+What if each item should have some specific logic, like a counter? In MJS that is not a problem:
 ```js
 // ResultsItem.js
 import { Cmd } from 'mangojuice-core';
@@ -241,7 +243,7 @@ export const View = ({ model }) => (
 )
 ```
 
-**`Logic.Increment(1)`** demonstrates how to execute a command with some argument.
+**`Logic.Increment(1)`** demonstrates how you can bind a command with some exact argument.
 
 ```js
 // SearchResults.js
@@ -266,7 +268,7 @@ export const Logic = {
   },
   ...
 }
-export const View = ({ model, nest }) => (
+export const View = ({ model }) => (
   <div>
     {model.loading && <div>Loading...</div>}
     {model.error && <div>{model.error}</div>}
@@ -274,16 +276,16 @@ export const View = ({ model, nest }) => (
   </div>
 )
 ```
-**`results: nest(null, ResultsItem.Logic)`** just like in `all together`, we are nesting each part of a block separately. Here we are nesting logic. So, the rule is – you can bind child logic to an array of models, and the logic will be binded to each item of an array.
+**`results: nest(null, ResultsItem.Logic)`** associates a logic with `results` model's field. But `results` is an array. In this case logic will be associated with each object of an array.
 
-**`results: results.map(x => ResultsItem.createModel(x))`** in `SetResultsList` command just creates a `ResultsItem` model for each result item. That is a nesting of a model.
+**`results: results.map(x => ResultsItem.createModel(x))`** in `SetResultsList` command just creates a `ResultsItem` model for each result item.
 
-**`<ResultsItem.View model={x} />`** in View nesting a View of our `ResultsItem` block for each result item.
+**`<ResultsItem.View model={x} />`** in shows a View of our `ResultsItem` block for each result item.
 
-## Going deeper (shared, subscribe, port)
-What if you will have to add a user to your app? Obviously user model should be easily accessable from anywhere of the app, for example to check is user authorized or not, or to check role of the user. For these cases, when you need to have widely used model, MJS provides shared block.
+## Going deeper
+What if you will have to add a user to your app? Obviously the user model should be easily accessable from anywhere of the app. For example to check is the user authorized or not, or to check a role of the user. For these cases, when you need to have a widely used model, MJS provides so called `shared block`.
 
-As you probably already noticed, application in MJS is a tree of blocks. The key diffeerence of shared tree is that blocks from shared tree do not have a View. But anyway it is better to show how it looks like.
+As you probably already noticed, an application in MJS is a tree of blocks. The key diffeerence of a shared tree is that blocks from a shared tree do not have a View.
 
 ```js
 // Shared.js
@@ -329,9 +331,9 @@ export const Logic = {
 ```
 You should already understand what is going on above, except one thing...
 
-**`bindCommands: this`** binds all commands from User logic to lastly created model. It is useful for singletone blocks when only one instance of a block could be presented in the app. So it allows you to call `User.Logic.Login` command without explicitly binding it to user's model, like we did above for `SearchResults.Logic.Search` command.
+**`bindCommands: this`** binds all commands from User logic to lastly created model. It is useful for a singletone block when only one instance of a block can be presented in the app. So it allows you to use `User.Logic.Login` command without explicitly binding it to user's model, like we did above for `SearchResults.Logic.Search` command.
 
-#### Usege of shared block
+### Usege of shared block
 ```js
 // index.js
 ...
@@ -344,7 +346,7 @@ Run.mount({
 })
 ```
 
-**`shared: Shared`** saying to a runner that we have a shared block that should be initiated with app block and tied together.
+**`shared: Shared`** adds a shared block tree to the application.
 
 ```js
 // Main.js
@@ -361,12 +363,12 @@ export const View = ({ model, shared }) => (
   </div>
 )
 ```
-**`const View = ({ model, shared })`** now also have a `shared` field in props which is just a model of shared block.
+**`const View = ({ model, shared })`** now also have a `shared` field in the props which is just a model of a shared block.
 
-#### App depends on Shared (and how to disable it)
-It is important to notice that every view from app block tree depends on changes of model of shared tree. For example, when user logged in (`authorazed` changed to `true` by `Login` command) each View of the app (of each app block) will be rerendered. For instance `Main.Vew`, `SearchForm.View`, `SearchResults.View`, all of them will be rerendered.
+### App depends on Shared (and how to disable it)
+It is important to notice that every view from app's block tree depends on changes of model of a shared tree. For example, when user loggs in (`authorazed` changes to `true` by `Login` command) each View of the app (of each block from app tree) will be re-rendered. For instance `Main.View`, `SearchForm.View`, `SearchResults.View`, all of them will be re-rendered.
 
-That imposes an important restriction to shared blocks. They should be rarely changing to have a good performance. But there is also a way to disable shared dependency for a specific block:
+That imposes an important restriction to shared blocks. They should be changed rarely to have a good performance. But there is also a way to disable shared dependency for a specific block:
 
 ```js
 // SearchResults.js
@@ -386,14 +388,12 @@ export const Logic = {
 }
 ```
 
-**`manualSharedSubscribe: true`** is disabeling View re-rendering of `SearchResults` block on each shared model change.
+**`manualSharedSubscribe: true`** disables View re-rendering of `SearchResults` block when shared model changed.
 
-**`subscriptions: ...`** provides a way to subscribe only to some of shared model changes. Above we subscribed to changes of `shared.user` and added an update handler command `HandleUserUpdate`. This command will be executed on every `shared.user` model change.
+**`subscriptions: ...`** provides a way to subscribe only to some of shared model changes. Above we subscribed to changes of `shared.user` and added an update handler command `HandleUserUpdate`. This command will be executed on every change of `shared.user`. But not on changes of `shared` model itself.
 
-In this example, created user subscription is almost ignoring our `manualSharedSubscribe: true`, because subscription also re-rendering the view. But if `shared` (root) model will be changed in some way (not `shared.user`), then the View won't be renredered, because we have `manualSharedSubscribe: true` and subscription only to `shared.user`.
-
-#### Dealing with the world
-Above we showed how to handle events from View. But complex applications could have to handle not only view events, but some more, like WebSocket messages, or pressing `esc` in window scope, or some interval. The good news is that MJS also provide a way to handle this kind of events.
+### Dealing with the world
+We showed above how to handle events from a View. But complex applications could have to handle not only view events, but some more, like WebSocket messages, or presses to `esc` in window scope, or execute someting in interval. The good news is that MJS also provides a way to handle this kind of events.
 
 ```js
 // SearchResults.js
@@ -409,7 +409,7 @@ export const Logic = {
   ...
 }
 ```
-**`port({ model, destroy, exec })`** is a special function of logic object, that is aimed to subscribe to some global events and execute commands. In above example we just made an interval for refreshing search results every 10 secs. Also we subscribed to a destroy Promise, which will be resolved when block will be removed.
+**`port({ model, destroy, exec })`** is a special function of logic object, that is aimed to subscribe to some global events. In the example we just made an interval for refreshing the search results every 10 secs. Also we subscribed to the destroy Promise, which will be resolved when the block will be removed.
 
 ## Conclusion
 That is all about basics of MJS. It was inspired by many existing frameworks/languages that the author used for a while. So probably there is no something extremly new. MJS is all about defining scalable, flexible way of implementing logic of your app in MVC manner with help of Command Pattern and of the latest available ES6/ES7 features, like decorators or async/await.
