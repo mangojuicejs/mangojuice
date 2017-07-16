@@ -12,15 +12,13 @@ export default reactImpl => {
     prevExecsMap = {};
 
     componentDidMount() {
-      const { proc } = this.props;
       this.unmounted = false;
-      proc.addListener(MODEL_UPDATED_EVENT, this.updateView);
+      this.props.proc.addListener(MODEL_UPDATED_EVENT, this.updateView);
     }
 
     componentWillUnmount() {
-      const { proc } = this.props;
       this.unmounted = true;
-      proc.removeListener(MODEL_UPDATED_EVENT, this.updateView);
+      this.props.proc.removeListener(MODEL_UPDATED_EVENT, this.updateView);
     }
 
     componentDidUpdate() {
@@ -63,7 +61,13 @@ export default reactImpl => {
         nest,
         props
       } = this.props;
-      const nestProps = { model, shared, nest, props, exec: this.execCommand };
+      const nestProps = {
+        ...props,
+        model,
+        shared,
+        nest,
+        exec: this.execCommand
+      };
       nestProps.all = nestProps;
       return runInContext(View, nestProps);
     }
