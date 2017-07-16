@@ -2,30 +2,30 @@
 
 > The missing `M.C` part for your favorite `V` library.
 
-* **Highly scalable** because of strongly decoupled M, V and C and good definition of logical Block of your application
+* **Highly scalable** because of strongly decoupled Model, View and Controller, and good definition of logical Block of your application
 * **Forces you to write good decomposed code**, which is easy to scale, test and debug.
 * **Fully-featured core**, no need to add any middlewares to do just regular things
-* **View library agnostic**
-* **Support for server-rendering**, but depends on your V lib, of course
+* **View library-agnostic**
+* **Support for server-rendering**(if your View library also supports it, of course)
 * **Lightweight** (zero dependencies, around **6kb minified gzipped**)
 * **Easy to learn and fun to use**
 
 ## Installation
 ```bash
 npm install mangojuice-core  # general set of tools
-npm install mangojuice-react # for using react for view rendering
+npm install mangojuice-react # using React as view rendering
 npm install babel-plugin-transform-decorators-legacy
 ```
 MangoJuice relies on decorators, so you should add decorators transformer to your babel configuration.
 
 
-## Quick start (block, cmd, async tasks, run)
+## Quick start
 MangoJuice (MJS) consists of three main parts:
-* **Model** – plain function `const createModel = () => ({ ... })`, which defines initial model state of your logical block.
+* **Model** – plain function `const createModel = () => ({ ... })`, which defines the initial model state of your logical block.
 * **Logic** - plain object `const Logic = { ... };` with a set of commands inside.
-* **View** – plain function `const View = ({ model }) => { ... }`, which should display something based on current state of a model. If your favorite V library is React, then View is a plain-function component.
+* **View** – plain function `const View = ({ model }) => { ... }`, which should display something based on the current state of a model. If your favorite View library is React, then View is a plain-function component.
 
-All these three parts together called `Block`. For example, let's say you have a page with very complicated search form and results list. In this case you will probably have three logical blocks: (1) Search form, (2) Results list and (3) Block that manage search form and results (parent block of 1 and 2).
+All these three parts are together called a `Block`. For example, let's say you have a page with a very complicated search form and a results list. In this case you will probably have three logical blocks: (1) Search form, (2) Results list and (3) Block that manage search form and results (parent for 1 and 2).
 
 #### Search Form example
 ```js
@@ -47,34 +47,31 @@ export const Logic = {
   Search() {
   }
 };
-export const View = ({ model, exec }) => (
+export const View = ({ model }) => (
   <div>
     <h2>Complicated Search Form</h2>
-    <input value={model.query} onChange={exec(Logic.SetQuery)} /><br />
-    <button onClick={exec(Logic.Search)}>Search</button>
+    <input value={model.query} onChange={Logic.SetQuery} /><br />
+    <button onClick={Logic.Search}>Search</button>
   </div>
 );
 ```
-Module `SearchForm.js` is a `Block`. It exports `createModel`, `View` and `Logic`. Only this kind of modules could be called `Block` in MJS.
+Module `SearchForm.js` is a `Block`. It exports `createModel`, `View` and `Logic`. Only this kind of modules can be called `Block` in MJS.
 
-**`const createModel = () =>`** is a function (factory) that returns initial state of the block.
+**`const createModel = () =>`** is a function (factory) that returns the initial state of the block.
 
-**`name: 'SearchForm'`** defines a name of the logical block. Each logic object should have a name for easier debugging and namespacing commands.
+**`name: 'SearchForm'`** defines a name for the logical block. Each logic object should have a name for easier debugging and namespacing commands.
 
-**`@Cmd.update`** defines that decorated function is a function for updating a model. MJS implements so called `command pattern`, and `Cmd` decorators help to convert plain function to a command creator with defined behaviour.
+**`@Cmd.update`** defines that decorated function is a function for updating a model. MJS implements the so called `command pattern`, and `Cmd` decorators help to convert plain function to a command creator with defined behaviour.
 
-For instance, if you will call `Logic.SetQuery(1,2,3)` it will return you a plain object (command), which contains original function, array of arguments `[1,2,3]` and some other internally used information, that defines that this is a command for updating a model.
+For instance, if you call `Logic.SetQuery(1,2,3)` it will return you a plain object (command), which contains original function, array of arguments `[1,2,3]` and some other internally used information, that defines that this is a command for updating a model.
 
-If you are familiar with Redux, then you can think about it as about action creator tied with function that will actually handle the action.
+If you are familiar with Redux, then you can think about it as an action creator tied with function that will actually handle the action.
 
 **`ctx`** as first argument of each command is just an object with `model` field. So you can use it to define next state of a model, or to take some information to decide what command should be executed next.
 
-**`@Cmd.nope`** just do nothing. We will see why this is useful a bit later. And there is some more command types in MJS core and we will meet them a bit later too.
+**`@Cmd.nope`** is a no-op. We will see why this is useful a bit later. And there is some more command types in MJS core and we will meet them a bit later too.
 
-**`const View = ({ model, exec }) =>`** is just a pure-functional React component, which renders the form. MJS passing a props object with model and `exec` function.
-
-**`exec`** needed in a View to create actual event handler, which you can pass to some prop like `onChange`. By calling this function the command will be created and executed.
-`exec` accepts command creator function and command object.
+**`const View = ({ model }) =>`** is just a pure-functional React component, which renders the form. MJS passes a `props` object  with the model.
 
 #### Runing the block
 ```js
@@ -89,9 +86,9 @@ Run.mount({
 });
 ```
 
-**`Run.mount`** setup a block you are passing in `app` field (object with `View`, `createModel` and `Logic`) and mount it to the DOM using specific View mounter instance.
+**`Run.mount`** sets up a block you are passing in `app` field (object with `View`, `createModel` and `Logic`) and mounts it to the DOM using the specific View mounter instance.
 
-**`new ReactMounter('#container')`** contains a logic for mapping a model to DOM changes via View function. Mounter actually defines how View functions should be writtern, what they should return, what arguments it should accept, etc. Actual mounters are not part of the MJS core. In core you can find just an interface for a mounter. In the example above we are using React for writing Views and hence using ReactMounter.
+**`new ReactMounter('#container')`** contains a logic for mapping a model to DOM changes via a View function. Mounter actually defines how View functions should be writtern, what they should return, what arguments they should accept, etc. Actual mounters are not a part of the MJS core. In a core you can find just an interface for a mounter. In the example above we are using React for writing Views and hence we are using ReactMounter.
 
 #### Search Results example
 ```js
@@ -150,7 +147,7 @@ export const Logic = {
     };
   }
 };
-export const View = ({ model, exec }) => (
+export const View = ({ model }) => (
   <div>
     {model.loading && <div>Loading...</div>}
     {model.error && <div>{model.error}</div>}
@@ -158,11 +155,11 @@ export const View = ({ model, exec }) => (
   </div>
 )
 ```
-**`@Cmd.batch`** is a command type aimed to execute other commands. Commands of this type should decide what should be done next and with what arguments. Returned value could be an array, a command or null/undefined.
+**`@Cmd.batch`** is a command type aimed to execute other commands. Commands of this type should decide what should be done next and in waht order. Returned value can be an array, a command or null/undefined.
 
-**`@Cmd.execLatest`**. There is also `@Cmd.execEvery`. It is a command for executing async function. Command of this type should return a `Task` object, which defines what async function should be executed and what is success/fail handler commands. Success command will be executed with returned value from async function, and fail command will be executed with throwed error object. Success and fail commands is optional (will be executed a nope command instead of some not defined cmd). The task function gets the same arguments as command function which created a task.
+**`@Cmd.execLatest`**. There is also `@Cmd.execEvery`. It is a command for executing an async function. A command of this type should return a `Task` object, which defines what async function should be executed and what is success/fail handler commands. Success command will be executed with value returned by async function, and fail command will be executed with error object throwed by async function. Success and fail commands are optional (will be executed a no-op command instead of not defined command). The task function gets the same arguments as the command function which created the task.
 
-**`this.call(fetch, 'www.google.com/search')`** in task. This thing inspired by `redux-saga` and needed to achive two goals: (1) it creates task cancellation point and (2) it makes easier to test a task (you can pass some testing `call` func in a context which will mock results of some executions). If some task marked as `execLatest` and it will be called before previos one returned some results (before success/fail cmd executed), then previous task will be canceled and new one started.
+**`this.call(fetch, 'www.google.com/search')`** in the task. This thing inspired by `redux-saga` and needed to achive two goals: (1) it creates a task cancellation point and (2) it makes easier to test a task (you can pass some testing `call` func in a context which will mock results of `call`s). If some task marked as `execLatest`, then only one async fucnction can be executing at one point in time.
 
 #### All together
 ```js
@@ -194,14 +191,14 @@ export const Logic = {
     }
   }
 };
-export const View = ({ model, nest }) => (
+export const View = ({ model }) => (
   <div>
-    {nest(model.form, SearchForm.View)}
-    {nest(model.results, SearchResilts.View)}
+    <SearchForm.View model={model.form} />
+    <SearchResilts.View model={model.results} />
   </div>
 )
 ```
-This block contains form and results blocks and tie them together.
+This block contains the form and the results block and ties them together.
 
 **`const createModel = () =>`** is making initial block's model as usual, but it also creates models for children blocks using their own `createModel` functions.
 
@@ -234,17 +231,17 @@ export const Logic = {
     return { counter: model.counter + amount };
   }
 };
-export const View = ({ model, exec }) => (
+export const View = ({ model }) => (
   <div>
     {model.text}<br />
-    <button onClick={exec(Logic.Increment(1))}>+</button>
+    <button onClick={Logic.Increment(1)}>+</button>
     {model.counter}
-    <button onClick={exec(Logic.Increment(-1))}>-</button>
+    <button onClick={Logic.Increment(-1)}>-</button>
   </div>
 )
 ```
 
-**`exec(Logic.Increment(1))`** demonstrating how to pass a command object to `exec`. It works efficiently, because `ReactMounter` caches exact handlers internaly and do not create new handler function on each re-render.
+**`Logic.Increment(1)`** demonstrates how to execute a command with some argument.
 
 ```js
 // SearchResults.js
@@ -273,7 +270,7 @@ export const View = ({ model, nest }) => (
   <div>
     {model.loading && <div>Loading...</div>}
     {model.error && <div>{model.error}</div>}
-    {model.results.map((x, i) => nest(x, ResultsItem.View))}
+    {model.results.map((x, i) => <ResultsItem.View model={x} />)}
   </div>
 )
 ```
@@ -281,7 +278,7 @@ export const View = ({ model, nest }) => (
 
 **`results: results.map(x => ResultsItem.createModel(x))`** in `SetResultsList` command just creates a `ResultsItem` model for each result item. That is a nesting of a model.
 
-**`nest(x, ResultsItem.View)`** in View nesting a View of our `ResultsItem` block for each result item.
+**`<ResultsItem.View model={x} />`** in View nesting a View of our `ResultsItem` block for each result item.
 
 ## Going deeper (shared, subscribe, port)
 What if you will have to add a user to your app? Obviously user model should be easily accessable from anywhere of the app, for example to check is user authorized or not, or to check role of the user. For these cases, when you need to have widely used model, MJS provides shared block.
@@ -353,18 +350,18 @@ Run.mount({
 // Main.js
 import * as User from './User';
 ...
-export const View = ({ model, shared, nest, exec }) => (
+export const View = ({ model, shared }) => (
   <div>
     {shared.user.authorized && <div>Hello, {shared.user.name}</div>}
     {!shared.user.authorized && (
-      <button onClick={exec(User.Logic.Login)}>Login</button>
+      <button onClick={User.Logic.Login}>Login</button>
     )}
-    {nest(model.form, SearchForm.View)}
-    {nest(model.results, SearchResilts.View)}
+    <SearchForm.View model={model.form} />
+    <SearchResilts.View model={model.results} />
   </div>
 )
 ```
-**`const View = ({ model, shared, nest, exec })`** now also have a `shared` field in props which is just a model of shared block.
+**`const View = ({ model, shared })`** now also have a `shared` field in props which is just a model of shared block.
 
 #### App depends on Shared (and how to disable it)
 It is important to notice that every view from app block tree depends on changes of model of shared tree. For example, when user logged in (`authorazed` changed to `true` by `Login` command) each View of the app (of each app block) will be rerendered. For instance `Main.Vew`, `SearchForm.View`, `SearchResults.View`, all of them will be rerendered.
