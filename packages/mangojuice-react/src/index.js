@@ -18,6 +18,8 @@ const ViewInContextComp = ViewInContext(reactImpl);
 React.createElement = function(View, props, ...args) {
   const context = getContext();
   if (props && context) {
+    // Convert commands to handler functions, which will
+    // execute command in current context
     for (let k in props) {
       if (
         props[k] && props[k].id &&
@@ -27,6 +29,7 @@ React.createElement = function(View, props, ...args) {
       }
     }
 
+    // Nest views for current or child models
     if (props.model && props.model.__proc) {
       if (props.model.__proc.id === context.model.__proc.id) {
         props.model = context.model;
@@ -34,7 +37,12 @@ React.createElement = function(View, props, ...args) {
         props.exec = context.exec;
         props.nest = context.nest;
         props.all = props;
-        return React.createElement(ViewInContextComp, { View, props });
+
+        return reactImpl.createElement(
+          ViewInContextComp,
+          props,
+          reactImpl.createElement(View, props, ...args)
+        );
       }
       return context.nest(props.model, View, props);
     }

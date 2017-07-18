@@ -60,7 +60,8 @@ export default reactImpl => {
         View,
         proc: { model, sharedModel: shared },
         nest,
-        props
+        props,
+        children
       } = this.props;
       const nestProps = {
         ...props,
@@ -70,7 +71,9 @@ export default reactImpl => {
         exec: this.execCommand
       };
       nestProps.all = nestProps;
-      return createElement(ViewInContext, { View, props: nestProps });
+      return createElement(ViewInContext, nestProps,
+        createElement(View, nestProps, children)
+      );
     }
 
     render() {

@@ -21,15 +21,15 @@ export default ({ Component, createElement }) =>
 
     pushContext() {
       this.oldContext = getContext();
-      setContext(this.props.props);
+      setContext(this.props);
     }
 
     popContext() {
-      this.oldContext = null;
       setContext(this.oldContext);
+      this.oldContext = null;
     }
 
     render() {
-      return createElement(this.props.View, this.props.props);
+      return this.props.children;
     }
   };
