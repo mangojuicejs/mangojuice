@@ -3,19 +3,22 @@ import * as Task from "./Task";
 
 // Utils
 export function createCommand(name, func, exec, opts) {
+  const beforeId = nextId();
+  const afterId = nextId();
   const creator = function(...args) {
     return {
       func,
       exec,
       args,
       opts,
+      beforeId,
+      afterId,
       isCmd: true,
-      id: creator.id,
-      beforeId: creator.id,
-      afterId: creator.After.id,
+      id: beforeId,
       funcName: name,
       name: getCommandName(name, this),
       context: this,
+
       model(modelObj) {
         this._model = modelObj;
         return this;
@@ -30,9 +33,9 @@ export function createCommand(name, func, exec, opts) {
       }
     };
   };
-  creator.id = nextId();
-  creator.Before = { id: creator.id };
-  creator.After = { id: nextId() };
+  creator.id = beforeId;
+  creator.Before = { id: beforeId };
+  creator.After = { id: afterId };
   return creator;
 }
 

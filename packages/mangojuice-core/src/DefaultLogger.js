@@ -14,11 +14,11 @@ export class DefaultLogger {
 
   onEndHandling(cmd, model) {}
 
-  onExecuted(cmd, model) {}
+  onExecuted(cmd, model, result) {}
 
   onEmitSubscriptions(cmd, model) {}
 
-  onEndExec(cmd, model) {}
+  onEndExec(cmd, model, result) {}
 }
 
 export default DefaultLogger;

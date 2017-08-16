@@ -7,7 +7,8 @@ import {
   maybeForEach,
   emptyArray,
   ensureCmdObject,
-  memoize
+  memoize,
+  noop
 } from "./Utils";
 
 // Constants
@@ -67,9 +68,10 @@ export class Process {
         shared: this.sharedModel
       };
       this.config = this.logic.config(configProps, ...this.configArgs) || {};
+      this.config.childrenKeys = Object.keys(this.config.children || {});
     }
     this.config.meta = this.config.meta || {};
-    this.config.childrenKeys = Object.keys(this.config.children || {});
+    this.config.childrenKeys = this.config.childrenKeys || [];
   }
 
   prepareHandlers() {
@@ -125,8 +127,9 @@ export class Process {
       this.computedFields = maybeMap(Object.keys(computedFields), k => {
         const get = memoize(computedFields[k]);
         Object.defineProperty(this.model, k, {
+          enumerable: true,
           configurable: true,
-          set: () => {},
+          set: noop,
           get
         });
         return get;
@@ -176,7 +179,7 @@ export class Process {
     ) {
       this.doSubscribe({
         model: this.sharedModel,
-        handler: null,
+        handlerCmd: null,
         initRun: false,
         subEvent: CHILD_MODEL_UPDATED_EVENT
       });
@@ -191,19 +194,19 @@ export class Process {
 
   doSubscribe = ({
     model,
-    handler,
+    handlerCmd,
     initRun = true,
     subEvent = MODEL_UPDATED_EVENT
   }) => {
     const proc = model.__proc;
     const subHandler = cmd => {
       const resPromise = createResultPromise();
-      if (handler) {
+      if (handlerCmd) {
         resPromise.add(
-          this.exec(Cmd.appendArgs(handler.clone(), [cmd, model]))
+          this.exec(Cmd.appendArgs(handlerCmd.clone(), [cmd, model]))
         );
       }
-      if (!handler || this.config.manualSharedSubscribe) {
+      if (!handlerCmd || this.config.manualSharedSubscribe) {
         this.resetComputedFields();
         resPromise.add(this.emit(MODEL_UPDATED_EVENT, cmd));
       }
@@ -394,7 +397,7 @@ export class Process {
         resPromise.add(result.then(this.exec, this.exec));
       }
     }
-    this.logger.onExecuted(cmd, this.model);
+    this.logger.onExecuted(cmd, this.model, result);
 
     // Run after handlers
     cmd.id = cmd.afterId;
@@ -411,7 +414,7 @@ export class Process {
 
     // Move back id of the cmd (to make cmd object reusable)
     cmd.id = cmd.beforeId;
-    this.logger.onEndExec(cmd, this.model);
+    this.logger.onEndExec(cmd, this.model, result);
     return resPromise.get();
   }
 
@@ -455,18 +458,19 @@ export class Process {
   };
 
   /**
-   * This function creates a `Process` object by given handler
-   * and logic object and prepare it.
+   * This function creates a `Process` object by given logic.
+   * Then you can call `handler` and `args` functions to set
+   * specific command to handle all commands in the logic and
+   * to set arguments which will be passed to `config` of the logic.
+   *
    * Returns ready to bind/run Process instance. Created process
    * instance used by `bindChildren`/`runChildren` functions
    * to bind a process to some children logic and run the process.
    *
-   * @param  {?Function|?Object}  execHandler
-   * @param  {Object}             logic
-   * @param  {Array}              configArgs
+   * @param  {Object}  logic
    * @return {Process}
    */
-  nest = (execHandler, logic, ...configArgs) => {
+  nest = (logic) => {
     if (!logic) {
       throw new Error("Passed logic is undefined");
     }
@@ -476,8 +480,6 @@ export class Process {
       sharedModel: this.sharedModel,
       appContext: this.appContext,
       logger: this.logger,
-      execHandler,
-      configArgs,
       logic
     });
     return proc;
@@ -492,10 +494,39 @@ export class Process {
    * @param  {Object} model
    * @return {Object}
    */
-  subscribe = (handler, model) => ({
-    handler: ensureCmdObject(handler),
-    model
+  subscribe = (model) => ({
+    model,
+    handlerCmd: null,
+    handler(handler) {
+      this.handlerCmd = handler;
+      return this;
+    },
   });
+
+  /**
+   * Set command exec handler cmd, which will be executed after
+   * each execution of a command in this process or in any
+   * child process. The handler executed in scope of parent process
+   * (because parent process usually wants to handle commands of child
+   * process)
+   * @param  {?Function|?Object} handler
+   * @return {Process}
+   */
+  handler(handler) {
+    this.execHandler = handler;
+    return this;
+  }
+
+  /**
+   * Set arguments which will be passed to config function of the
+   * logic of this process.
+   * @param  {...any} args
+   * @return {Process}
+   */
+  args(...args) {
+    this.configArgs = args;
+    return this;
+  }
 }
 
 export default Process;

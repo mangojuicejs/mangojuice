@@ -59,11 +59,11 @@ describe("Block specs", () => {
         name: "BlockA",
         config({ subscribe, shared, nest }) {
           return {
-            subscriptions: [subscribe(this.FromSubCmd, shared)],
+            subscriptions: [subscribe(shared).handler(this.FromSubCmd)],
             initCommands: [this.FromInitOneCmd, this.FromInitTwoCmd(1, 2, 3)],
             children: {
-              b_1: nest(this.HandleB_1, BlockB.Logic),
-              b_2: nest(this.HandleB_2, BlockB.Logic)
+              b_1: nest(BlockB.Logic).handler(this.HandleB_1),
+              b_2: nest(BlockB.Logic).handler(this.HandleB_2)
             }
           };
         },
@@ -149,10 +149,10 @@ describe("Block specs", () => {
         config({ nest }) {
           return {
             children: {
-              arr: nest(null, ChildBlock.Logic),
-              child_1: nest(null, ChildBlock.Logic),
-              child_2: nest(null, ChildBlock.Logic),
-              child_3: nest(null, ChildBlock.Logic)
+              arr: nest(ChildBlock.Logic),
+              child_1: nest(ChildBlock.Logic),
+              child_2: nest(ChildBlock.Logic),
+              child_3: nest(ChildBlock.Logic)
             }
           };
         },
@@ -259,7 +259,7 @@ describe("Block specs", () => {
           config({ nest }) {
             return {
               children: {
-                recursive: nest(this.HandleChange, RecursiveBlock.Logic)
+                recursive: nest(RecursiveBlock.Logic).handler(this.HandleChange)
               }
             };
           },
