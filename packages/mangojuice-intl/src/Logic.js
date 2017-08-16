@@ -8,7 +8,7 @@ export const Logic = {
   config(ctx, languages) {
     return {
       bindCommands: this,
-      initCommands: this.LoadMessages(),
+      initCommands: this.LoadMessages,
       meta: { languages }
     };
   },
