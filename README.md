@@ -27,7 +27,22 @@ MangoJuice (MJS) consists of three main parts:
 
 All these three parts are together called a `Block`.
 
-For example, let's say you have a page with a very complicated search form and a results list. In this case you will probably have three logical blocks: (1) Search form, (2) Results list and (3) Block that manage search form and results (parent for 1 and 2).
+For example, let's say you have a page with a very complicated search form and a results list. In this case you will probably have three logical Blocks: (1) Search form, (2) Results list and (3) Block that manage search form and results (parent for 1 and 2).
+
+#### The App is three trees
+The app in MJS represented as a tree. And each part of the block have completely separated tree. For instance, to nest Search form to the Main block you should nest the Seach form's model to the Main block's model, nest the Search form's logic to the Main block's logic and the Search form's view to the Main block's view.
+
+#### The Logic is a commands factory
+Logic consists of commands creators and `config` function with defines children Blocks, init commands, etc. When you call command creator it will return a command. Command is an object with all necessary information like type of a command, command's name, function that should be executed, array of arguments. In MJS defined three types of a command:
+
+* `Cmd.update` – command for updating a model
+* `Cmd.batch` – command for executing another commands
+* `Cmd.execLatest/Cmd.execLatest` – command for executing async task
+
+#### The Process put everything together
+There is one thing that makes everything to work, called `Process`. It is an internal class and you won't interact with it directly. But you should understand that the instance of this class created for every Model of every Block of your app and it actually executes commands and it takes care of View updates when model of a Block changed. The instance of the Process initially created during the run of the up.
+
+Now you have very basic understanding what MJS is and how it works. Let's implement the search page mentioned above to see MJS in action.
 
 ### Search Form Block
 ```js
@@ -35,10 +50,17 @@ For example, let's say you have a page with a very complicated search form and a
 import { Cmd } from 'mangojuice-core';
 
 export const createModel = () => ({
-  query: ''
+  query: '',
+  count: 0
 });
 export const Logic = {
   name: 'SearchForm',
+
+  computed({ model }) {
+    return {
+      count: () => model.query.length
+    };
+  },
 
   @Cmd.update
   SetQuery(ctx, e) {
@@ -53,7 +75,7 @@ export const View = ({ model }) => (
   <div>
     <h2>Complicated Search Form</h2>
     <input value={model.query} onChange={Logic.SetQuery} /><br />
-    <button onClick={Logic.Search}>Search</button>
+    <button onClick={Logic.Search}>Search {model.count} chars</button>
   </div>
 );
 ```
@@ -62,6 +84,8 @@ Module `SearchForm.js` is a `Block`. It exports `createModel`, `View` and `Logic
 **`const createModel = () =>`** is a function (factory) that returns the initial state of the block.
 
 **`name: 'SearchForm'`** defines a name for the logical block. Each logic object should have a name for easier debugging and namespacing commands.
+
+**`computed({ model }) {`** is a way to attach some computation to the model's fields. In the example we are computing amount of symbols in the search query.
 
 **`@Cmd.update`** defines that the decorated function is a function for updating a model. MJS implements the so called `command pattern`, and `Cmd` decorators help to convert plain function to a command creator with defined behaviour.
 
