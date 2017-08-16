@@ -1,14 +1,10 @@
-// @flow
-import type { ViewFn } from "@mangojuice/core/types";
-import type { Model as SharedModel } from "src/shared/Main";
-import type { Model } from "./Model";
 import React from "react";
-import * as Router from "@mangojuice/core/blocks/Router";
-import * as Intl from "@mangojuice/core/blocks/Intl";
-import * as Form from "@mangojuice/core/blocks/Form";
-import * as Data from "@mangojuice/core/blocks/Data";
-import * as Field from "@mangojuice/core/blocks/Field";
+import * as Router from "mangojuice-router";
+import * as Intl from "mangojuice-intl";
+import * as Data from "mangojuice-data";
+import { Field, Form } from "mangojuice-form";
 import { Logic } from "./Logic";
+
 
 export const Messages = {
   title: "NEWS.FORM.TITLE",
@@ -18,11 +14,7 @@ export const Messages = {
   tags: "NEWS.FORM.TAGS"
 };
 
-export const InputField: ViewFn<Field.Model<string>, SharedModel> = ({
-  model,
-  props,
-  exec
-}) =>
+export const InputField = ({ model, shared, label }) =>
   <div>
     {model.error &&
       model.touched &&
@@ -32,19 +24,14 @@ export const InputField: ViewFn<Field.Model<string>, SharedModel> = ({
     <input
       id={model.for}
       value={model.value}
-      disabled={props.disabled}
-      {...Field.handlers(exec)}
+      {...Field.handlers}
     />
     <label htmlFor={model.for}>
-      {props.label}
+      {Intl.formatMessage(shared.intl, label)}
     </label>
   </div>;
 
-export const TextareaField: ViewFn<Field.Model<string>, SharedModel> = ({
-  model,
-  props,
-  exec
-}) =>
+export const TextareaField = ({ model, shared, label }) =>
   <div>
     {model.error &&
       model.touched &&
@@ -54,19 +41,14 @@ export const TextareaField: ViewFn<Field.Model<string>, SharedModel> = ({
     <textarea
       id={model.for}
       value={model.value}
-      disabled={props.disabled}
-      {...Field.handlers(exec)}
+      {...Field.handlers}
     />
     <label htmlFor={model.for}>
-      {props.label}
+      {Intl.formatMessage(shared.intl, label)}
     </label>
   </div>;
 
-export const SelectField: ViewFn<Field.Model<string>, SharedModel> = ({
-  model,
-  props,
-  exec
-}) =>
+export const SelectField = ({ model, shared, label, options }) =>
   <div>
     {model.error &&
       model.touched &&
@@ -76,27 +58,21 @@ export const SelectField: ViewFn<Field.Model<string>, SharedModel> = ({
     <select
       id={model.for}
       value={model.value}
-      disabled={props.disabled}
-      {...Field.handlers(exec)}
+      {...Field.handlers}
     >
       <option>-- Select --</option>
-      {props.options.map(o =>
+      {options.map(o =>
         <option key={o.value} value={o.value}>
           {o.title}
         </option>
       )}
     </select>
     <label htmlFor={model.for}>
-      {props.label}
+      {Intl.formatMessage(shared.intl, label)}
     </label>
   </div>;
 
-export const AutocompleteField: ViewFn<Field.Model<string>, SharedModel> = ({
-  model,
-  nest,
-  exec,
-  props
-}) =>
+export const AutocompleteField = ({ model, shared, label }) =>
   <div>
     {model.error &&
       model.touched &&
@@ -105,32 +81,28 @@ export const AutocompleteField: ViewFn<Field.Model<string>, SharedModel> = ({
       </p>}
     <input
       id={model.for}
-      disabled={props.disabled}
       value={model.value.title || model.value}
-      {...Field.handlers(exec)}
+      {...Field.handlers}
     />
     <label htmlFor={model.for}>
-      {props.label}
+      {Intl.formatMessage(shared.intl, label)}
     </label>
-    {nest(model.options, AutocompleteSuggestions)}
+    <AutocompleteSuggestions model={model.options} />
   </div>;
 
-export const AutocompleteSuggestions: ViewFn<
-  Data.Model<Array<any>>,
-  SharedModel
-> = ({ model, exec }) =>
+export const AutocompleteSuggestions = ({ model, shared }) =>
   <div>
-    {Data.whenError(model, error =>
+    {Data.isError(model) && (
       <span>
         Error: {error}
       </span>
     )}
-    {Data.whenLoading(model, () => <span>Loading...</span>)}
+    {Data.isLoading(model) && <span>Loading...</span>}
     {Data.whenReady(model, list =>
       <ul>
         {list.map((s, i) =>
           <li key={i}>
-            <a onMouseDown={exec(Field.Logic.SelectOption(s))}>
+            <a onMouseDown={Field.Logic.SelectOption(s)}>
               {s.title}
             </a>
           </li>
@@ -139,12 +111,7 @@ export const AutocompleteSuggestions: ViewFn<
     )}
   </div>;
 
-export const TagsField: ViewFn<Field.Model<Array<string>>, SharedModel> = ({
-  model,
-  nest,
-  exec,
-  props
-}) =>
+export const TagsField = ({ model, shared, label }) =>
   <div>
     {model.error &&
       model.touched &&
@@ -152,55 +119,49 @@ export const TagsField: ViewFn<Field.Model<Array<string>>, SharedModel> = ({
         Field have error: {model.error}
       </p>}
     {Field.valueTail(model).map((x, i) =>
-      <span key={i} onClick={exec(Field.Logic.RemoveValuePart(i))}>
+      <span key={i} onClick={Field.Logic.RemoveValuePart(i)}>
         {x},
       </span>
     )}
     <input
       id={model.for}
-      disabled={props.disabled}
       value={Field.valueHead(model)}
-      {...Field.handlers(exec)}
+      {...Field.handlers}
     />
     <label htmlFor={model.for}>
-      {props.label}
+      {Intl.formatMessage(shared.intl, label)}
     </label>
   </div>;
 
-export const View: ViewFn<Model, SharedModel> = ({
-  model,
-  shared,
-  nest,
-  exec
-}) =>
-  <form onSubmit={exec(Logic.SubmitForm())}>
+export const View = ({ model, shared }) =>
+  <form onSubmit={Logic.SubmitForm}>
     {Form.isInvalid(model) && <h2>Form is invalid. Check all fields please</h2>}
-    {nest(model.title, InputField, {
-      label: Intl.formatMessage(shared.intl, Messages.title),
-      disabled: Form.isSubmitting(model)
-    })}
-    {nest(model.article, TextareaField, {
-      label: Intl.formatMessage(shared.intl, Messages.article),
-      disabled: Form.isSubmitting(model)
-    })}
-    {nest(model.city, AutocompleteField, {
-      label: Intl.formatMessage(shared.intl, Messages.city),
-      disabled: Form.isSubmitting(model)
-    })}
-    {nest(model.category, SelectField, {
-      label: Intl.formatMessage(shared.intl, Messages.category),
-      disabled: Form.isSubmitting(model),
-      options: [
+    <InputField
+      model={model.title}
+      label={Messages.title}
+    />
+    <TextareaField
+      model={model.article}
+      label={Messages.article}
+    />
+    <AutocompleteField
+      model={model.city}
+      label={Messages.city}
+    />
+    <SelectField
+      model={model.category}
+      label={Messages.category}
+      options={[
         { value: "1", title: "World" },
         { value: "2", title: "Politics" },
         { value: "3", title: "Sport" }
-      ]
-    })}
-    {nest(model.tags, TagsField, {
-      label: Intl.formatMessage(shared.intl, Messages.tags),
-      disabled: Form.isSubmitting(model)
-    })}
+      ]}
+    />
+    <TagsField
+      model={model.tags}
+      label={Messages.tags}
+    />
     <button disabled={Form.isSubmitting(model)}>Submit</button>
-    <a onClick={exec(Logic.ResetForm())}>Reset</a>
+    <a onClick={Logic.ResetForm}>Reset</a>
     <br />
   </form>;

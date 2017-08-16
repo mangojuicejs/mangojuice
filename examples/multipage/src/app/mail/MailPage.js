@@ -1,41 +1,41 @@
-// @flow
-import type { LogicObj, ViewFn } from "@mangojuice/core/types";
-import type { Model as SharedModel } from "src/shared/Main";
 import React from "react";
-import { Cmd } from "@mangojuice/core";
+import { Cmd } from "mangojuice-core";
 import { MailRoutes } from "src/routes";
-import * as Intl from "@mangojuice/core/blocks/Intl";
-import * as Router from "@mangojuice/core/blocks/Router";
-import * as Inbox from "@mangojuice/core/lazy!./Inbox";
-import * as Sent from "@mangojuice/core/lazy!./Sent";
+import * as Intl from "mangojuice-intl";
+import * as Router from "mangojuice-router";
+import * as Inbox from "mangojuice-lazy/loader!./Inbox";
+import * as Sent from "mangojuice-lazy/loader!./Sent";
+
 
 // Model
 export type Model = {
   inbox: Inbox.Model,
   sent: Sent.Model
 };
-
 export const createModel = (): Model => ({
   inbox: Inbox.createModel(),
   sent: Sent.createModel()
 });
 
+
 // Logic
-export const Logic: LogicObj<Model, SharedModel> = {
+export const Logic = {
   name: "MailPage",
 
   config({ nest }) {
     return {
       children: {
-        inbox: nest(null, Inbox.Logic),
-        sent: nest(null, Sent.Logic)
+        inbox: nest(Inbox.Logic),
+        sent: nest(Sent.Logic)
       }
     };
   },
 
   @Cmd.batch
   OpenLatestBox({ shared }) {
-    return MailRoutes.Inbox({ box: shared.route.params.box || 0 });
+    return MailRoutes.Inbox({
+      box: shared.route.params.box || 0
+    });
   },
 
   @Cmd.batch
@@ -50,31 +50,22 @@ export const Messages = {
   sent: "MAIL.SENT_TITLE"
 };
 
-export const View: ViewFn<Model, SharedModel> = ({
-  model,
-  shared,
-  nest,
-  exec
-}) =>
+export const View = ({ model, shared }) =>
   <div>
     <ul>
       <li>
-        <a onClick={exec(Logic.OpenLatestBox())}>
+        <a onClick={Logic.OpenLatestBox}>
           {Intl.formatMessage(shared.intl, Messages.inbox)}
           {Router.isActive(shared.route, MailRoutes.Inbox) && " <---"}
         </a>
       </li>
       <li>
-        <a onClick={exec(Logic.OpenSent())}>
+        <a onClick={Logic.OpenSent}>
           {Intl.formatMessage(shared.intl, Messages.sent)}
           {Router.isActive(shared.route, MailRoutes.Sent) && " <---"}
         </a>
       </li>
     </ul>
-    {Router.whenRoute(shared.route, MailRoutes.Inbox, () =>
-      nest(model.inbox, Inbox.View)
-    )}
-    {Router.whenRoute(shared.route, MailRoutes.Sent, () =>
-      nest(model.sent, Sent.View)
-    )}
-  </div>;
+    {Router.isActive(shared.route, MailRoutes.Inbox) && <Inbox.View model={model.inbox} />}
+    {Router.isActive(shared.route, MailRoutes.Sent) && <Sent.View model={model.sent} />}
+  </div>

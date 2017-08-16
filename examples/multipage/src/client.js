@@ -1,13 +1,13 @@
-import { Run, Cmd, Utils } from "@mangojuice/core";
-import ReactServerMounter from "@mangojuice/core/mounters/react/server";
-import ReactMounter from "@mangojuice/core/mounters/react";
+import { Run, Cmd, Utils } from "mangojuice-core";
+import ReactMounter from "mangojuice-react";
+import ReactServerMounter from "mangojuice-react/server";
 import * as App from "./app/AppPage";
 import * as Shared from "./shared/Main";
-import simpleLogger from "@mangojuice/core/logger/simpleLogger";
+import { SimpleStackLogger } from "mangojuice-core";
 
 // REGULAR RENDERING FROM SCRATCH
 let { restart } = Run.mount({
-  logger: simpleLogger(),
+  logger: SimpleStackLogger,
   mounter: new ReactMounter("#content"),
   app: App,
   shared: Shared

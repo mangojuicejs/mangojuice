@@ -498,7 +498,7 @@ export class Process {
     model,
     handlerCmd: null,
     handler(handler) {
-      this.handlerCmd = handler;
+      this.handlerCmd = ensureCmdObject(handler);
       return this;
     },
   });
@@ -513,7 +513,7 @@ export class Process {
    * @return {Process}
    */
   handler(handler) {
-    this.execHandler = handler;
+    this.execHandler = ensureCmdObject(handler);
     return this;
   }
 

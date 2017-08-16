@@ -1,28 +1,26 @@
-// @flow
-import type { LogicObj, ViewFn } from "@mangojuice/core/types";
-import type { Model as SharedModel } from "src/shared/Main";
 import React from "react";
-import { Cmd } from "@mangojuice/core";
-import * as Intl from "@mangojuice/core/blocks/Intl";
+import { Cmd } from "mangojuice-core";
+import * as Intl from "mangojuice-intl";
+
 
 // Model
 export type Model = {
   title: string,
   text: string
 };
-
 export const createModel = (letter: Model): Model => ({
   title: letter.title,
   text: letter.text
 });
 
+
 // Logic
-export const Logic: LogicObj<Model, SharedModel> = {
+export const Logic = {
   name: "Letter",
 
   config({ shared, subscribe }) {
     return {
-      subscriptions: subscribe(this.SubSmth(), shared.intl)
+      subscriptions: subscribe(shared.intl).handler(this.SubSmth)
     };
   },
 
@@ -30,9 +28,11 @@ export const Logic: LogicObj<Model, SharedModel> = {
     destroy.then(() => console.log("port destroyed"));
   },
 
-  @Cmd.nope Delete() {},
+  @Cmd.nope
+  Delete() {},
 
-  @Cmd.nope SubSmth() {}
+  @Cmd.nope
+  SubSmth() {}
 };
 
 // View
@@ -40,12 +40,7 @@ export const Messages = {
   delete: "MAIL.LETTER.DELETE"
 };
 
-export const View: ViewFn<Model, SharedModel> = ({
-  model,
-  shared,
-  nest,
-  exec
-}) =>
+export const View = ({ model, shared }) =>
   <div>
     <h3>
       {model.title}
@@ -53,10 +48,11 @@ export const View: ViewFn<Model, SharedModel> = ({
     <p>
       {model.text}
     </p>
-    {shared.user.authorized &&
+    {shared.user.authorized && (
       <div>
-        <button onClick={exec(Logic.Delete())}>
+        <button onClick={Logic.Delete}>
           {Intl.formatMessage(shared.intl, Messages.delete)}
         </button>
-      </div>}
+      </div>
+    )}
   </div>;

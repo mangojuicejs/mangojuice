@@ -1,6 +1,4 @@
-// @flow
-import type { LogicObj } from "@mangojuice/core/types";
-import { Cmd } from "@mangojuice/core";
+import { Cmd } from "mangojuice-core";
 
 // Model
 export type Model = {
@@ -14,7 +12,7 @@ export const createModel = (): Model => ({
 });
 
 // Logic
-export const Logic: LogicObj<Model, any> = {
+export const Logic = {
   name: "User",
 
   config() {

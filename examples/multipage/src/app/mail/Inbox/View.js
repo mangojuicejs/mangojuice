@@ -1,34 +1,27 @@
-// @flow
-import type { ViewFn } from "@mangojuice/core/types";
-import type { Model as SharedModel } from "src/shared/Main";
-import type { Model, Box } from "./Model";
 import React from "react";
-import * as Data from "@mangojuice/core/blocks/Data";
-import * as Intl from "@mangojuice/core/blocks/Intl";
-import * as Letter from "@mangojuice/core/lazy!../Letter";
+import * as Data from "mangojuice-data";
+import * as Intl from "mangojuice-intl";
+import * as Letter from "mangojuice-lazy/loader!../Letter";
 import { Logic } from "./Logic";
+
 
 export const Messages = {
   boxes: "MAIL.INBOX.BOXES_TITLE",
   letters: "MAIL.INBOX.LETTERS_TITLE"
 };
 
-export const BoxesList: ViewFn<Data.Model<Array<Box>>, SharedModel> = ({
-  model,
-  shared,
-  exec
-}) =>
+export const BoxesList = ({ model, shared }) =>
   <ul>
-    {Data.whenError(model, error =>
+    {Data.isError(model) && (
       <span>
         Error: {error}
       </span>
     )}
-    {Data.whenLoading(model, () => <span>Loading...</span>)}
+    {Data.isLoading(model) && <span>Loading...</span>}
     {Data.whenReady(model, list =>
       list.map(box =>
         <li key={box.id}>
-          <a onClick={exec(Logic.OpenBox(box.id))}>
+          <a onClick={Logic.OpenBox(box.id)}>
             {box.title}
             {shared.route.params.box === box.id && " <---"}
           </a>
@@ -37,45 +30,37 @@ export const BoxesList: ViewFn<Data.Model<Array<Box>>, SharedModel> = ({
     )}
   </ul>;
 
-export const LettersList: ViewFn<
-  Data.Model<Array<Letter.Model>>,
-  SharedModel
-> = ({ model, nest, exec }) =>
+export const LettersList = ({ model, nest }) =>
   <div>
     <div>
       <input
         id="search-letters"
         placeholder="Search..."
         value={model.query}
-        onChange={exec(Data.Logic.Search())}
+        onChange={Data.Logic.Search}
       />
     </div>
-    {Data.whenError(model, error =>
+    {Data.isError(model) && (
       <span>
         Error: {error}
       </span>
     )}
-    {Data.whenLoading(model, () => <span>Loading...</span>)}
-    {Data.whenReady(model, data => data.map(l => nest(l, Letter.View)))}
+    {Data.isLoading(model) && <span>Loading...</span>}
+    {Data.whenReady(model, data => data.map(l => <Letter.View model={l} />))}
   </div>;
 
-export const View: ViewFn<Model, SharedModel> = ({
-  model,
-  shared,
-  nest,
-  exec
-}) =>
+export const View = ({ model, shared }) =>
   <div>
     <div>
       <h1>
         {Intl.formatMessage(shared.intl, Messages.boxes)}
       </h1>
-      {nest(model.boxes, BoxesList)}
+      <BoxesList model={model.boxes} />
     </div>
     <div>
       <h2>
         {Intl.formatMessage(shared.intl, Messages.letters)}
       </h2>
-      {nest(model.letters, LettersList)}
+      <LettersList model={model.letters} />
     </div>
   </div>;

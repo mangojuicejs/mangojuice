@@ -1,16 +1,13 @@
-// @flow
-import type { LogicObj, ViewFn } from "@mangojuice/core/types";
-import type { Model as SharedModel } from "src/shared/Main";
 import React from "react";
-import { Cmd, Utils, Task } from "@mangojuice/core";
+import { Cmd, Utils, Task } from "mangojuice-core";
 import { Routes, MailRoutes } from "src/routes";
-import { formatMessage } from "utils/format";
-import * as Router from "@mangojuice/core/blocks/Router";
+import * as Intl from "mangojuice-intl";
+import * as Router from "mangojuice-router";
 import * as User from "src/shared/User";
-import * as News from "@mangojuice/core/lazy!./news/NewsPage";
-import * as Mail from "@mangojuice/core/lazy!./mail/MailPage";
-import * as Letter from "@mangojuice/core/lazy!./mail/Letter";
-import * as LoginLightbox from "@mangojuice/core/lazy!./lightboxes/Login";
+import * as News from "mangojuice-lazy/loader!./news/NewsPage";
+import * as Mail from "mangojuice-lazy/loader!./mail/MailPage";
+import * as Letter from "mangojuice-lazy/loader!./mail/Letter";
+import * as LoginLightbox from "mangojuice-lazy/loader!./lightboxes/Login";
 
 // Model
 export type Model = {
@@ -27,16 +24,17 @@ export const createModel = () => ({
   notification: ""
 });
 
+
 // Logic
-export const Logic: LogicObj<Model, SharedModel> = {
+export const Logic = {
   name: "AppPage",
 
   config({ nest }) {
     return {
       children: {
-        mail: nest(this.HandleMail(), Mail.Logic),
-        news: nest(null, News.Logic),
-        login: nest(null, LoginLightbox.Logic)
+        mail: nest(Mail.Logic).handler(this.HandleMail),
+        news: nest(News.Logic),
+        login: nest(LoginLightbox.Logic)
       }
     };
   },
@@ -48,8 +46,8 @@ export const Logic: LogicObj<Model, SharedModel> = {
 
   @Cmd.execLatest
   DelayHideNotification() {
-    return Task.create(function*() {
-      yield Task.call(Utils.delay, 3000);
+    return Task.create(async function() {
+      await this.call(Task.delay, 3000);
     }).success(this.SetNotificationMsg(""));
   },
 
@@ -64,7 +62,7 @@ export const Logic: LogicObj<Model, SharedModel> = {
     console.log(JSON.stringify(shared, null, 2));
   },
 
-  @Cmd.handle
+  @Cmd.batch
   HandleMail(ctx, cmd) {
     if (cmd.is(Letter.Logic.Delete)) {
       return this.ShowNotification(Messages.letterRemoved);
@@ -100,49 +98,41 @@ export const Messages = {
   mail: "MAIL.TITLE"
 };
 
-export const View: ViewFn<Model, SharedModel> = ({
-  model,
-  shared,
-  nest,
-  exec
-}) =>
+export const View = ({ model, shared }) =>
   shared.intl.loaded &&
   <div>
-    {!!model.notification &&
+    {!!model.notification && (
       <h1>
-        {formatMessage(shared.intl, model.notification)}
-      </h1>}
+        {Intl.formatMessage(shared.intl, model.notification)}
+      </h1>
+    )}
     <h1>
-      {formatMessage(shared.intl, Messages.title)}
+      {Intl.formatMessage(shared.intl, Messages.title)}
     </h1>
     <div>
-      <button onClick={exec(Logic.ChangeLocale("ru"))}>Ru</button>
-      <button onClick={exec(Logic.ChangeLocale("en"))}>En</button>
+      <button onClick={Logic.ChangeLocale("ru")}>Ru</button>
+      <button onClick={Logic.ChangeLocale("en")}>En</button>
     </div>
     <ul>
       <li>
-        <a onClick={exec(Logic.OpenInbox())}>
-          {formatMessage(shared.intl, Messages.mail)}
+        <a onClick={Logic.OpenInbox}>
+          {Intl.formatMessage(shared.intl, Messages.mail)}
           {Router.isActive(shared.route, Routes.Mail) && " <---"}
         </a>
       </li>
       <li>
-        <a onClick={exec(Logic.OpenNews())}>
-          {formatMessage(shared.intl, Messages.news)}
+        <a onClick={Logic.OpenNews}>
+          {Intl.formatMessage(shared.intl, Messages.news)}
           {Router.isActive(shared.route, Routes.News) && " <---"}
         </a>
       </li>
     </ul>
-    {Router.whenRoute(shared.route, Routes.Mail, () =>
-      nest(model.mail, Mail.View)
-    )}
-    {Router.whenRoute(shared.route, Routes.News, () =>
-      nest(model.news, News.View)
-    )}
-    {Router.whenNotFound(shared.route, () => <span>Page not found :(</span>)}
-    {shared.route.query.auth && nest(model.login, LoginLightbox.View)}
+    {Router.isActive(shared.route, Routes.Mail) && <Mail.View model={model.mail} />}
+    {Router.isActive(shared.route, Routes.News) && <News.View model={model.news} />}
+    {Router.isNotFound(shared.route) && <span>Page not found :(</span>}
+    {shared.route.query.auth && <LoginLightbox.View model={model.login} />}
     <div>
-      <button onClick={exec(Logic.OpenLogin())}>Open Login</button>
-      <button onClick={exec(Logic.LogModel())}>Log model</button>
+      <button onClick={Logic.OpenLogin}>Open Login</button>
+      <button onClick={Logic.LogModel}>Log model</button>
     </div>
   </div>;

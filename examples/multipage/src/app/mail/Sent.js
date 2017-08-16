@@ -1,11 +1,8 @@
-// @flow
-import type { LogicObj, ViewFn } from "@mangojuice/core/types";
-import type { Model as SharedModel } from "src/shared/Main";
 import React from "react";
-import { Cmd } from "@mangojuice/core";
+import { Cmd } from "mangojuice-core";
 import { MailRoutes } from "src/routes";
-import * as Intl from "@mangojuice/core/blocks/Intl";
-import * as Router from "@mangojuice/core/blocks/Router";
+import * as Intl from "mangojuice-intl";
+import * as Router from "mangojuice-router";
 
 // Model
 export type Model = {
@@ -17,12 +14,12 @@ export const createModel = (): Model => ({
 });
 
 // Logic
-export const Logic: LogicObj<Model, SharedModel> = {
+export const Logic = {
   name: "Sent",
 
   config({ subscribe, shared }) {
     return {
-      subs: subscribe(this.HandlerRouter(), shared.route)
+      subs: subscribe(shared.route).handler(this.HandlerRouter)
     };
   },
 
@@ -41,7 +38,7 @@ export const Messages = {
   for: "MAIL.SENT.FOR"
 };
 
-export const View: ViewFn<Model, SharedModel> = ({ model, shared }) =>
+export const View = ({ model, shared }) =>
   <div>
     <h2>
       {Intl.formatMessage(shared.intl, Messages.for, shared.user.name)}
