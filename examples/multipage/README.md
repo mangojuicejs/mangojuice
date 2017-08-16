@@ -9,6 +9,10 @@ The aim of this example to show how real app can be implemented with MangoJuice.
 4. i18n integration with hot language changer
 5. Async operations example.
 6. Big Block decomposition example
+7. Example how to work with form (with validation, autocomplete, tags)
+8. Code splitting with `mangojuice-lazy`
+9. Sort of server rendering
+10. Commands handling, subscriptions
 
 ## How to run
 From root of the repo...
