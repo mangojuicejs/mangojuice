@@ -19,7 +19,7 @@ module.exports = {
   },
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
   moduleNameMapper: {
-    "^mangojuice-core$": "<rootDir>/packages/mangojuice-core/src",
+    "^mangojuice-core": "<rootDir>/packages/mangojuice-core/src",
     "^mangojuice-data": "<rootDir>/packages/mangojuice-data/src",
     "^mangojuice-form": "<rootDir>/packages/mangojuice-form/src",
     "^mangojuice-intl": "<rootDir>/packages/mangojuice-intl/src",
@@ -48,8 +48,7 @@ module.exports = {
     "<rootDir>/packages/*/__tests__/**/*spec.browser.ts?(x)"
   ],
   transform: {
-    "^.+\\.jsx?$": "babel-jest",
-    "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    "^.+\\.jsx?$": "babel-jest"
   },
   transformIgnorePatterns: ["<rootDir>/node_modules/(?!lodash-es)"]
 };

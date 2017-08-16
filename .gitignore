@@ -1,5 +1,6 @@
 .idea
 .vscode
+.npmrc
 
 .DS_Store
 .rpt2_cache*

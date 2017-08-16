@@ -1,6 +1,6 @@
 {
   "name": "mangojuice-form",
-  "version": "0.1.2-beta.1",
+  "version": "0.1.7-beta2",
   "description": "",
   "author": {
     "name": "Artem Artemev",
@@ -14,14 +14,14 @@
   "license": "MIT",
   "main": "index.js",
   "rollup": {
-    "moduleName": "Mjs.Form",
+    "moduleName": "Mjs.Dom",
     "bundledDependencies": [],
     "moduleGlobals": {
       "mangojuice": "Mjs"
     }
   },
   "dependencies": {
-    "mangojuice-core": "0.1.0-0",
-    "mangojuice-data": "0.1.2-beta.1"
+    "mangojuice-core": "0.1.7-beta2",
+    "mangojuice-data": "0.1.7-beta2"
   }
 }

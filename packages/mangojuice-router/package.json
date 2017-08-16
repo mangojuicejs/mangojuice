@@ -1,6 +1,6 @@
 {
   "name": "mangojuice-router",
-  "version": "0.1.2-beta.1",
+  "version": "0.1.7-beta2",
   "description": "",
   "author": {
     "name": "Artem Artemev",
@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "history": "4.4.0",
-    "mangojuice-core": "0.1.0-0",
+    "mangojuice-core": "0.1.7-beta2",
     "qs": "6.3.0",
     "url-pattern": "1.0.3"
   }

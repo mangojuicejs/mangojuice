@@ -1,6 +1,6 @@
-import { Task } from "mangojuice-core";
+import * as Process from "mangojuice-core/Process";
 
-describe("Task", () => {
+describe("Process", () => {
   describe("CancellationToken", () => {
     it("should work", () => {});
   });

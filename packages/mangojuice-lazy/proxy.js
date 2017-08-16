@@ -6,7 +6,7 @@ module.exports = function(options) {
         // Find import of lazy block
         if (
           t.isStringLiteral(p.node.source) &&
-          p.node.source.value.startsWith("mangojuice-lazy!") &&
+          p.node.source.value.startsWith("mangojuice-lazy/loader!") &&
           p.node.specifiers.length === 1 &&
           t.isImportNamespaceSpecifier(p.node.specifiers[0])
         ) {
@@ -46,10 +46,16 @@ module.exports = function(options) {
           var progPath = p.findParent(function(pp) {
             return pp.isProgram();
           });
+
           progPath.pushContainer(
             "body",
             t.importDeclaration(
-              [t.importDefaultSpecifier(t.identifier("getLazyCommand"))],
+              [
+                t.importSpecifier(
+                  t.identifier("getLazyCommand"),
+                  t.identifier("getLazyCommand")
+                )
+              ],
               t.stringLiteral("mangojuice-lazy")
             )
           );

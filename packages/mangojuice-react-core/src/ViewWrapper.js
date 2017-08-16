@@ -1,8 +1,11 @@
-import { Cmd, MODEL_UPDATED_EVENT } from "mangojuice-core";
+import { Cmd, Utils, MODEL_UPDATED_EVENT } from "mangojuice-core";
 import ViewPortCreator from "./ViewPort";
+import ViewInContextCreator from "./ViewInContext";
+
 
 export default reactImpl => {
   const ViewPort = ViewPortCreator(reactImpl);
+  const ViewInContext = ViewInContextCreator(reactImpl);
   const { Component, createElement } = reactImpl;
 
   class ViewWrapper extends Component {
@@ -10,15 +13,13 @@ export default reactImpl => {
     prevExecsMap = {};
 
     componentDidMount() {
-      const { proc } = this.props;
       this.unmounted = false;
-      proc.addListener(MODEL_UPDATED_EVENT, this.updateView);
+      this.props.proc.addListener(MODEL_UPDATED_EVENT, this.updateView);
     }
 
     componentWillUnmount() {
-      const { proc } = this.props;
       this.unmounted = true;
-      proc.removeListener(MODEL_UPDATED_EVENT, this.updateView);
+      this.props.proc.removeListener(MODEL_UPDATED_EVENT, this.updateView);
     }
 
     componentDidUpdate() {
@@ -42,7 +43,10 @@ export default reactImpl => {
       this.execsMap[cmdHash] =
         this.prevExecsMap[cmdHash] ||
         ((...args) => {
-          this.props.proc.exec(Cmd.appendArgs(cmd.clone(), args));
+          const callCmd = !Utils.is.func(cmd)
+            ? Cmd.appendArgs(Utils.ensureCmdObject(cmd).clone(), args)
+            : cmd(...args);
+          this.props.proc.exec(callCmd);
         });
       return this.execsMap[cmdHash];
     };
@@ -56,11 +60,20 @@ export default reactImpl => {
         View,
         proc: { model, sharedModel: shared },
         nest,
-        props
+        props,
+        children
       } = this.props;
-      const nestProps = { model, shared, nest, props, exec: this.execCommand };
+      const nestProps = {
+        ...props,
+        model,
+        shared,
+        nest,
+        exec: this.execCommand
+      };
       nestProps.all = nestProps;
-      return createElement(View, nestProps);
+      return createElement(ViewInContext, nestProps,
+        createElement(View, nestProps, children)
+      );
     }
 
     render() {

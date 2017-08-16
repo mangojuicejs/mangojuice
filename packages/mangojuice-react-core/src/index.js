@@ -1,2 +1,4 @@
 import ReactMounter from "./ReactMounter";
-export default ReactMounter;
+import { getContext } from "./ViewRenderContext";
+import ViewInContext from "./ViewInContext";
+export default { ReactMounter, getContext, ViewInContext };

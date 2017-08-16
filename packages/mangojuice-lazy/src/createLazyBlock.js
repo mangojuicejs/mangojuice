@@ -89,6 +89,7 @@ export function createLazyLogic(resolver) {
     name: "",
     port: () => {},
     config: (...args) => ({ __args: args }),
+    computed: () => {},
     __get: commandsProxy.get
   };
 

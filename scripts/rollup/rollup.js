@@ -7,11 +7,17 @@ const cwd = process.cwd();
 const pkgJSON = require(join(cwd, "package.json"));
 
 module.exports = function(options) {
-  const { version, rollup: rollupConfig = {}, dependencies = {} } = pkgJSON;
+  const {
+    version,
+    rollup: rollupConfig = {},
+    dependencies = {},
+    peerDependencies = {}
+  } = pkgJSON;
 
-  const external = Object.keys(dependencies || {}).filter(
-    n => !(rollupConfig.bundledDependencies || []).includes(n)
-  );
+  const external = Object.keys(dependencies || {})
+    .filter(n => !(rollupConfig.bundledDependencies || []).includes(n))
+    .concat(Object.keys(peerDependencies || {}));
+
   const plugins = createPlugins(version, options);
 
   return rollup({

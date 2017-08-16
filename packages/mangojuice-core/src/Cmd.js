@@ -1,4 +1,4 @@
-import { nextId, is, maybeForEach } from "./Utils";
+import { nextId, is, maybeForEach, ensureCmdObject } from "./Utils";
 import * as Task from "./Task";
 
 // Utils
@@ -20,8 +20,10 @@ export function createCommand(name, func, exec, opts) {
         this._model = modelObj;
         return this;
       },
-      is(cmd) {
-        return cmd && (this.id === cmd.id || this.name === cmd);
+      is(cmd, model) {
+        return cmd &&
+          (this.id === cmd.id || this.name === cmd) &&
+          (!model || this._model === model);
       },
       clone() {
         return Object.assign({}, this);
@@ -35,11 +37,13 @@ export function createCommand(name, func, exec, opts) {
 }
 
 export function appendArgs(cmd, args) {
+  cmd = ensureCmdObject(cmd);
   cmd.args = cmd.args.concat(args);
   return cmd;
 }
 
 export function setContext(cmd, ctx) {
+  cmd = ensureCmdObject(cmd);
   cmd.context = ctx;
   cmd.name = getCommandName(cmd.funcName, ctx);
   return cmd;
@@ -47,8 +51,13 @@ export function setContext(cmd, ctx) {
 
 export function hash(cmd) {
   // TODO optimize for primitives
-  const argsHash = cmd.args.length > 0 ? JSON.stringify(cmd.args) : "";
-  return `${cmd.id}${argsHash}`;
+  if (is.func(cmd)) {
+    return `${cmd.id}`;
+  } else {
+    cmd = ensureCmdObject(cmd);
+    const argsHash = cmd.args.length > 0 ? JSON.stringify(cmd.args) : "";
+    return `${cmd.id}${argsHash}`;
+  }
 }
 
 export function getCommandName(funcName, ctx) {

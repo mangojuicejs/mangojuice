@@ -5,7 +5,9 @@ import {
   is,
   maybeMap,
   maybeForEach,
-  emptyArray
+  emptyArray,
+  ensureCmdObject,
+  memoize
 } from "./Utils";
 
 // Constants
@@ -16,17 +18,6 @@ export const CHILD_MODEL_UPDATED_EVENT = "childUpdated";
 export const createContext = () => ({
   bindings: {}
 });
-export const ensureCmdObject = cmd => {
-  if (!cmd) return null;
-  if (!cmd.isCmd) {
-    if (cmd.id && is.func(cmd)) {
-      return cmd();
-    } else {
-      throw new Error("You passed something weird instead of cmd");
-    }
-  }
-  return cmd;
-};
 
 /**
  * Process class for executing logic on a model
@@ -60,6 +51,7 @@ export class Process {
   bind(model) {
     this.prepareConfig();
     this.bindModel(model);
+    this.bindComputed();
     this.bindCommands();
     this.bindChildren();
   }
@@ -126,6 +118,22 @@ export class Process {
     }
   }
 
+  bindComputed() {
+    if (!this.logic.computed) return;
+    const computedFields = this.logic.computed(this.execProps);
+    if (computedFields) {
+      this.computedFields = maybeMap(Object.keys(computedFields), k => {
+        const get = memoize(computedFields[k]);
+        Object.defineProperty(this.model, k, {
+          configurable: true,
+          set: () => {},
+          get
+        });
+        return get;
+      });
+    }
+  }
+
   bindModel(model) {
     this.model = model;
     this.execProps = {
@@ -159,26 +167,6 @@ export class Process {
     this.stopSubscriptions();
     this.subscriptions = [];
 
-    const doSubscribe = ({
-      model,
-      handler,
-      initRun = true,
-      subEvent = MODEL_UPDATED_EVENT
-    }) => {
-      const proc = model.__proc;
-      const subHandler = cmd => {
-        if (handler) {
-          this.exec(Cmd.appendArgs(handler.clone(), [cmd, model]));
-        } else {
-          this.emit(MODEL_UPDATED_EVENT, cmd);
-        }
-      };
-      const subStopper = () => proc.removeListener(subEvent, subHandler);
-      proc.addListener(subEvent, subHandler);
-      this.subscriptions.push(subStopper);
-      return initRun && subHandler(Cmd.defaultNopeCmd());
-    };
-
     // Reflect to any update of the shared model if this behaviour
     // is not disabled by `manualSharedSubscribe` config field.
     if (
@@ -186,7 +174,7 @@ export class Process {
       this.sharedModel !== this.rootProc.model &&
       !this.config.manualSharedSubscribe
     ) {
-      doSubscribe({
+      this.doSubscribe({
         model: this.sharedModel,
         handler: null,
         initRun: false,
@@ -197,8 +185,34 @@ export class Process {
     // Reflect to changes of specific shared sub-model by
     // given subscriptions array in the config
     if (this.config.subscriptions) {
-      return Promise.all(maybeMap(this.config.subscriptions, doSubscribe));
+      return Promise.all(maybeMap(this.config.subscriptions, this.doSubscribe));
     }
+  }
+
+  doSubscribe = ({
+    model,
+    handler,
+    initRun = true,
+    subEvent = MODEL_UPDATED_EVENT
+  }) => {
+    const proc = model.__proc;
+    const subHandler = cmd => {
+      const resPromise = createResultPromise();
+      if (handler) {
+        resPromise.add(
+          this.exec(Cmd.appendArgs(handler.clone(), [cmd, model]))
+        );
+      }
+      if (!handler || this.config.manualSharedSubscribe) {
+        this.resetComputedFields();
+        resPromise.add(this.emit(MODEL_UPDATED_EVENT, cmd));
+      }
+      return resPromise.get();
+    };
+    const subStopper = () => proc.removeListener(subEvent, subHandler);
+    proc.addListener(subEvent, subHandler);
+    this.subscriptions.push(subStopper);
+    return initRun && subHandler(Cmd.defaultNopeCmd());
   }
 
   runPorts() {
@@ -235,13 +249,17 @@ export class Process {
     }
   }
 
+  resetComputedFields() {
+    maybeForEach(this.computedFields, f => f.reset());
+  }
+
   destroy(deep = true) {
+    delete this.model.__proc;
     this.stopSubscriptions();
     this.stopPorts();
     if (deep) {
       this.mapChildren(this.model, x => x.__proc.destroy(true));
     }
-    delete this.model.__proc;
   }
 
   addListener(event, listener) {
@@ -299,15 +317,20 @@ export class Process {
     const tick = nextId();
     const updateKeys = Object.keys(updateObj);
     const updateMarker = (x, k) => {
-      if (this.bindChild(x, k)) x.__proc.run();
+      if (this.bindChild(x, k)) {
+        x.__proc.run();
+      }
       x.__proc.tick = tick;
     };
     const unmarkedDestroyer = x => {
-      if (x.__proc.tick !== tick) x.__proc.destroy();
+      if (x.__proc.tick !== tick) {
+        x.__proc.destroy();
+      }
     };
 
     this.mapChildren(updateObj, updateMarker);
     this.mapChildren(this.model, unmarkedDestroyer, updateKeys);
+    this.resetComputedFields();
     Object.assign(this.model, updateObj);
     return true;
   }
@@ -330,7 +353,7 @@ export class Process {
     this.logger.onStartHandling(cmd, this.model, isBefore);
     const resPromise = createResultPromise();
     maybeForEach(this.execHandlers, ({ handler, proc }) => {
-      const handlerCmd = Cmd.appendArgs(handler.clone(), [cmd, model]);
+      const handlerCmd = Cmd.appendArgs(handler.clone(), [cmd, model, isBefore]);
       handlerCmd.isHandler = true;
       const execRes = proc.exec(handlerCmd);
       resPromise.add(execRes);
@@ -351,15 +374,16 @@ export class Process {
    * @return {Promise}
    */
   doExecCmd(cmd) {
+    cmd = Cmd.setContext(cmd, this.logic).model(this.model);
     this.logger.onStartExec(cmd, this.model);
 
     // Run before handlers
     const resPromise = createResultPromise();
     resPromise.add(this.handleCommand(this.model, cmd, true));
 
-    // Run the coomand
+    // Run the command
     let modelUpdated = false;
-    const result = Cmd.setContext(cmd, this.logic).exec(this.execProps);
+    const result = cmd.exec(this.execProps);
     if (result) {
       if (cmd.exec === Cmd.execBatch) {
         const batchRes = maybeMap(result, x => x.exec && this.exec(x));
@@ -380,7 +404,9 @@ export class Process {
     if (modelUpdated) {
       this.logger.onEmitSubscriptions(cmd, this.model);
       resPromise.add(this.emit(MODEL_UPDATED_EVENT, cmd));
-      resPromise.add(this.rootProc.emit(CHILD_MODEL_UPDATED_EVENT, cmd));
+      if (!this.config.disableRootUpdate) {
+        resPromise.add(this.rootProc.emit(CHILD_MODEL_UPDATED_EVENT, cmd));
+      }
     }
 
     // Move back id of the cmd (to make cmd object reusable)
@@ -454,7 +480,6 @@ export class Process {
       configArgs,
       logic
     });
-    proc.prepareConfig();
     return proc;
   };
 
