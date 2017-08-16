@@ -1,12 +1,9 @@
-// @flow
-import type { LogicObj, ViewFn } from "@mangojuice/core/types";
-import type { Model as SharedModel } from "src/shared/Main";
-import React from "react";
-import * as Router from "@mangojuice/core/blocks/Router";
-import * as Intl from "@mangojuice/core/blocks/Intl";
-import { Cmd } from "@mangojuice/core";
+import React from "mangojuice-react";
+import * as Router from "mangojuice-router";
+import * as Intl from "mangojuice-intl";
+import { Cmd } from "mangojuice-core";
 import { Routes } from "src/routes";
-import * as CreateForm from "@mangojuice/core/lazy!./CreateForm";
+import * as CreateForm from "mangojuice-lazy/loader!./CreateForm";
 
 // Model
 export type Model = {
@@ -19,15 +16,16 @@ export const createModel = (): Model => ({
   form: CreateForm.createModel()
 });
 
+
 // Logic
-export const Logic: LogicObj<Model, SharedModel> = {
+export const Logic = {
   name: "NewsPage",
 
   config({ subscribe, nest, shared }) {
     return {
-      subscriptions: subscribe(this.HandleRouter(), shared.route),
+      subscriptions: subscribe(shared.route).handler(this.HandleRouter),
       children: {
-        form: nest(this.HandleForm(), CreateForm.Logic)
+        form: nest(CreateForm.Logic).handler(this.HandleForm)
       }
     };
   },
@@ -37,7 +35,7 @@ export const Logic: LogicObj<Model, SharedModel> = {
     return { news: model.news.concat(article) };
   },
 
-  @Cmd.handle
+  @Cmd.batch
   HandleForm({ model }, cmd) {
     if (cmd.is(CreateForm.Logic.SubmitSuccess)) {
       return [
@@ -55,6 +53,7 @@ export const Logic: LogicObj<Model, SharedModel> = {
   }
 };
 
+
 // View
 export const Messages = {
   title: "NEWS.TITLE",
@@ -62,56 +61,48 @@ export const Messages = {
   newsList: "NEWS.LIST"
 };
 
-export const View: ViewFn<Model, SharedModel> = ({
-  model,
-  shared,
-  nest,
-  exec,
-  all
-}) =>
+export const View = ({ model, shared }) =>
   <div>
     <h1>
       {Intl.formatMessage(shared.intl, Messages.title)}
     </h1>
-    <FormView {...all} />
+    <FormView model={model} />
     <div>
       <h2>
         {Intl.formatMessage(shared.intl, Messages.newsList)}
       </h2>
     </div>
-    <div>
-      {model.news.map((a, i) =>
-        <div key={i}>
-          <h3>
-            [{a.category}] {a.title}
-          </h3>
-          <p>
-            {a.article}
-          </p>
-          <div>
-            {a.tags.map(t =>
-              <span>
-                {t},{" "}
-              </span>
-            )}
-          </div>
-          <div>
-            In {a.city.title}
-          </div>
-        </div>
-      )}
-    </div>
+    <NewsListView model={model} />
   </div>;
 
-export const FormView: ViewFn<Model, SharedModel> = ({
-  model,
-  shared,
-  nest,
-  exec
-}) =>
+export const NewsListView = ({ model, shared }) =>
+  <div>
+    {model.news.map((a, i) =>
+      <div key={i}>
+        <h3>
+          [{a.category}] {a.title}
+        </h3>
+        <p>
+          {a.article}
+        </p>
+        <div>
+          {a.tags.map((t, i) =>
+            <span key={i}>
+              {t},{" "}
+            </span>
+          )}
+        </div>
+        <div>
+          In {a.city.title}
+        </div>
+      </div>
+    )}
+  </div>
+
+export const FormView = ({ model, shared }) =>
   <div>
     <h2>
       {Intl.formatMessage(shared.intl, Messages.addArticle)}
     </h2>
-    {nest(model.form, CreateForm.View)}
+    <CreateForm.View model={model.form} />
   </div>;

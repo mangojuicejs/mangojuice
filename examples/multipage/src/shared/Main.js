@@ -1,8 +1,6 @@
-// @flow
-import type { LogicObj } from "@mangojuice/core/types";
-import { Cmd } from "@mangojuice/core";
-import * as Router from "@mangojuice/core/blocks/Router";
-import * as Intl from "@mangojuice/core/blocks/Intl";
+import { Cmd } from "mangojuice-core";
+import * as Router from "mangojuice-router";
+import * as Intl from "mangojuice-intl";
 import * as User from "./User";
 import * as routes from "src/routes";
 import languages from "src/languages";
@@ -20,17 +18,18 @@ export const createModel = (): Model => ({
   user: User.createModel()
 });
 
+
 // Logic
-export const Logic: LogicObj<Model, any> = {
+export const Logic = {
   name: "Shared",
 
   config({ nest }, request) {
     return {
       bindCommands: this,
       children: {
-        route: nest(null, Router.Logic, routes, request),
-        intl: nest(null, Intl.Logic, languages),
-        user: nest(null, User.Logic, request)
+        route: nest(Router.Logic).args(routes, request),
+        intl: nest(Intl.Logic).args(languages),
+        user: nest(User.Logic).args(request)
       }
     };
   }

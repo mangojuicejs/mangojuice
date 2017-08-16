@@ -12,7 +12,7 @@ export function findDomNodes(selector, attempts = 100, wait = 50) {
     const elems = Utils.querySelector(selector);
     if (!elems.length) {
       return this.call(Task.delay, wait).then(() => {
-        return this.call(findDomNodes, newAttempt, wait);
+        return this.call(findDomNodes, selector, newAttempt, wait);
       });
     } else {
       return elems;

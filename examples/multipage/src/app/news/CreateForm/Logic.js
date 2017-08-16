@@ -1,13 +1,10 @@
-// @flow
-import type { LogicObj } from "@mangojuice/core/types";
-import type { Model as SharedModel } from "src/shared/Main";
-import type { Model } from "./Model";
-import * as Field from "@mangojuice/core/blocks/Field";
+import { Cmd } from "mangojuice-core";
+import * as Dom from "mangojuice-dom";
+import { Form, Field } from "mangojuice-form";
 import * as Tasks from "./Tasks";
-import { Dom } from "@mangojuice/core";
-import * as Form from "@mangojuice/core/blocks/Form";
 
-export const Logic: LogicObj<Model, SharedModel> = {
+
+export const Logic = {
   ...Form.Logic,
   name: "CreateForm",
 
@@ -20,21 +17,21 @@ export const Logic: LogicObj<Model, SharedModel> = {
     return {
       ...formConfig,
       children: {
-        title: nest(this.HandleField(), Field.Logic, {
+        title: nest(Field.Logic).handler(this.HandleField).args({
           validator: x => (x.length < 10 ? "Title is too short" : ""),
           normalize: x => x.toUpperCase()
         }),
-        article: nest(this.HandleField(), Field.Logic, {
+        article: nest(Field.Logic).handler(this.HandleField).args({
           validator: x => (!x.length ? "Required" : "")
         }),
-        category: nest(this.HandleField(), Field.Logic, {
+        category: nest(Field.Logic).handler(this.HandleField).args({
           validator: x => (!x.length ? "Required" : "")
         }),
-        tags: nest(this.HandleField(), Field.Logic, {
+        tags: nest(Field.Logic).handler(this.HandleField).args({
           valueSep: ",",
           validator: x => (!x.length ? "Required" : "")
         }),
-        city: nest(this.HandleField(), Field.Logic, {
+        city: nest(Field.Logic).handler(this.HandleField).args({
           optionsGetter: Tasks.GetCitySuggestions,
           validator: x => {
             if (!x) {
@@ -48,5 +45,12 @@ export const Logic: LogicObj<Model, SharedModel> = {
     };
   },
 
-  @Dom.focus("#new-article-title") FocusForm() {}
+  @Dom.focus("#new-article-title")
+  FocusForm() {
+  },
+
+  @Cmd.batch
+  SubmitFailed(ctx, error) {
+    console.error(error)
+  }
 };

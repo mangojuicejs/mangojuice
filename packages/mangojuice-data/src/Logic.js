@@ -10,7 +10,7 @@ export const Logic = {
     return {
       meta: opts,
       children: opts.block
-        ? { rawData: nest(null, opts.block.Logic) }
+        ? { rawData: nest(opts.block.Logic) }
         : {}
     };
   },

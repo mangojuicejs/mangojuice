@@ -1,7 +1,8 @@
 var React = require("react");
 var ReactDOMServer = require("react-dom/server");
-var ReactMounterCreator = require("mangojuice-react-core");
+var ReactMounterCore = require("mangojuice-react-core");
 
+// React interface implementation
 var reactImpl = {
   Component: React.Component,
   createElement: React.createElement,
@@ -10,6 +11,12 @@ var reactImpl = {
     return ReactDOMServer.renderToString(elem);
   }
 };
+var Mounter = ReactMounterCore.ReactMounter(reactImpl);
+var createElement = ReactMounterCore.createElementWrapper(reactImpl);
 
-module.exports = ReactMounterCreator(reactImpl);
-module.exports.default = module.exports;
+// Export react with createElement overrided
+const toExport = Object.assign({}, React);
+toExport.Mounter = Mounter;
+toExport.createElement = createElement;
+module.exports = toExport
+module.exports.default = toExport;

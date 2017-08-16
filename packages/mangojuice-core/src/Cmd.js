@@ -9,13 +9,14 @@ export function createCommand(name, func, exec, opts) {
       exec,
       args,
       opts,
-      isCmd: true,
-      id: creator.id,
-      beforeId: creator.id,
+      id: creator.Before.id,
+      beforeId: creator.Before.id,
       afterId: creator.After.id,
+      isCmd: true,
       funcName: name,
       name: getCommandName(name, this),
       context: this,
+
       model(modelObj) {
         this._model = modelObj;
         return this;
@@ -30,9 +31,9 @@ export function createCommand(name, func, exec, opts) {
       }
     };
   };
-  creator.id = nextId();
-  creator.Before = { id: creator.id };
+  creator.Before = { id: nextId() };
   creator.After = { id: nextId() };
+  creator.id = creator.Before.id;
   return creator;
 }
 

@@ -1,4 +1,3 @@
 import ReactMounter from "./ReactMounter";
-import { getContext } from "./ViewRenderContext";
-import ViewInContext from "./ViewInContext";
-export default { ReactMounter, getContext, ViewInContext };
+import createElementWrapper from "./createElementWrapper";
+export default { ReactMounter, createElementWrapper };

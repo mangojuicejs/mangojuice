@@ -1,13 +1,7 @@
-// @flow
-import type { TaskFn } from "@mangojuice/core/types";
-import type { Model as SharedModel } from "src/shared/Main";
-import type { Model } from "./Model";
-import { Utils, Task } from "@mangojuice/core";
+import { Utils, Task } from "mangojuice-core";
 
-export const GetCitySuggestions: TaskFn<Model, SharedModel> = function*(
-  { model },
-  val
-) {
+
+export async function GetCitySuggestions({ model }, val) {
   return typeof val !== "string" || !val
     ? []
     : [
@@ -17,7 +11,7 @@ export const GetCitySuggestions: TaskFn<Model, SharedModel> = function*(
       ].filter(x => x.title.toLowerCase().indexOf(val.toLowerCase()) >= 0);
 };
 
-export const ValidateForm: TaskFn<Model, SharedModel> = function*({ model }) {
+export async function ValidateForm({ model }) {
   if (
     model.title.valid &&
     model.article.valid &&
@@ -31,10 +25,8 @@ export const ValidateForm: TaskFn<Model, SharedModel> = function*({ model }) {
   }
 };
 
-export const SubmitNewArticle: TaskFn<Model, SharedModel> = function*({
-  model
-}) {
-  yield Task.call(Utils.delay, 2000);
+export async function SubmitNewArticle({ model }) {
+  await this.call(Task.delay, 2000);
   return {
     title: model.title.value,
     article: model.article.value,

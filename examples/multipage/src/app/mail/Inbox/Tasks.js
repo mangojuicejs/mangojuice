@@ -1,28 +1,22 @@
-// @flow
-import type { TaskFn } from "@mangojuice/core/types";
-import type { Model as SharedModel } from "src/shared/Main";
-import type { Model, Box } from "./Model";
-import * as Data from "@mangojuice/core/blocks/Data";
-import * as Letter from "@mangojuice/core/lazy!../Letter";
-import { Utils, Task } from "@mangojuice/core";
+import * as Data from "mangojuice-data";
+import * as Letter from "mangojuice-lazy/loader!../Letter";
+import { Utils, Task } from "mangojuice-core";
 
-export const GetBoxesList: TaskFn<Model, SharedModel> = function*() {
-  yield Task.call(Utils.delay, 2000);
-  const data = yield Task.call(_getBoxesList);
+
+export async function GetBoxesList() {
+  await this.call(Task.delay, 2000);
+  const data = await this.call(_getBoxesList);
   return data;
 };
 
-export const GetBoxLetters: TaskFn<Model, SharedModel> = function*({ shared }) {
-  yield Task.call(Utils.delay, 2000);
-  const data = yield Task.call(_getMailsList, shared.route.params.box);
+export async function GetBoxLetters({ shared }) {
+  await this.call(Task.delay, 2000);
+  const data = await this.call(_getMailsList, shared.route.params.box);
   return data.map(l => Letter.createModel(l));
 };
 
-export const GetSearchLetters: TaskFn<
-  Data.Model<Letter.Model>,
-  SharedModel
-> = function*({ model }, data: Array<Letter.Model>) {
-  yield Task.call(Utils.delay, 300);
+export async function GetSearchLetters({ model }, data) {
+  await this.call(Task.delay, 300);
   return data.reduce((acc, x, i) => {
     if (
       !model.query ||

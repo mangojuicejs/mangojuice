@@ -22,13 +22,9 @@ module.exports = {
   },
 
   plugins: [
-    // new webpack.optimize.UglifyJsPlugin({
-    //   compress: { warnings: false },
-    //   sourceMap: true
-    // }),
     new webpack.HotModuleReplacementPlugin(),
     new webpack.LoaderOptionsPlugin({
-      splitBlocks: false
+      splitBlocks: true
     }),
     new HtmlWebpackPlugin({
       filename: "index.html",
@@ -40,14 +36,18 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
-        loader: "babel-loader",
-        include: [SOURCE_DIR],
-        exclude: [/node_modules/],
+        loader: require.resolve('babel-loader'),
+        include: [ SOURCE_DIR ],
+        exclude: [ /node_modules/ ],
         query: {
-          presets: ["es2015", "stage-0", "react"],
+          presets: [
+            [require.resolve('babel-preset-es2015'), { modules: false }],
+            require.resolve('babel-preset-stage-0'),
+            require.resolve('babel-preset-react')
+          ],
           plugins: [
-            "transform-decorators-legacy",
-            "@mangojuice/core/babel/proxy"
+            require.resolve('babel-plugin-transform-decorators-legacy'),
+            require.resolve('mangojuice-lazy/proxy')
           ]
         }
       }
@@ -55,11 +55,11 @@ module.exports = {
   },
 
   resolve: {
-    modules: ["node_modules", path.resolve(__dirname)]
-    // alias: {
-    //   'react': 'preact-compat/dist/preact-compat',
-    //   'react-dom': 'preact-compat/dist/preact-compat'
-    // }
+    modules: [
+      path.join(path.resolve(__dirname), "node_modules"),
+      path.resolve(__dirname),
+      path.join(__dirname, '..', '..', 'node_modules')
+    ]
   },
 
   devServer: {
