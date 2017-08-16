@@ -1,4 +1,4 @@
-import React from "react";
+import React from "mangojuice-react";
 import * as Router from "mangojuice-router";
 import * as Intl from "mangojuice-intl";
 import { Cmd } from "mangojuice-core";

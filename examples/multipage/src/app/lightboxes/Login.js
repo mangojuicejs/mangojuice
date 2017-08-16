@@ -1,4 +1,4 @@
-import React from "react";
+import React from "mangojuice-react";
 import LightboxMounter from "./mounter";
 import { Cmd } from "mangojuice-core";
 import * as User from "src/shared/User";

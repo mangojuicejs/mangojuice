@@ -1,4 +1,4 @@
-import React from "react";
+import React from "mangojuice-react";
 import { Cmd, Utils, Task } from "mangojuice-core";
 import { Routes, MailRoutes } from "src/routes";
 import * as Intl from "mangojuice-intl";

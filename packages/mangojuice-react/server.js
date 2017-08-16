@@ -11,10 +11,12 @@ var reactImpl = {
     return ReactDOMServer.renderToString(elem);
   }
 };
+var Mounter = ReactMounterCore.ReactMounter(reactImpl);
+var createElement = ReactMounterCore.createElementWrapper(reactImpl);
 
-// Patching createElement fuction to support
-// commands and command creators as a prop
-React.createElement = ReactMounterCore.createElementWrapper(reactImpl);
-
-module.exports = ReactMounterCore.ReactMounter(reactImpl);
-module.exports.default = module.exports;
+// Export react with createElement overrided
+const toExport = Object.assign({}, React);
+toExport.Mounter = Mounter;
+toExport.createElement = createElement;
+module.exports = toExport
+module.exports.default = toExport;

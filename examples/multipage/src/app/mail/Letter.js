@@ -1,4 +1,4 @@
-import React from "react";
+import React from "mangojuice-react";
 import { Cmd } from "mangojuice-core";
 import * as Intl from "mangojuice-intl";
 

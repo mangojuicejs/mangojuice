@@ -1,4 +1,4 @@
-import React from "react";
+import React from "mangojuice-react";
 import * as Data from "mangojuice-data";
 import * as Intl from "mangojuice-intl";
 import * as Letter from "mangojuice-lazy/loader!../Letter";

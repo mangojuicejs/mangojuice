@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { ReactMounter, createElementWrapper } from "mangojuice-react-core";
 
+
 // React interface implementation
 const reactImpl = {
   Component: React.Component,
@@ -9,9 +10,10 @@ const reactImpl = {
   unmountComponentAtNode: ReactDOM.unmountComponentAtNode,
   render: ReactDOM.render
 };
+const Mounter = ReactMounter(reactImpl);
+const createElement = createElementWrapper(reactImpl);
 
-// Patching createElement fuction to support
-// commands and command creators as a prop
-React.createElement = createElementWrapper(reactImpl);
-
-export default ReactMounter(reactImpl);
+// Export react with createElement overrided
+const toExport = { ...React, Mounter, createElement };
+module.exports = toExport
+module.exports.default = toExport;
