@@ -1,7 +1,5 @@
-// @flow
-import type { Model as DataModel } from "@mangojuice/core/blocks/Data";
-import type { Model as LetterModel } from "../Letter";
-import * as Data from "@mangojuice/core/blocks/Data";
+import * as Letter from "../Letter";
+import * as Data from "mangojuice-data";
 
 export type Box = {
   id: string,
@@ -9,8 +7,8 @@ export type Box = {
 };
 
 export type Model = {
-  boxes: DataModel<Array<Box>>,
-  letters: DataModel<Array<LetterModel>>
+  boxes: Data.Model<Array<Box>>,
+  letters: Data.Model<Array<Letter.Model>>
 };
 
 export const createModel = (): Model => ({

@@ -17,7 +17,7 @@ export const Logic = {
       meta,
       initCommands: this.InitField(),
       children: {
-        options: nest(this.HandleOption(), Data.Logic, {
+        options: nest(Data.Logic).handler(this.HandleOption).args({
           retreiver: meta.optionsGetter
         })
       }

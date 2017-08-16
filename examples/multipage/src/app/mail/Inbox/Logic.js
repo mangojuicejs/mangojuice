@@ -1,29 +1,27 @@
-// @flow
-import type { LogicObj } from "@mangojuice/core/types";
-import type { Model as SharedModel } from "src/shared/Main";
-import type { Model } from "./Model";
-import { Cmd, Dom } from "@mangojuice/core";
+import { Cmd } from "mangojuice-core";
 import { MailRoutes } from "src/routes";
-import * as Router from "@mangojuice/core/blocks/Router";
-import * as Data from "@mangojuice/core/blocks/Data";
-import * as Letter from "@mangojuice/core/lazy!../Letter";
+import * as Dom from "mangojuice-dom";
+import * as Router from "mangojuice-router";
+import * as Data from "mangojuice-data";
+import * as Letter from "mangojuice-lazy/loader!../Letter";
 import * as Tasks from "./Tasks";
+
 
 export const getLettersIdnt = ({ route }) => {
   return `${route.params.box}`;
 };
 
-export const Logic: LogicObj<Model, SharedModel> = {
+export const Logic = {
   name: "Inbox",
 
   config({ subscribe, nest, shared }) {
     return {
-      subscriptions: subscribe(this.HandleRouter(), shared.route),
+      subscriptions: subscribe(shared.route).handler(this.HandleRouter),
       children: {
-        boxes: nest(null, Data.Logic, {
+        boxes: nest(Data.Logic).args({
           retreiver: Tasks.GetBoxesList
         }),
-        letters: nest(this.HandleLetterData(), Data.Logic, {
+        letters: nest(Data.Logic).handler(this.HandleLetterData).args({
           retreiver: Tasks.GetBoxLetters,
           searcher: Tasks.GetSearchLetters,
           block: Letter
@@ -32,7 +30,7 @@ export const Logic: LogicObj<Model, SharedModel> = {
     };
   },
 
-  @Cmd.handle
+  @Cmd.batch
   HandleLetterData({ model }, cmd, cmdModel) {
     if (cmd.is(Letter.Logic.Delete)) {
       return Data.Logic.Filter(cmdModel).model(model.letters);
@@ -40,7 +38,7 @@ export const Logic: LogicObj<Model, SharedModel> = {
   },
 
   @Cmd.batch
-  HandleRouter({ shared, model }, route) {
+  HandleRouter({ shared, model }, cmd, route) {
     const result = [];
     if (Router.isActive(route, MailRoutes.Inbox)) {
       result.push(this.FocusSearchField());
@@ -58,7 +56,9 @@ export const Logic: LogicObj<Model, SharedModel> = {
     return result;
   },
 
-  @Dom.focus("#search-letters") FocusSearchField() {},
+  @Dom.focus("#search-letters")
+  FocusSearchField() {
+  },
 
   @Cmd.batch
   RetreiveBoxLetters({ shared, model }) {

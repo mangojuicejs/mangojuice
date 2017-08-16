@@ -1,5 +1,6 @@
 import { Utils, Cmd, Task, MODEL_UPDATED_EVENT } from "mangojuice-core";
 
+
 export function createBlockResolver(asyncRequire, lazyBlock) {
   let required = false;
   let resolvedBlock = null;
@@ -31,6 +32,8 @@ export function createBlockResolver(asyncRequire, lazyBlock) {
       const cmd = actualBlock.Logic[k];
       if (cmd && cmd.id) {
         actualBlock.Logic[k].id = lazyBlock.Logic[k].id;
+        actualBlock.Logic[k].Before = lazyBlock.Logic[k].Before;
+        actualBlock.Logic[k].After = lazyBlock.Logic[k].After;
       }
     });
     Object.assign(lazyBlock.Logic, actualBlock.Logic);

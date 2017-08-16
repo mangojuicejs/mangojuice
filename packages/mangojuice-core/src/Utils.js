@@ -12,6 +12,8 @@ export const is = {
     it && is.func(Symbol) ? is.func(it[Symbol.iterator]) : is.array(it)
 };
 
+export const noop = () => {};
+
 export const sym = id => `@@mangojuice/${id}`;
 
 export function autoInc(seed = 1) {

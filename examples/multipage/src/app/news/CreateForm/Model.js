@@ -1,6 +1,5 @@
-// @flow
-import * as Field from "@mangojuice/core/blocks/Field";
-import * as Form from "@mangojuice/core/blocks/Form";
+import { Form, Field } from "mangojuice-form";
+
 
 export type Model = Form.Model & {
   title: Field.Model<string>,
