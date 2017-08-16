@@ -33,7 +33,7 @@ For example, let's say you have a page with a very complicated search form and a
 The app in MJS represented as a tree. And each part of the block have completely separated tree. For instance, to nest Search form to the Main block you should nest the Seach form's model to the Main block's model, nest the Search form's logic to the Main block's logic and the Search form's view to the Main block's view.
 
 #### The Logic is a commands factory
-Logic consists of commands creators and `config` function with defines children Blocks, init commands, etc. When you call command creator it will return a command. Command is an object with all necessary information like type of a command, command's name, function that should be executed, array of arguments. In MJS defined three types of a command:
+Logic consists of commands creators and `config` function which defines children Blocks, init commands, etc. When you call command creator it will return a command. Command is an object with all necessary information like type of a command, command's name, function that should be executed, array of arguments. In MJS defined three types of a command:
 
 * `Cmd.update` – command for updating a model
 * `Cmd.batch` – command for executing another commands
@@ -47,6 +47,7 @@ Now you have very basic understanding what MJS is and how it works. Let's implem
 ### Search Form Block
 ```js
 // SearchForm.js
+import React from 'mangojuice-react';
 import { Cmd } from 'mangojuice-core';
 
 export const createModel = () => ({
