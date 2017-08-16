@@ -29,8 +29,8 @@
   },
   "dependencies": {
     "mangojuice-core": "0.2.0",
-    "mangojuice-data": "0.2.7-beta2",
-    "mangojuice-dom": "0.2.7-beta2",
+    "mangojuice-data": "0.2.0",
+    "mangojuice-dom": "0.2.0",
     "mangojuice-form": "0.2.0",
     "mangojuice-intl": "0.2.0",
     "mangojuice-lazy": "0.2.0",
