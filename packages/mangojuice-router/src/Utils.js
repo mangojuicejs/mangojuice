@@ -3,6 +3,50 @@ import { Utils, Cmd } from "mangojuice-core";
 
 
 /**
+ * By given router model and command object creates
+ * a href value that can be used to set in `href` of
+ * a link or to push/replace in history
+ * @param  {object} model
+ * @param  {object} cmd
+ * @return {string}
+ */
+export function createHref(model, { routes, routeId, args }) {
+  const [ newParams, newQuery, opts = {} ] = args;
+
+  // Get routes chain
+  const routesChain = [routes.map[routeId]];
+  let currRouteId = routeId;
+  while (routes.parents[currRouteId]) {
+    currRouteId = routes.parents[currRouteId];
+    routesChain.unshift(routes.map[currRouteId]);
+  }
+
+  // Calculate next URL
+  const nextQuery = opts.keep ? { ...newQuery, ...model.query } : newQuery;
+  const nextParams = { ...model.params, ...newParams };
+  const nextUrl = routesChain
+    .reduce((acc, matcher) => acc + matcher.stringify(nextParams), "");
+    .replace(/\/{2,}/g, "/") + qs.stringify(nextQuery);
+
+  return nextUrl;
+}
+
+/**
+ * Helper function to create an object with href and onClick handler
+ * that can be used for passing to <a> elemt in react-like view
+ * libraries
+ * @param  {object} model
+ * @param  {object} cmd
+ * @return {object}
+ */
+export function link(model, cmd) {
+  return {
+    onClick: cmd,
+    href: createHref(model, cmd)
+  };
+}
+
+/**
  * Route command function, which change the browser's
  * history by binded routeId and provided arguments.
  * @param  {string} routeId
@@ -12,30 +56,14 @@ import { Utils, Cmd } from "mangojuice-core";
  * @param  {object} query
  * @param  {object} options
  */
-export function routeUpdateCommand(
-  routeId,
-  { meta, model },
-  newParams = {},
-  query = {},
-  { replace, keep } = {}
-) {
-  // Get routes chain
-  const routesChain = [meta.routes.map[routeId]];
-  let currRouteId = routeId;
-  while (meta.routes.parents[currRouteId]) {
-    currRouteId = meta.routes.parents[currRouteId];
-    routesChain.unshift(meta.routes.map[currRouteId]);
-  }
+export function routeUpdateCommand(routeId, { model, meta }, ...args) {
+  // Stop handling a click to a link by the browser
+  const event = args[args.length - 1];
+  if (event && event.preventDefault) event.preventDefault();
 
-  // Calculate next URL
+  // Calculate next url to push to history
   const updateHistory = meta.history[replace ? "replace" : "push"];
-  const newQuery = keep ? { ...query, ...model.query } : query;
-  const nextParams = { ...model.params, ...newParams };
-  const nextUrl = routesChain
-    .reduce((acc, matcher) => acc + matcher.stringify(nextParams), "");
-    .replace(/\/{2,}/g, "/") + qs.stringify(newQuery);
-
-  // Update history according to given options
+  const nextUrl = createHref(model, { routeId, args, routes: meta.routes });
   updateHistory(nextUrl);
 }
 
@@ -102,8 +130,11 @@ export const createRouteMaps = (commands) => {
     }
   });
 
+  // Define routes tree and set it to each command
   const roots = routes.filter(r => !parents[r.routeId]);
-  return { map, children, parents, roots };
+  const routesTree = { map, children, parents, roots };
+  routes.forEach(r => r.routes = routesTree);
+  return routesTree;
 };
 
 /**
