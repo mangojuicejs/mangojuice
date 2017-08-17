@@ -376,4 +376,18 @@ describe("Block specs", () => {
       expect(JSON.stringify(shared.model)).toEqual('{"e":10,"f":4,"g":6}');
     });
   });
+
+  describe('Singletone blocks', () => {
+    it('should make root of shared/app to be singleton', () => {
+
+    });
+
+    it('should provied a way to create singleton child block', () => {
+
+    });
+
+    it('should provide a way to include additional commands to singleton', () => {
+
+    });
+  });
 });

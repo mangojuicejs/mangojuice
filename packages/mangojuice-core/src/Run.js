@@ -12,6 +12,8 @@ const EMPTY_BLOCK = {
 /**
  * Create model and `Process` object and bind model to process.
  * Returns an object with process instance and model object.
+ * Created process is singleton by default (because it is a root
+ * of a tree).
  *
  * @param  {Object} options.Logic
  * @param  {Function} options.createModel
@@ -39,7 +41,7 @@ export const initProcess = (
     configArgs
   });
 
-  proc.bind(model);
+  proc.singleton(true).bind(model);
   return { proc, model };
 };
 
