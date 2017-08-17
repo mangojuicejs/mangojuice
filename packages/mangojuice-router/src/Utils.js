@@ -2,13 +2,24 @@ import UrlPattern from "url-pattern";
 import { Utils, Cmd } from "mangojuice-core";
 
 
-export function changeToRoute(
+/**
+ * Route command function, which change the browser's
+ * history by binded routeId and provided arguments.
+ * @param  {string} routeId
+ * @param  {object} options.meta
+ * @param  {object} options.model
+ * @param  {object} newParams
+ * @param  {object} query
+ * @param  {object} options
+ */
+export function routeUpdateCommand(
   routeId,
   { meta, model },
-  newParams,
-  query,
-  options = {}
+  newParams = {},
+  query = {},
+  { replace, keep } = {}
 ) {
+  // Get routes chain
   const routesChain = [meta.routes.map[routeId]];
   let currRouteId = routeId;
   while (meta.routes.parents[currRouteId]) {
@@ -16,23 +27,30 @@ export function changeToRoute(
     routesChain.unshift(meta.routes.map[currRouteId]);
   }
 
-  const nextParams = Object.assign({}, model.params, newParams);
-  const nextUrl = routesChain.reduce((acc, routeMatcher) => {
-    return acc + routeMatcher.stringify(nextParams);
-  }, "");
+  // Calculate next URL
+  const updateHistory = meta.history[replace ? "replace" : "push"];
+  const newQuery = keep ? { ...query, ...model.query } : query;
+  const nextParams = { ...model.params, ...newParams };
+  const nextUrl = routesChain
+    .reduce((acc, matcher) => acc + matcher.stringify(nextParams), "");
+    .replace(/\/{2,}/g, "/") + qs.stringify(newQuery);
 
-  meta.history.push(nextUrl.replace(/\/{2,}/g, "/"));
+  // Update history according to given options
+  updateHistory(nextUrl);
 }
 
-export const getRoutesFromObject = obj => {
-  return !obj
-    ? []
-    : Object.keys(obj).filter(k => obj[k] && obj[k].routeId).map(k => obj[k]);
-};
-
+/**
+ * Creates a command creator for given pattern and children,
+ * and extend it to be a "route" command – defines some additional
+ * field in command creator, such as `routeId`
+ * @param  {string} pattern
+ * @param  {?object} children
+ * @param  {?object} options
+ * @return {CommandCreator}
+ */
 export const route = (pattern, children, options = {}) => {
   const routeId = Utils.nextId();
-  const func = changeToRoute.bind(null, routeId);
+  const func = routeUpdateCommand.bind(null, routeId);
   const routeCmd = Cmd.createUpdateCmd(pattern, func);
   routeCmd.routeId = routeId;
   routeCmd.pattern = pattern;
@@ -41,12 +59,20 @@ export const route = (pattern, children, options = {}) => {
   return routeCmd;
 };
 
-export const expandRoutesToMaps = routes => {
+/**
+ * By given list of commands create a set of maps with only
+ * route commands. Returned maps represents a tree structure
+ * of routes.
+ * @param  {Array} commands
+ * @return {Object}
+ */
+export const createRouteMaps = (commands) => {
   const map = {};
   const children = {};
   const parents = {};
   const usedNames = {};
 
+  // Helper to track uniqueness of names in patterns
   const checkNamesUniq = names => {
     names.forEach(n => {
       if (n !== "_" && usedNames[n]) {
@@ -57,37 +83,44 @@ export const expandRoutesToMaps = routes => {
     });
   };
 
-  const fillObjects = (routesObj, parentId) => {
-    if (!routesObj) {
-      return [];
+  // Create map, children and parents from routes
+  const routes = commands.filter(cmd => cmd && cmd.routeId);
+  routes.forEach(r => {
+    const suffix = r.children ? "(/*)" : "/";
+    const normPatt = r.pattern.replace(/\/+$/, "") + suffix;
+    const matcher = new UrlPattern(normPatt);
+    checkNamesUniq(matcher.names);
+    map[r.routeId] = matcher;
+
+    if (r.children) {
+      for (let k in r.children) {
+        if (r.children[k] && r.children[k].routeId) {
+          children[r.routeId] = r.children[k].routeId;
+          parents[r.children[k].routeId] = r.routeId;
+        }
+      }
     }
-    return getRoutesFromObject(routesObj).map(r => {
-      const suffix = r.children ? "(/*)" : "/";
-      const normPatt = r.pattern.replace(/\/+$/, "") + suffix;
-      const matcher = new UrlPattern(normPatt);
-      checkNamesUniq(matcher.names);
-      map[r.routeId] = matcher;
-      children[r.routeId] = fillObjects(r.children, r.routeId);
-      parents[r.routeId] = parentId;
-      return r.routeId;
-    });
-  };
+  });
 
-  if (!routes.Routes) {
-    throw new Error(
-      "Routes module do not export `Routes` object with root routes"
-    );
-  }
-
-  fillObjects(routes.Routes);
-  const roots = getRoutesFromObject(routes.Routes);
+  const roots = routes.filter(r => !parents[r.routeId]);
   return { map, children, parents, roots };
 };
 
+/**
+ * In given routes sub-tree (map, children, parents, roots) try to
+ * match given path and create a route chain. Returns an object
+ * with extracted params and routes changed if found, otherwise
+ * returns null
+ * @param  {Object} routesObj
+ * @param  {string} routeId
+ * @param  {string} path
+ * @return {object}
+ */
 export const findPath = (routesObj, routeId, path) => {
   const normPath = `${path.replace(/\/+$/g, "")}/`;
   const exactPath = normPath === "//" ? "/" : normPath;
   const res = routesObj.map[routeId].match(exactPath);
+
   if (!res) {
     return null;
   } else {
@@ -115,6 +148,12 @@ export const findPath = (routesObj, routeId, path) => {
   }
 };
 
+/**
+ * Find first mathing routes chain by given path and routes tree
+ * @param  {Object} routesObj
+ * @param  {string} path
+ * @return {?object}
+ */
 export const findFirstPath = (routesObj, path) => {
   const roots = routesObj.roots;
   for (let i = 0; i < roots.length; i++) {
@@ -131,8 +170,11 @@ export const isFirstAppear = (model, routeCmd) =>
 export const isChanged = (model, routeCmd) =>
   model.changedRoutes[routeCmd.routeId];
 
-export const isActive = (model, routeCmd) => model.active[routeCmd.routeId];
+export const isActive = (model, routeCmd) =>
+  model.active[routeCmd.routeId];
 
-export const isLeft = (model, routeCmd) => model.leftRoutes[routeCmd.routeId];
+export const isLeft = (model, routeCmd) =>
+  model.leftRoutes[routeCmd.routeId];
 
-export const isNotFound = (model) => Object.keys(model.active).length === 0;
+export const isNotFound = (model) =>
+  Object.keys(model.active).length === 0;

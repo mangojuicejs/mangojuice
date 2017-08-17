@@ -7,12 +7,10 @@ import * as Utils from './Utils';
 export const Logic = {
   name: "Router",
 
-  config(ctx, routesObj, request) {
-    const routes = Utils.expandRoutesToMaps(routesObj);
+  config({ binded }, request) {
+    const routes = Utils.createRouteMaps(binded);
     const history = request ? null : createHistory();
-    const routeCmds = Object.keys(routesObj).map(k => routesObj[k]);
     return {
-      bindCommands: [this, ...routeCmds],
       meta: { routes, history, request }
     };
   },
@@ -35,15 +33,17 @@ export const Logic = {
     const initLocation = meta.request
       ? meta.request.location
       : meta.history.location;
+
     return handleHistoryChange(initLocation);
   },
 
-  @Cmd.update
+  @Cmd.batch
   HandleLocationChange({ model, meta }, location) {
     const firstPath = Utils.findFirstPath(meta.routes, location.pathname);
     const active = {};
     const changedRoutes = {};
-    const appearedOnce = Object.assign({}, model.appearedOnce);
+    const appearedOnce = { ...model.appearedOnce };
+
     if (firstPath) {
       firstPath.chain.forEach(x => {
         active[x] = true;
@@ -58,11 +58,11 @@ export const Logic = {
     }
 
     const leftRoutes = {};
-    Object.keys(model.active).forEach(k => {
+    for (let k in model.active) {
       if (!active[k]) {
         leftRoutes[k] = true;
       }
-    });
+    }
 
     meta.handledOnce = true;
     const search = location.search.replace(/^\?(.*)/, "$1");
@@ -70,14 +70,19 @@ export const Logic = {
       ? { ...model.params, ...firstPath.params }
       : model.params;
 
-    return {
+    return this.UpdateRouter({
       query: qs.parse(search),
       params,
       active,
       leftRoutes,
       changedRoutes,
       appearedOnce
-    };
+    });
+  },
+
+  @Cmd.update
+  UpdateRouter(ctx, newValues) {
+    return newValues;
   },
 
   @Cmd.update
