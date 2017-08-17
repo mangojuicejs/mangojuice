@@ -190,7 +190,9 @@ export const View = ({ model }) => (
 **`this.call(fetch, 'www.google.com/search')`** is the task. This was inspired by `redux-saga` and needed to achive two goals:
 
 * it creates a task cancellation point and
-* it makes easier to test a task (you can pass some testing `call` func in a context which will mock results of `call`s). If some task marked as `execLatest`, then only one async fucnction can be executing at one point in time.
+* it makes easier to test a task (you can pass some testing `call` func in a context which will mock results of `call`s).
+
+If some task marked as `execLatest`, then only one async fucnction can be executing at one point in time. So, if you will execute the task while another one already executing, then exucuting task will be canceled and the new one will be started.
 
 ### All together – Main Block
 ```js
@@ -248,7 +250,7 @@ As you can see, to nest one block to another you have to nest all three parts of
 
 
 ### Multiple counter problem
-What if each item should have some specific logic, like a counter? In MJS that is not a problem:
+What if each item should have some specific logic, like a counter? In MJS that is not a problem. Let's create a separate Block for result item with counter logic and then use it in `SearchResults`:
 ```js
 // ResultsItem.js
 import React from 'mangojuice-react';
@@ -276,7 +278,7 @@ export const View = ({ model }) => (
 )
 ```
 
-**`Logic.Increment(1)`** demonstrates how you can bind a command with some exact argument.
+**`Logic.Increment(1)`** demonstrates how you can bind a command with arguments.
 
 ```js
 // SearchResults.js
@@ -313,7 +315,9 @@ export const View = ({ model }) => (
 
 **`results: results.map(x => ResultsItem.createModel(x))`** in `SetResultsList` command just creates a `ResultsItem` model for each result item.
 
-**`<ResultsItem.View model={x} />`** in shows a View of our `ResultsItem` block for each result item.
+**`<ResultsItem.View model={x} />`** in the View shows View of `ResultsItem` block for each result item.
+
+As you can see, MJS understands two types of child model: object and array. If child model is an object then the Logic will be associated with this object. If an array – with each element of the arra. MJS do not support primitives as child model. If child model becomes `null` then Logic for the child will be destroyed.
 
 ## Going deeper
 What if you would need to add a user to your app? Obviously the user model should be easily accessable from anywhere in the app. For example to check if the user is authorized or not, or to check a role of the user. For these cases, when you need to have a widely used model, MJS provides the so called `Shared Block`.
@@ -366,6 +370,8 @@ You should already understand what is going on above, except one thing...
 
 **`bindCommands: this`** binds all commands from User logic to lastly created model. It is useful for a singleton block when only one instance of a block can be present in the app. So it allows you to use `User.Logic.Login` command without explicitly binding it to user's model, like we did above for `SearchResults.Logic.Search` command.
 
+Without `bindCommands: this` you will have to write `User.Logic.Login().model(shared.user)` if you will want to login the user somewhere in the app, which is not as clean as just `User.Logic.Login`.
+
 ### Usege of shared block
 ```js
 // index.js
@@ -399,7 +405,7 @@ export const View = ({ model, shared }) => (
 **`const View = ({ model, shared })`** now also have a `shared` field in the props which is just a model of a shared block.
 
 ### App depends on Shared (and how to disable it)
-It is important to notice that every view from app's block tree depends on changes of the model of a shared tree. For example, when the user logs in (`authorized` changes to `true` by `Login` command) each View of the app (of each block from the app's tree) will be re-rendered. For instance `Main.View`, `SearchForm.View`, `SearchResults.View`, all of these views will be re-rendered.
+It is important to notice that every Block from app tree depends on changes of the model of a shared tree. For example, when the user logs in (`authorized` changes to `true` by `Login` command) each View of the app (of each block from the app's tree) will be re-rendered. For instance `Main.View`, `SearchForm.View`, `SearchResults.View`, all of these views will be re-rendered.
 
 That imposes an important restriction to shared blocks. They should be changed rarely to have a good performance. But there is also a way to disable shared dependency for a specific block:
 
@@ -427,6 +433,8 @@ export const Logic = {
 
 **`subscriptions: ...`** provides a way to subscribe only to some of shared model changes. Above we subscribed to changes of `shared.user` and added an update handler command `HandleUserUpdate`. This command will be executed on every change of `shared.user`. But not on changes of `shared` model itself.
 
+`subscriptions` defined there just to demonstrate the mechanism. If you want to remove Shared dependency from `SearchResults` you just need to add `manualSharedSubscribe: true` and no subscriptions.
+
 ### Dealing with the real world
 We showed above how to handle events from a View. But complex applications could have to handle not only view events, but some more, like WebSocket messages, or presses to `esc` in the window scope, or execute someting in the interval. The good news is that MJS also provides a way to handle this kind of events.
 
@@ -444,10 +452,12 @@ export const Logic = {
   ...
 }
 ```
-**`port({ model, destroy, exec })`** is a special function of logic object, that is aimed to subscribe to some global events. In the example we just made an interval for refreshing the search results every 10 secs. Also we subscribed to the destroy Promise, which will be resolved when the block is removed.
+**`port({ model, destroy, exec })`** is a special function of logic object, that is aimed to subscribe to some global events. In the example we just made an interval for refreshing the search results every 10 secs.
+
+**`destroy.then(() => clearInterval(timer));`** subscribes to the destroy Promise, which will be resolved when the block is removed. For example when model of the `SearchResults` will be removed – set to `null` – in `Main` block.
 
 ## Conclusion
 These are the basics of MJS. It was inspired by many existing frameworks/languages that the author used for a while. So probably there is not anything extremely new. MJS is all about defining a scalable, flexible way of implementing logic of your app in following the MVC pattern with the help of the Command Pattern and of the latest available ES6/ES7 features, like decorators or async/await.
 
-## Documentation
+## API Reference
 TODO
