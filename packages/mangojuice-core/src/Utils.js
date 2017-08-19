@@ -80,6 +80,10 @@ export const ensureCmdObject = cmd => {
   return cmd;
 };
 
+export const objectValues = (obj) => {
+  return obj ? Object.keys(obj).map(k => obj[k]) : [];
+};
+
 export const memoize = func => {
   let data;
   let computed = false;

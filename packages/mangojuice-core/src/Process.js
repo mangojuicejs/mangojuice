@@ -136,7 +136,7 @@ export class Process {
           for (let k in commandsObj) {
             const cmd = commandsObj[k];
             if (cmd && cmd.id && cmd.Before && cmd.After) {
-              this.appContext.bindings[cmd.id] = this.model;
+              this.appContext.bindings[cmd.id] = this;
               bindedCommands.push(cmd);
             } else if (is.object(cmd)) {
               processSingleton(cmd);
@@ -484,9 +484,9 @@ export class Process {
 
     // When command globally binded to some model –
     // run command in appropreate processor
-    const bindModel = this.appContext.bindings[cmd.id];
-    if (bindModel && bindModel !== this.model) {
-      return bindModel.__proc.exec(cmd);
+    const bindProc = this.appContext.bindings[cmd.id];
+    if (bindProc && bindProc.model !== this.model) {
+      return bindProc.exec(cmd);
     }
 
     // No process binded to the model

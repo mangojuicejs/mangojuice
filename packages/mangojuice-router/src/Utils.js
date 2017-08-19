@@ -1,4 +1,5 @@
 import UrlPattern from "url-pattern";
+import qs from 'qs';
 import { Utils, Cmd } from "mangojuice-core";
 
 
@@ -10,7 +11,7 @@ import { Utils, Cmd } from "mangojuice-core";
  * @param  {object} cmd
  * @return {string}
  */
-export function createHref(model, { routes, routeId, args }) {
+export function createHref(model, routes, routeId, args) {
   const [ newParams, newQuery, opts = {} ] = args;
 
   // Get routes chain
@@ -40,9 +41,11 @@ export function createHref(model, { routes, routeId, args }) {
  * @return {object}
  */
 export function link(model, cmd) {
+  const creator = cmd.isCmd ? cmd.creator : cmd;
+  const args = cmd.isCmd ? cmd.args : Utils.emptyArray;
   return {
     onClick: cmd,
-    href: createHref(model, cmd)
+    href: createHref(model, creator.routes, creator.routeId, args)
   };
 }
 
@@ -65,8 +68,9 @@ export function routeUpdateCommand(routeId, { model, meta }, ...args) {
   }
 
   // Calculate next url to push to history
-  const updateHistory = meta.history[replace ? "replace" : "push"];
-  const nextUrl = createHref(model, { routeId, args, routes: meta.routes });
+  const [ , , opts = {} ] = args;
+  const updateHistory = meta.history[opts.replace ? "replace" : "push"];
+  const nextUrl = createHref(model, meta.routes, routeId, args);
   updateHistory(nextUrl);
 }
 
@@ -124,9 +128,9 @@ export const createRouteMaps = (commands) => {
     map[r.routeId] = matcher;
 
     if (r.children) {
+      children[r.routeId] = Utils.objectValues(r.children);
       for (let k in r.children) {
         if (r.children[k] && r.children[k].routeId) {
-          children[r.routeId] = r.children[k].routeId;
           parents[r.children[k].routeId] = r.routeId;
         }
       }
@@ -160,12 +164,14 @@ export const findPath = (routesObj, routeId, path) => {
   } else {
     const children = routesObj.children[routeId];
     let childRoute, childRes;
-    for (let i = 0; i < children.length; i++) {
-      const maybeChildRes = findPath(routesObj, children[i], `/${res._}`);
-      if (maybeChildRes) {
-        childRoute = children[i];
-        childRes = maybeChildRes;
-        break;
+    if (children) {
+      for (let i = 0; i < children.length; i++) {
+        const maybeChildRes = findPath(routesObj, children[i].routeId, `/${res._}`);
+        if (maybeChildRes) {
+          childRoute = children[i];
+          childRes = maybeChildRes;
+          break;
+        }
       }
     }
     if (!childRoute) {
@@ -210,5 +216,16 @@ export const isActive = (model, routeCmd) =>
 export const isLeft = (model, routeCmd) =>
   model.leftRoutes[routeCmd.routeId];
 
-export const isNotFound = (model) =>
-  Object.keys(model.active).length === 0;
+export const isNotFound = (model, routesToCheck) => {
+  if (!routesToCheck) {
+    return Object.keys(model.active).length === 0;
+  }
+
+  for (let k in routesToCheck) {
+    const cmd = routesToCheck[k];
+    if (cmd && cmd.routeId && model.active[cmd.routeId]) {
+      return false;
+    }
+  }
+  return true;
+}
