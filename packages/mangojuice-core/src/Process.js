@@ -487,13 +487,14 @@ export class Process {
     // When command binded individually to some model –
     // run command in appropreate processor
     if (cmd._model && cmd._model !== this.model && cmd._model.__proc) {
+      cmd.__redirected = true;
       return cmd._model.__proc.exec(cmd);
     }
 
     // When command globally binded to some model –
     // run command in appropreate processor
     const bindProc = this.appContext.bindings[cmd.id];
-    if (bindProc && bindProc !== this) {
+    if (!cmd.__redirected && bindProc && bindProc !== this) {
       return bindProc.exec(cmd);
     }
 
