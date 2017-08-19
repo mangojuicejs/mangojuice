@@ -48,7 +48,7 @@ export class Process {
     this.config = config;
     this.configArgs = configArgs || emptyArray;
     this.execHandlers = execHandlers;
-    this.singletonValue = singletonValue || emptyArray;
+    this.singletonValue = singletonValue;
   }
 
   bind(model) {
@@ -112,8 +112,7 @@ export class Process {
 
   /**
    * Make all commands from logic (plus from `singleton` if provided
-   * and object or an array) to be binded to the model of this process.
-   * Also defines in `meta` object a list of all binded commands.
+   * an object or an array) to be binded to the model of this process.
    */
   bindCommands() {
     if (this.singletonValue && this.logic) {
@@ -153,7 +152,7 @@ export class Process {
 
   /**
    * Replace fields in the model with computed getter with memoization
-   * if defined in `logic.computer`.
+   * if defined in `logic.computed`.
    */
   bindComputed() {
     if (!this.logic.computed) return;
@@ -296,8 +295,17 @@ export class Process {
     maybeForEach(this.computedFields, f => f.reset());
   }
 
+  unbindCommands() {
+    if (this.bindedCommands) {
+      maybeForEach(this.bindedCommands, cmd =>
+        delete this.appContext.bindings[cmd.id]
+      );
+    }
+  }
+
   destroy(deep = true) {
     delete this.model.__proc;
+    this.unbindCommands();
     this.stopSubscriptions();
     this.stopPorts();
     if (deep) {
@@ -485,7 +493,7 @@ export class Process {
     // When command globally binded to some model –
     // run command in appropreate processor
     const bindProc = this.appContext.bindings[cmd.id];
-    if (bindProc && bindProc.model !== this.model) {
+    if (bindProc && bindProc !== this) {
       return bindProc.exec(cmd);
     }
 

@@ -15,12 +15,6 @@ export const createModel = (): Model => ({
 export const Logic = {
   name: "User",
 
-  config() {
-    return {
-      bindCommands: this
-    };
-  },
-
   @Cmd.update
   Login() {
     return {

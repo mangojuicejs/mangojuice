@@ -82,13 +82,12 @@ describe("Block specs", () => {
     };
 
     it("should execute init commands in correct order and finish", async () => {
-      const { app, shared, commands } = await runWithTracking({
+      const { app, shared, commandNames } = await runWithTracking({
         app: BlockA,
         shared: SharedBlock
       });
-      const cmdNames = commands.map(x => x.name);
 
-      expect(cmdNames).toEqual([
+      expect(commandNames).toEqual([
         "SharedBlock.FromPortAsync",
         "SharedBlock.FromInitOneCmd",
         "BlockB.FromInitOneCmd",
@@ -268,6 +267,7 @@ describe("Block specs", () => {
       };
 
       const { app } = await runWithTracking({ app: RecursiveBlock });
+
       await app.proc.exec(RecursiveBlock.Logic.SetField('recursive',
         RecursiveBlock.createModel()));
       await app.model.recursive.__proc.exec(RecursiveBlock.Logic.SetField('recursive',
