@@ -1,19 +1,6 @@
-import { Run, Cmd, Task, DefaultLogger } from "mangojuice-core";
+import { Cmd, Task } from "mangojuice-core";
+import { runWithTracking } from "mangojuice-test";
 
-const runWithTracking = async props => {
-  const commands = [];
-  class TrackerLogger extends DefaultLogger {
-    onStartExec(cmd) {
-      commands.push(cmd);
-    }
-  }
-  const res = Run.run({
-    ...props,
-    logger: TrackerLogger
-  });
-  await Promise.all([res.app.run, res.shared.run]);
-  return { commands, ...res };
-};
 
 describe("Block specs", () => {
   describe("Init commands execution", () => {

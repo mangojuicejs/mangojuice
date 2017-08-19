@@ -34,7 +34,8 @@ export class Process {
     logic,
     config,
     configArgs,
-    execHandlers
+    execHandlers,
+    singletonValue
   }) {
     this.id = nextId();
     this.rootProc = rootProc || this;
@@ -47,6 +48,7 @@ export class Process {
     this.config = config;
     this.configArgs = configArgs || emptyArray;
     this.execHandlers = execHandlers;
+    this.singletonValue = singletonValue || emptyArray;
   }
 
   bind(model) {
@@ -114,30 +116,35 @@ export class Process {
    * Also defines in `meta` object a list of all binded commands.
    */
   bindCommands() {
-    if (this.singleton && this.logic) {
+    if (this.singletonValue && this.logic) {
       // Ensure that commands is a list of objects or an object
       let commands = emptyArray;
-      if (Utils.is.bool(this.singleton)) {
+      if (is.bool(this.singletonValue)) {
         commands = this.logic;
-      } else if (Utils.is.array(this.singleton)) {
-        commands = [this.logic, ...this.singleton];
-      } else if (Utils.is.object(this.singleton)) {
-        commands = [this.logic, this.singleton];
+      } else if (is.array(this.singletonValue)) {
+        commands = [this.logic, ...this.singletonValue];
+      } else if (is.object(this.singletonValue)) {
+        commands = [this.logic, this.singletonValue];
       } else {
         throw new Error('You passed something weird in "singleton"');
       }
 
       // Create bindings in the app context
       const bindedCommands = [];
-      maybeForEach(commands, commandsObj => {
-        for (let k in commandsObj) {
-          const cmd = commandsObj[k];
-          if (cmd && cmd.id && cmd.Before && cmd.After) {
-            this.appContext.bindings[cmd.id] = this.model;
-            bindedCommands.push(cmd);
+      const processSingleton = (commandsArr) => {
+        maybeForEach(commandsArr, commandsObj => {
+          for (let k in commandsObj) {
+            const cmd = commandsObj[k];
+            if (cmd && cmd.id && cmd.Before && cmd.After) {
+              this.appContext.bindings[cmd.id] = this.model;
+              bindedCommands.push(cmd);
+            } else if (is.object(cmd)) {
+              processSingleton(cmd);
+            }
           }
-        }
-      });
+        });
+      }
+      processSingleton(commands);
 
       // Set a list of binded commands in the Process
       this.bindedCommands = bindedCommands;
@@ -570,7 +577,7 @@ export class Process {
    * @return {Process}
    */
   singleton(val) {
-    this.singleton = val;
+    this.singletonValue = val;
     return this;
   }
 }

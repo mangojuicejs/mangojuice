@@ -25,7 +25,7 @@ export function createHref(model, { routes, routeId, args }) {
   const nextQuery = opts.keep ? { ...newQuery, ...model.query } : newQuery;
   const nextParams = { ...model.params, ...newParams };
   const nextUrl = routesChain
-    .reduce((acc, matcher) => acc + matcher.stringify(nextParams), "");
+    .reduce((acc, matcher) => acc + matcher.stringify(nextParams), "")
     .replace(/\/{2,}/g, "/") + qs.stringify(nextQuery);
 
   return nextUrl;
@@ -59,7 +59,10 @@ export function link(model, cmd) {
 export function routeUpdateCommand(routeId, { model, meta }, ...args) {
   // Stop handling a click to a link by the browser
   const event = args[args.length - 1];
-  if (event && event.preventDefault) event.preventDefault();
+  if (event && event.preventDefault) {
+    args.pop();
+    event.preventDefault();
+  }
 
   // Calculate next url to push to history
   const updateHistory = meta.history[replace ? "replace" : "push"];

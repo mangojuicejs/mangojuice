@@ -1,4 +1,4 @@
-import createHistory from "history/createBrowserHistory";
+import createBrowserHistory from "history/createBrowserHistory";
 import qs from "qs";
 import { Cmd } from "mangojuice-core";
 import * as Utils from './Utils';
@@ -7,7 +7,8 @@ import * as Utils from './Utils';
 export const Logic = {
   name: "Router",
 
-  config({ binded }, request) {
+  config({ binded }, options = {}) {
+    const { request, createHistory = createBrowserHistory } = options;
     const routes = Utils.createRouteMaps(binded);
     const history = request ? null : createHistory();
     return {

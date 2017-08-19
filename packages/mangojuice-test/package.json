@@ -1,5 +1,5 @@
 {
-  "name": "mangojuice-router",
+  "name": "mangojuice-test",
   "version": "0.2.0",
   "description": "",
   "author": {
@@ -14,16 +14,13 @@
   "license": "MIT",
   "main": "index.js",
   "rollup": {
-    "moduleName": "Mjs.Router",
+    "moduleName": "Mjs.Test",
     "bundledDependencies": [],
     "moduleGlobals": {
       "mangojuice": "Mjs"
     }
   },
   "dependencies": {
-    "history": "4.6.3",
-    "mangojuice-core": "0.2.0",
-    "qs": "6.5.0",
-    "url-pattern": "1.0.3"
+    "mangojuice-core": "0.2.0"
   }
 }

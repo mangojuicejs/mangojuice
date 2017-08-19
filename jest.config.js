@@ -27,7 +27,8 @@ module.exports = {
     "^mangojuice-react": "<rootDir>/packages/mangojuice-react/src",
     "^mangojuice-react-core": "<rootDir>/packages/mangojuice-react-core/src",
     "^mangojuice-router": "<rootDir>/packages/mangojuice-router/src",
-    "^mangojuice-dom": "<rootDir>/packages/mangojuice-dom/src"
+    "^mangojuice-dom": "<rootDir>/packages/mangojuice-dom/src",
+    "^mangojuice-test": "<rootDir>/packages/mangojuice-test/src",
   },
   projects: [
     "<rootDir>/packages/mangojuice-core",
@@ -38,7 +39,8 @@ module.exports = {
     "<rootDir>/packages/mangojuice-react",
     "<rootDir>/packages/mangojuice-react-core",
     "<rootDir>/packages/mangojuice-router",
-    "<rootDir>/packages/mangojuice-dom"
+    "<rootDir>/packages/mangojuice-dom",
+    "<rootDir>/packages/mangojuice-test"
   ],
   rootDir: __dirname,
   testMatch: [

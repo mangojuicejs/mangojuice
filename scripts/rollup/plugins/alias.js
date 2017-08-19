@@ -21,5 +21,6 @@ module.exports = alias({
     ROOT,
     "packages/mangojuice-router/dist/index.es.js"
   ),
-  "mangojuice-dom": resolve(ROOT, "packages/mangojuice-dom/dist/index.es.js")
+  "mangojuice-dom": resolve(ROOT, "packages/mangojuice-dom/dist/index.es.js"),
+  "mangojuice-test": resolve(ROOT, "packages/mangojuice-test/dist/index.es.js")
 });

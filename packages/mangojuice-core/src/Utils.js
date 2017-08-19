@@ -4,6 +4,7 @@ export const is = {
   func: f => typeof f === "function",
   number: n => typeof n === "number",
   string: s => typeof s === "string",
+  bool: s => s === true || s === false,
   array: Array.isArray,
   object: obj => obj && !is.array(obj) && typeof obj === "object",
   promise: p => p && is.func(p.then),
