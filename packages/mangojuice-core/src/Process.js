@@ -585,7 +585,7 @@ export class Process {
    * @param  {Boolean|Object|Array<Object>|null} val
    * @return {Process}
    */
-  singleton(val) {
+  singleton(val = true) {
     this.singletonValue = val;
     return this;
   }
