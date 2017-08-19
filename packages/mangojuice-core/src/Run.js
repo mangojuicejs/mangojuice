@@ -12,6 +12,8 @@ const EMPTY_BLOCK = {
 /**
  * Create model and `Process` object and bind model to process.
  * Returns an object with process instance and model object.
+ * Created process is singleton by default (because it is a root
+ * of a tree).
  *
  * @param  {Object} options.Logic
  * @param  {Function} options.createModel
@@ -27,7 +29,8 @@ export const initProcess = (
   sharedModel,
   appContext,
   LoggerClass = DefaultLogger,
-  blockName = "app"
+  blockName = "app",
+  singleton = false
 ) => {
   const model = createModel();
   const logger = new LoggerClass(blockName, model);
@@ -39,7 +42,7 @@ export const initProcess = (
     configArgs
   });
 
-  proc.bind(model);
+  proc.singleton(singleton).bind(model);
   return { proc, model };
 };
 
@@ -57,7 +60,7 @@ export const initProcess = (
 export const run = ({ app = EMPTY_BLOCK, shared = EMPTY_BLOCK, logger }) => {
   // Initizlize Process objects and bind to models
   const appContext = createContext();
-  const sharedRes = initProcess(shared, null, appContext, logger, "shared");
+  const sharedRes = initProcess(shared, null, appContext, logger, "shared", true);
   const appRes = initProcess(app, sharedRes.model, appContext, logger, "app");
 
   // Run processes after model binding (important to run after bind

@@ -25,11 +25,10 @@ export const Logic = {
 
   config({ nest }, request) {
     return {
-      bindCommands: this,
       children: {
-        route: nest(Router.Logic).args(routes, request),
-        intl: nest(Intl.Logic).args(languages),
-        user: nest(User.Logic).args(request)
+        route: nest(Router.Logic).singleton(routes).args(request),
+        intl: nest(Intl.Logic).singleton().args(languages),
+        user: nest(User.Logic).singleton().args(request)
       }
     };
   }

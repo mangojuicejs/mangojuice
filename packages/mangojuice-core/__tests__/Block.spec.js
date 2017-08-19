@@ -1,19 +1,6 @@
-import { Run, Cmd, Task, DefaultLogger } from "mangojuice-core";
+import { Cmd, Task } from "mangojuice-core";
+import { runWithTracking } from "mangojuice-test";
 
-const runWithTracking = async props => {
-  const commands = [];
-  class TrackerLogger extends DefaultLogger {
-    onStartExec(cmd) {
-      commands.push(cmd);
-    }
-  }
-  const res = Run.run({
-    ...props,
-    logger: TrackerLogger
-  });
-  await Promise.all([res.app.run, res.shared.run]);
-  return { commands, ...res };
-};
 
 describe("Block specs", () => {
   describe("Init commands execution", () => {
@@ -95,13 +82,12 @@ describe("Block specs", () => {
     };
 
     it("should execute init commands in correct order and finish", async () => {
-      const { app, shared, commands } = await runWithTracking({
+      const { app, shared, commandNames } = await runWithTracking({
         app: BlockA,
         shared: SharedBlock
       });
-      const cmdNames = commands.map(x => x.name);
 
-      expect(cmdNames).toEqual([
+      expect(commandNames).toEqual([
         "SharedBlock.FromPortAsync",
         "SharedBlock.FromInitOneCmd",
         "BlockB.FromInitOneCmd",
@@ -281,6 +267,7 @@ describe("Block specs", () => {
       };
 
       const { app } = await runWithTracking({ app: RecursiveBlock });
+
       await app.proc.exec(RecursiveBlock.Logic.SetField('recursive',
         RecursiveBlock.createModel()));
       await app.model.recursive.__proc.exec(RecursiveBlock.Logic.SetField('recursive',
@@ -374,6 +361,86 @@ describe("Block specs", () => {
 
       expect(JSON.stringify(app.model)).toEqual('{"a":1,"b":2,"c":3,"d":11}');
       expect(JSON.stringify(shared.model)).toEqual('{"e":10,"f":4,"g":6}');
+    });
+  });
+
+  describe('Singletone blocks', () => {
+    const ChildBlock = {
+      createModel: () => ({ a: 0 }),
+      Logic: {
+        name: "ChildBlock",
+        @Cmd.update UpdateModel() { return { a: 2 } },
+      }
+    };
+    const SharedBlock = {
+      createModel: () => ({
+        child: ChildBlock.createModel(),
+        a: 0
+      }),
+      Logic: {
+        name: "SharedBlock",
+        config({ nest }) {
+          return { children: { child: nest(ChildBlock.Logic).singleton() } };
+        },
+        @Cmd.update UpdateModel() { return { a: 1 } },
+      }
+    };
+    const AppBlock = {
+      createModel: () => ({ a: 0 }),
+      Logic: {
+        name: "AppBlock",
+      }
+    };
+
+    it('should make root of shared to be singleton', async () => {
+      const { app, shared } = await runWithTracking({
+        app: AppBlock,
+        shared: SharedBlock
+      });
+
+      await app.proc.exec(SharedBlock.Logic.UpdateModel);
+
+      expect(app.model.a).toEqual(0);
+      expect(shared.model.a).toEqual(1);
+    });
+
+    it('should provied a way to create singleton child block', async () => {
+      const { app, shared } = await runWithTracking({
+        app: AppBlock,
+        shared: SharedBlock
+      });
+
+      await app.proc.exec(ChildBlock.Logic.UpdateModel);
+
+      expect(app.model.a).toEqual(0);
+      expect(shared.model.a).toEqual(0);
+      expect(shared.model.child.a).toEqual(2);
+    });
+
+    it('should prioritize model binding on command level on same model', async () => {
+      const { app, shared } = await runWithTracking({
+        app: AppBlock,
+        shared: SharedBlock
+      });
+
+      await shared.proc.exec(SharedBlock.Logic.UpdateModel().model(app.model));
+
+      expect(app.model.a).toEqual(1);
+      expect(shared.model.a).toEqual(0);
+      expect(shared.model.child.a).toEqual(0);
+    });
+
+    it('should prioritize model binding on command level in different model', async () => {
+      const { app, shared } = await runWithTracking({
+        app: AppBlock,
+        shared: SharedBlock
+      });
+
+      await shared.proc.exec(ChildBlock.Logic.UpdateModel().model(app.model));
+
+      expect(app.model.a).toEqual(2);
+      expect(shared.model.a).toEqual(0);
+      expect(shared.model.child.a).toEqual(0);
     });
   });
 });

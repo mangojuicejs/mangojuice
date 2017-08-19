@@ -34,7 +34,8 @@ export class Process {
     logic,
     config,
     configArgs,
-    execHandlers
+    execHandlers,
+    singletonValue
   }) {
     this.id = nextId();
     this.rootProc = rootProc || this;
@@ -47,13 +48,14 @@ export class Process {
     this.config = config;
     this.configArgs = configArgs || emptyArray;
     this.execHandlers = execHandlers;
+    this.singletonValue = singletonValue;
   }
 
   bind(model) {
+    this.bindCommands();
     this.prepareConfig();
     this.bindModel(model);
     this.bindComputed();
-    this.bindCommands();
     this.bindChildren();
   }
 
@@ -65,7 +67,8 @@ export class Process {
       const configProps = {
         subscribe: this.subscribe,
         nest: this.nest,
-        shared: this.sharedModel
+        shared: this.sharedModel,
+        binded: this.bindedCommands
       };
       this.config = this.logic.config(configProps, ...this.configArgs) || {};
       this.config.childrenKeys = Object.keys(this.config.children || {});
@@ -107,19 +110,50 @@ export class Process {
     });
   }
 
+  /**
+   * Make all commands from logic (plus from `singleton` if provided
+   * an object or an array) to be binded to the model of this process.
+   */
   bindCommands() {
-    if (this.config.bindCommands) {
-      maybeForEach(this.config.bindCommands, commandsObj => {
-        maybeForEach(Object.keys(commandsObj), cmdName => {
-          const cmd = commandsObj[cmdName];
-          if (cmd && cmd.id) {
-            this.appContext.bindings[cmd.id] = this.model;
+    if (this.singletonValue && this.logic) {
+      // Ensure that commands is a list of objects or an object
+      let commands = emptyArray;
+      if (is.bool(this.singletonValue)) {
+        commands = this.logic;
+      } else if (is.array(this.singletonValue)) {
+        commands = [this.logic, ...this.singletonValue];
+      } else if (is.object(this.singletonValue)) {
+        commands = [this.logic, this.singletonValue];
+      } else {
+        throw new Error('You passed something weird in "singleton"');
+      }
+
+      // Create bindings in the app context
+      const bindedCommands = [];
+      const processSingleton = (commandsArr) => {
+        maybeForEach(commandsArr, commandsObj => {
+          for (let k in commandsObj) {
+            const cmd = commandsObj[k];
+            if (cmd && cmd.id && cmd.Before && cmd.After) {
+              this.appContext.bindings[cmd.id] = this;
+              bindedCommands.push(cmd);
+            } else if (is.object(cmd)) {
+              processSingleton(cmd);
+            }
           }
         });
-      });
+      }
+      processSingleton(commands);
+
+      // Set a list of binded commands in the Process
+      this.bindedCommands = bindedCommands;
     }
   }
 
+  /**
+   * Replace fields in the model with computed getter with memoization
+   * if defined in `logic.computed`.
+   */
   bindComputed() {
     if (!this.logic.computed) return;
     const computedFields = this.logic.computed(this.execProps);
@@ -137,6 +171,11 @@ export class Process {
     }
   }
 
+  /**
+   * Associate instance of the Process with given model by setting
+   * hidden `__proc` field in the model.
+   * @param  {Object} model
+   */
   bindModel(model) {
     this.model = model;
     this.execProps = {
@@ -256,8 +295,17 @@ export class Process {
     maybeForEach(this.computedFields, f => f.reset());
   }
 
+  unbindCommands() {
+    if (this.bindedCommands) {
+      maybeForEach(this.bindedCommands, cmd =>
+        delete this.appContext.bindings[cmd.id]
+      );
+    }
+  }
+
   destroy(deep = true) {
     delete this.model.__proc;
+    this.unbindCommands();
     this.stopSubscriptions();
     this.stopPorts();
     if (deep) {
@@ -439,14 +487,15 @@ export class Process {
     // When command binded individually to some model –
     // run command in appropreate processor
     if (cmd._model && cmd._model !== this.model && cmd._model.__proc) {
+      cmd.__redirected = true;
       return cmd._model.__proc.exec(cmd);
     }
 
     // When command globally binded to some model –
     // run command in appropreate processor
-    const bindModel = this.appContext.bindings[cmd.id];
-    if (bindModel && bindModel !== this.model) {
-      return bindModel.__proc.exec(cmd);
+    const bindProc = this.appContext.bindings[cmd.id];
+    if (!cmd.__redirected && bindProc && bindProc !== this) {
+      return bindProc.exec(cmd);
     }
 
     // No process binded to the model
@@ -455,7 +504,7 @@ export class Process {
     }
 
     return this.doExecCmd(cmd);
-  };
+  }
 
   /**
    * This function creates a `Process` object by given logic.
@@ -483,7 +532,7 @@ export class Process {
       logic
     });
     return proc;
-  };
+  }
 
   /**
    * Helper function to create subscription object based
@@ -501,7 +550,7 @@ export class Process {
       this.handlerCmd = ensureCmdObject(handler);
       return this;
     },
-  });
+  })
 
   /**
    * Set command exec handler cmd, which will be executed after
@@ -525,6 +574,19 @@ export class Process {
    */
   args(...args) {
     this.configArgs = args;
+    return this;
+  }
+
+  /**
+   * Mark this process as singleton. It will make all commands from
+   * attached Logic to be automatically binded to the model of this
+   * process. So you will be able to write `Logic.Command` and not
+   * `Logic.Command().model(...)`
+   * @param  {Boolean|Object|Array<Object>|null} val
+   * @return {Process}
+   */
+  singleton(val = true) {
+    this.singletonValue = val;
     return this;
   }
 }

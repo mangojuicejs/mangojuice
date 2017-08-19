@@ -9,6 +9,7 @@ export function createCommand(name, func, exec, opts) {
       exec,
       args,
       opts,
+      creator,
       id: creator.Before.id,
       beforeId: creator.Before.id,
       afterId: creator.After.id,
@@ -27,7 +28,7 @@ export function createCommand(name, func, exec, opts) {
           (!model || this._model === model);
       },
       clone() {
-        return Object.assign({}, this);
+        return { ...this };
       }
     };
   };

@@ -337,7 +337,7 @@ export const Logic = {
   config({ nest }) {
     return {
       children: {
-        user: nest(User.Logic),
+        user: nest(User.Logic).singleton(),
       }
     }
   }
@@ -353,10 +353,6 @@ export const createModel = () => ({
 export const Logic = {
   name: 'User',
 
-  config() {
-    return { bindCommands: this };
-  },
-
   @Cmd.update
   Login() {
     return {
@@ -368,9 +364,9 @@ export const Logic = {
 ```
 You should already understand what is going on above, except one thing...
 
-**`bindCommands: this`** binds all commands from User logic to lastly created model. It is useful for a singleton block when only one instance of a block can be present in the app. So it allows you to use `User.Logic.Login` command without explicitly binding it to user's model, like we did above for `SearchResults.Logic.Search` command.
+**`nest(User.Logic).singleton()`** makes `User.Logic` logic as "singleton" in scope of your app. It means that all commands form the `User.Logic` will be automatically binded to the `shared.user` model. So, if you will want to execute the `User.Logic.Login` commands from anywhere in the app, then you will just need to execute `User.Logic.Login` instead of `User.Logic.Login().model(shared.user)`
 
-Without `bindCommands: this` you will have to write `User.Logic.Login().model(shared.user)` if you will want to login the user somewhere in the app, which is not as clean as just `User.Logic.Login`.
+Shared block's Logic is singleton by default. So, all commands from your shared block can be executed without `.model(shared)` part.
 
 ### Usege of shared block
 ```js
