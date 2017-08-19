@@ -27,8 +27,8 @@ export const Logic = {
     return {
       children: {
         route: nest(Router.Logic).singleton(routes).args(request),
-        intl: nest(Intl.Logic).singleton(true).args(languages),
-        user: nest(User.Logic).singleton(true).args(request)
+        intl: nest(Intl.Logic).singleton().args(languages),
+        user: nest(User.Logic).singleton().args(request)
       }
     };
   }

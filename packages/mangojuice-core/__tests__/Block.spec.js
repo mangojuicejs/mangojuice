@@ -380,7 +380,7 @@ describe("Block specs", () => {
       Logic: {
         name: "SharedBlock",
         config({ nest }) {
-          return { children: { child: nest(ChildBlock.Logic).singleton(true) } };
+          return { children: { child: nest(ChildBlock.Logic).singleton() } };
         },
         @Cmd.update UpdateModel() { return { a: 1 } },
       }

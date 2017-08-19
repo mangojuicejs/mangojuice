@@ -337,7 +337,7 @@ export const Logic = {
   config({ nest }) {
     return {
       children: {
-        user: nest(User.Logic).singleton(true),
+        user: nest(User.Logic).singleton(),
       }
     }
   }
@@ -364,7 +364,7 @@ export const Logic = {
 ```
 You should already understand what is going on above, except one thing...
 
-**`nest(User.Logic).singleton(true)`** makes `User.Logic` logic as "singleton" in scope of your app. It means that all commands form the `User.Logic` will be automatically binded to the `shared.user` model. So, if you will want to execute the `User.Logic.Login` commands from anywhere in the app, then you will just need to execute `User.Logic.Login` instead of `User.Logic.Login().model(shared.user)`
+**`nest(User.Logic).singleton()`** makes `User.Logic` logic as "singleton" in scope of your app. It means that all commands form the `User.Logic` will be automatically binded to the `shared.user` model. So, if you will want to execute the `User.Logic.Login` commands from anywhere in the app, then you will just need to execute `User.Logic.Login` instead of `User.Logic.Login().model(shared.user)`
 
 Shared block's Logic is singleton by default. So, all commands from your shared block can be executed without `.model(shared)` part.
 
