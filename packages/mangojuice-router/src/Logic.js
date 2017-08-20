@@ -81,8 +81,13 @@ export const Logic = {
     });
   },
 
-  @Cmd.update
+  @Cmd.batch
   UpdateRouter(ctx, newValues) {
+    return this.DoUpdateRouter(newValues);
+  },
+
+  @Cmd.uodate
+  DoUpdateRouter(ctx, newValues) {
     return newValues;
   },
 
