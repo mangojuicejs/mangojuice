@@ -24,7 +24,7 @@ export const Logic = {
       const defaultRoute = meta.routes.roots.find(
         x => x && x.routeId && x.options && x.options.default
       );
-      if (defaultRoute && location.pathname === "/") {
+      if (defaultRoute && meta.history.location.pathname === "/") {
         meta.history.replace(defaultRoute.pattern + meta.history.location.search);
       }
       const unlisten = meta.history.listen(handleHistoryChange);
