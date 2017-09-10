@@ -36,6 +36,9 @@ describe("Router basic usage cases", () => {
     Articles: Router.route('/articles', null, { default: true }),
     News: Router.route('/news', NewsRoutes),
   }
+  const DefaultRoutes = {
+    Root: Router.route('/', null, { default: true }),
+  }
   const routes = { MainRoutes, NewsRoutes };
 
   it("should activate default non root route", async () => {
@@ -116,5 +119,13 @@ describe("Router basic usage cases", () => {
     const link = Router.link(app.model.router, cmd);
 
     expect(link).toEqual({ onClick: cmd, href: '/news/' });
+  });
+
+  it("should keep search query on default route redirection", async () => {
+    const SharedBlock = createSharedBlock(DefaultRoutes, { initialEntries: [ '/?utm_campaign=tbbe' ] });
+    const { app, commandNames } = await runWithTracking({ app: SharedBlock });
+
+    expect(Router.isActive(app.model.router, DefaultRoutes.Root)).toBeTruthy();
+    expect(app.model.router.query).toEqual({ utm_campaign: 'tbbe' });
   });
 });
