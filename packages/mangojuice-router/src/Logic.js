@@ -86,7 +86,7 @@ export const Logic = {
     return this.DoUpdateRouter(newValues);
   },
 
-  @Cmd.uodate
+  @Cmd.update
   DoUpdateRouter(ctx, newValues) {
     return newValues;
   },

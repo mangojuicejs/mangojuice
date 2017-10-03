@@ -1,5 +1,6 @@
 import { Process, createContext } from "./Process";
 import { NopeCmd } from "./Cmd";
+import { emptyArray } from './Utils';
 import DefaultLogger from "./DefaultLogger";
 
 // Constants
@@ -135,4 +136,43 @@ export const render = props => {
     props.mounter.unmount();
     return { app, shared, html };
   });
+};
+
+/**
+ * Function creates an object for rendering already created model
+ * in scope of one application by given view and logic. All
+ * logic is running independently and connects with each other
+ * only in one app context.
+ * @param  {Object} props
+ * @return {Object}
+ */
+export const createRenderer = ({
+  mounter: defMounter,
+  logger = DefaultLogger
+}) => {
+  const loggerImpl = new logger('app');
+  const appContext = createContext();
+
+  return ({
+    View, Logic, model,
+    config = emptyArray,
+    mounter = defMounter
+  }) => {
+    let runRes = Promise.resolve();
+    if (model && !model.__proc) {
+      const proc = new Process({
+        logic: Logic,
+        sharedModel: model,
+        logger: loggerImpl,
+        configArgs: config,
+        appContext
+      });
+      proc.bind(model);
+      runRes = proc.run();
+    }
+    return {
+      view: mounter.mount(model.__proc, View),
+      done: runRes
+    };
+  };
 };
