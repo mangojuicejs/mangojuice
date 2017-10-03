@@ -150,7 +150,9 @@ export const createRenderer = ({
   mounter: defMounter,
   logger = DefaultLogger
 }) => {
+  const loggerImpl = new logger('app');
   const appContext = createContext();
+
   return ({
     View, Logic, model,
     config = emptyArray,
@@ -158,7 +160,6 @@ export const createRenderer = ({
   }) => {
     let runRes = Promise.resolve();
     if (model && !model.__proc) {
-      const loggerImpl = new logger('app', model);
       const proc = new Process({
         logic: Logic,
         sharedModel: model,
