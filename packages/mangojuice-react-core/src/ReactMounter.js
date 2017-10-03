@@ -32,7 +32,10 @@ export default reactImpl => {
       this.unmount();
       this.mounted = true;
       const element = this.execView(proc, view);
-      return render(element, this.container);
+      if (this.container) {
+        return render(element, this.container);
+      }
+      return element;
     }
 
     unmount() {
