@@ -15,10 +15,7 @@ export function createBlockResolver(asyncRequire, lazyBlock) {
       Object.assign(model, actualModel);
     }
 
-    if (
-      model.__proc && model.__proc.config &&
-      model.__proc.config.__args
-    ) {
+    if (model.__proc && modelArgs) {
       delete model.__proc.config;
       model.__proc.logic = resolvedBlock.Logic;
       model.__proc.bind(model);
@@ -28,19 +25,23 @@ export function createBlockResolver(asyncRequire, lazyBlock) {
   };
 
   const handleRequireResult = actualBlock => {
-    resolvedBlock = actualBlock;
-    resolver.resolvedBlock = actualBlock;
+    const block = actualBlock && actualBlock.Logic
+      ? actualBlock : actualBlock.default;
+
+    resolvedBlock = block;
+    resolver.resolvedBlock = block;
+
     Object.keys(lazyBlock.Logic).forEach(k => {
-      const cmd = actualBlock.Logic[k];
+      const cmd = block.Logic[k];
       if (cmd && cmd.id) {
-        actualBlock.Logic[k].id = lazyBlock.Logic[k].id;
-        actualBlock.Logic[k].Before = lazyBlock.Logic[k].Before;
-        actualBlock.Logic[k].After = lazyBlock.Logic[k].After;
+        block.Logic[k].id = lazyBlock.Logic[k].id;
+        block.Logic[k].Before = lazyBlock.Logic[k].Before;
+        block.Logic[k].After = lazyBlock.Logic[k].After;
       }
     });
-    Object.assign(lazyBlock.Logic, actualBlock.Logic);
-    Object.assign(lazyBlock, actualBlock);
-    resolveRequirePromise(actualBlock);
+    Object.assign(lazyBlock.Logic, block.Logic);
+    Object.assign(lazyBlock, block);
+    resolveRequirePromise(block);
   };
 
   const resolver = function(newModel) {
