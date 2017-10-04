@@ -437,7 +437,7 @@ export class Process {
     const result = cmd.exec(this.execProps);
     if (result) {
       if (cmd.exec === Cmd.execBatch) {
-        const batchRes = maybeMap(result, x => x.exec && this.exec(x));
+        const batchRes = maybeMap(result, x => this.exec(x));
         resPromise.add(Promise.all(batchRes));
       } else if (cmd.exec === Cmd.execUpdate) {
         modelUpdated = this.updateModel(result);
