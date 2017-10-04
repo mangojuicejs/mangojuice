@@ -15,8 +15,10 @@ export function createBlockResolver(asyncRequire, lazyBlock) {
       Object.assign(model, actualModel);
     }
 
-    const logicArgs = model.__proc && model.__proc.config.__args;
-    if (logicArgs) {
+    if (
+      model.__proc && model.__proc.config &&
+      model.__proc.config.__args
+    ) {
       delete model.__proc.config;
       model.__proc.logic = resolvedBlock.Logic;
       model.__proc.bind(model);
