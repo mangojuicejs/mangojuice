@@ -213,6 +213,7 @@ export class Process {
     // is not disabled by `manualSharedSubscribe` config field.
     if (
       this.sharedModel &&
+      this.sharedModel.__proc &&
       this.sharedModel !== this.rootProc.model &&
       !this.config.manualSharedSubscribe
     ) {

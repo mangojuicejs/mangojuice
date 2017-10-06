@@ -148,13 +148,14 @@ export const render = props => {
  */
 export const createRenderer = ({
   mounter: defMounter,
-  logger = DefaultLogger
+  defaultLogger = DefaultLogger
 }) => {
-  const loggerImpl = new logger('app');
+  const loggerImpl = new defaultLogger('app');
   const appContext = createContext();
 
   return ({
-    View, Logic, model,
+    View, Logic, model, shared,
+    logger = loggerImpl,
     config = emptyArray,
     mounter = defMounter
   }) => {
@@ -162,10 +163,10 @@ export const createRenderer = ({
     if (model && !model.__proc) {
       const proc = new Process({
         logic: Logic,
-        sharedModel: model,
-        logger: loggerImpl,
+        sharedModel: shared || model,
         configArgs: config,
-        appContext
+        appContext,
+        logger
       });
       proc.bind(model);
       runRes = proc.run();

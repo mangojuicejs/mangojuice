@@ -98,6 +98,7 @@ describe("Block specs", () => {
         "BlockA.HandleB_2",
         "BlockA.FromSubCmd",
         "BlockA.FromPortCmd",
+        "BlockA.FromPortCmd_1",
         "BlockA.FromPortCmd_2",
         "BlockA.FromPortAsync",
         "BlockA.FromInitOneCmd",
