@@ -22,13 +22,19 @@ export function createCommand(name, func, exec, opts) {
         this._model = modelObj;
         return this;
       },
+      clone() {
+        return { ...this };
+      },
+      get isBefore() {
+        return this.id === this.beforeId;
+      },
+      get isAfter() {
+        return this.id === this.afterId;
+      },
       is(cmd, model) {
         return cmd &&
           (this.id === cmd.id || this.name === cmd) &&
           (!model || this._model === model);
-      },
-      clone() {
-        return { ...this };
       }
     };
   };
