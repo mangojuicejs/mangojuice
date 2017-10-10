@@ -138,9 +138,8 @@ export function execTask(props) {
       if (err && err.cancelled) {
         reject(createNopeCmd(`${this.funcName}.Cancelled`)());
       } else {
-        const actualFailCmd = failCmd
-          ? appendArgs(failCmd, [err])
-          : createNopeCmd(`${this.funcName}.Failed`)(err);
+        const actualFailCmd = failCmd && appendArgs(failCmd, [err])
+        if (!actualFailCmd) proc.logExecutionError(err);
         reject(actualFailCmd);
       }
     };

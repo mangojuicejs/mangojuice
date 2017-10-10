@@ -156,7 +156,9 @@ export class Process {
    */
   bindComputed() {
     if (!this.logic.computed) return;
-    const computedFields = this.logic.computed(this.execProps);
+    const computedFields = this.safeExecFunction(
+      () => this.logic.computed(this.execProps));
+
     if (computedFields) {
       this.computedFields = maybeMap(Object.keys(computedFields), k => {
         const get = memoize(computedFields[k]);
@@ -267,16 +269,9 @@ export class Process {
         destroy: new Promise(r => (this.portDestroyResolver = r))
       };
 
-      // Try to run port
-      let result = null;
-      try {
-        result = this.logic.port(portProps);
-      } catch (e) {
-        this.logger.onCatchError(e, null, this.model);
-        console.error(e);
-      }
-
-      // Resolve with the resul
+      // Run and resolve port
+      const result = this.safeExecFunction(
+        () => this.logic.port(portProps));
       return Promise.resolve(result);
     }
   }
@@ -399,6 +394,34 @@ export class Process {
   }
 
   /**
+   * Execute some function in try/catch and if some error
+   * accured print it to console and call logger function.
+   * Returns result of function execution or null.
+   * @param  {Function}    func
+   * @return {any}
+   */
+  safeExecFunction(func, cmd) {
+    let result = null;
+    try {
+      result = func();
+    } catch (e) {
+      this.logExecutionError(error, cmd);
+    }
+    return result;
+  }
+
+  /**
+   * Log execution error usign active logger and also
+   * print the error to the console
+   * @param  {Error} error
+   * @param  {?Cmd} cmd
+   */
+  logExecutionError(error, cmd) {
+    this.logger.onCatchError(error, cmd, this.model);
+    console.error(error);
+  }
+
+  /**
    * Run all parent handler from parent processes to handle
    * executed command. Returns a promise which will be resolved
    * when all handlers will be fully executed.
@@ -446,15 +469,7 @@ export class Process {
 
     // Run the command
     let modelUpdated = false;
-    let result = null;
-
-    // Try to execute the command
-    try {
-      result = cmd.exec(this.execProps);
-    } catch (e) {
-      this.logger.onCatchError(e, cmd, this.model);
-      console.error(e);
-    }
+    const result = this.safeExecFunction(() => cmd.exec(this.execProps), cmd);
 
     // Handle results of the execution
     if (result) {
