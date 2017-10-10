@@ -266,7 +266,18 @@ export class Process {
         exec: this.exec,
         destroy: new Promise(r => (this.portDestroyResolver = r))
       };
-      return Promise.resolve(this.logic.port(portProps));
+
+      // Try to run port
+      let result = null;
+      try {
+        result = this.logic.port(portProps);
+      } catch (e) {
+        this.logger.onCatchError(e, null, this.model);
+        console.error(e);
+      }
+
+      // Resolve with the resul
+      return Promise.resolve(result);
     }
   }
 
@@ -435,7 +446,17 @@ export class Process {
 
     // Run the command
     let modelUpdated = false;
-    const result = cmd.exec(this.execProps);
+    let result = null;
+
+    // Try to execute the command
+    try {
+      result = cmd.exec(this.execProps);
+    } catch (e) {
+      this.logger.onCatchError(e, cmd, this.model);
+      console.error(e);
+    }
+
+    // Handle results of the execution
     if (result) {
       if (cmd.exec === Cmd.execBatch) {
         const batchRes = maybeMap(result, x => this.exec(x));

@@ -14,6 +14,8 @@ export class DefaultLogger {
 
   onEndHandling(cmd, model) {}
 
+  onCatchError(error, cmd, model) {}
+
   onExecuted(cmd, model, result) {}
 
   onEmitSubscriptions(cmd, model) {}
