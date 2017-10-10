@@ -404,7 +404,7 @@ export class Process {
     let result = null;
     try {
       result = func();
-    } catch (e) {
+    } catch (error) {
       this.logExecutionError(error, cmd);
     }
     return result;
@@ -469,7 +469,8 @@ export class Process {
 
     // Run the command
     let modelUpdated = false;
-    const result = this.safeExecFunction(() => cmd.exec(this.execProps), cmd);
+    const result = this.safeExecFunction(
+      () => cmd.exec(this.execProps), cmd);
 
     // Handle results of the execution
     if (result) {
