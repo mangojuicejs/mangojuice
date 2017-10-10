@@ -1,18 +1,38 @@
 import { Cmd, Utils, MODEL_UPDATED_EVENT } from "mangojuice-core";
-import ViewPortCreator from "./ViewPort";
-import ViewInContextCreator from "./ViewInContext";
+import { setContext, getContext } from './ViewRenderContext';
 
 
 export default reactImpl => {
-  const ViewPort = ViewPortCreator(reactImpl);
-  const ViewInContext = ViewInContextCreator(reactImpl);
   const { Component, createElement } = reactImpl;
 
   class ViewWrapper extends Component {
     execsMap = {};
     prevExecsMap = {};
 
+    constructor(props, ...args) {
+      super(props, ...args);
+      this.viewContext = {
+        nest: props.nest,
+        model: props.proc.model,
+        shared: props.proc.sharedModel,
+        exec: this.execCommand
+      };
+      this.nestProps = {
+        ...this.viewContext,
+        ...props.props
+      };
+    }
+
+    componentWillMount() {
+      this.pushContext();
+    }
+
+    componentWillUpdate() {
+      this.pushContext();
+    }
+
     componentDidMount() {
+      this.popContext();
       this.unmounted = false;
       this.props.proc.addListener(MODEL_UPDATED_EVENT, this.updateView);
     }
@@ -23,11 +43,22 @@ export default reactImpl => {
     }
 
     componentDidUpdate() {
+      this.popContext();
       this.prevExecsMap = {};
     }
 
     shuoldComponentUpdate() {
       return false;
+    }
+
+    pushContext() {
+      this.prevContext = getContext();
+      setContext(this.viewContext);
+    }
+
+    popContext() {
+      setContext(this.prevContext);
+      this.prevContext = null;
     }
 
     updateView = () => {
@@ -36,7 +67,7 @@ export default reactImpl => {
       if (!this.unmounted) {
         this.forceUpdate();
       }
-    };
+    }
 
     execCommand = cmd => {
       const cmdHash = Cmd.hash(cmd);
@@ -49,43 +80,18 @@ export default reactImpl => {
           this.props.proc.exec(callCmd);
         });
       return this.execsMap[cmdHash];
-    };
-
-    renderPort() {
-      return createElement(ViewPort, this.props);
     }
 
     renderView() {
-      const {
-        View,
-        proc: { model, sharedModel: shared },
-        nest,
-        props,
-        children
-      } = this.props;
-      const nestProps = {
-        ...props,
-        model,
-        shared,
-        nest,
-        exec: this.execCommand
-      };
-      nestProps.all = nestProps;
-      return createElement(ViewInContext, nestProps,
-        createElement(View, nestProps, children)
-      );
+      const { View, children } = this.props;
+      return createElement(View, this.nestProps, children);
     }
 
     render() {
       if (!this.props.proc.model.__proc) {
         return createElement("div");
       }
-
-      const parentMounter = this.props.mounter;
-      const propsMounter = this.props.props && this.props.props.mounter;
-      return propsMounter && propsMounter !== parentMounter
-        ? this.renderPort()
-        : this.renderView();
+      return this.renderView();
     }
   }
 

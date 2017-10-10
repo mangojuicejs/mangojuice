@@ -1,5 +1,4 @@
 import { getContext } from "./ViewRenderContext";
-import ViewInContext from "./ViewInContext";
 
 
 export default (reactImpl) => {
@@ -7,9 +6,6 @@ export default (reactImpl) => {
   if (reactImpl.createElement.__wrapped) {
     return reactImpl.createElement;
   }
-
-  // Component for nesting views for the same model
-  const ViewInContextComp = ViewInContext(reactImpl);
 
   // Patching createElement fuction to support
   // commands and command creators as a prop
@@ -34,13 +30,7 @@ export default (reactImpl) => {
           props.shared = context.shared;
           props.exec = context.exec;
           props.nest = context.nest;
-          props.all = props;
-
-          return reactImpl.createElement(
-            ViewInContextComp,
-            props,
-            reactImpl.createElement(View, props, ...args)
-          );
+          return reactImpl.createElement(View, props, ...args);
         }
         return context.nest(props.model, View, props);
       }

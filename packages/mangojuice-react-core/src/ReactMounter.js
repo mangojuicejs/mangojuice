@@ -17,14 +17,7 @@ export default reactImpl => {
       const nest = (model, nestView, nestProps) => {
         return this.execView(model.__proc, nestView, nestProps);
       };
-      const viewProps = {
-        key: proc.id,
-        mounter: this,
-        View,
-        proc,
-        nest,
-        props
-      };
+      const viewProps = { key: proc.id, View, proc, nest, props };
       return createElement(ViewWrapper, viewProps);
     }
 
