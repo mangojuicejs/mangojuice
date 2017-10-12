@@ -10,6 +10,7 @@ import {
   memoize,
   noop,
   handleModelChanges,
+
   MODEL_UPDATED_EVENT,
   CHILD_MODEL_UPDATED_EVENT,
   DESTROY_MODEL_EVENT
@@ -52,7 +53,8 @@ export class Process {
     config,
     configArgs,
     execHandlers,
-    singletonValue
+    singletonValue,
+    parentComputedFn
   }) {
     this.id = nextId();
     this.rootProc = rootProc || this;
@@ -66,6 +68,7 @@ export class Process {
     this.configArgs = configArgs || emptyArray;
     this.execHandlers = execHandlers;
     this.singletonValue = singletonValue;
+    this.parentComputedFn = parentComputedFn;
   }
 
   bind(model) {
@@ -172,38 +175,48 @@ export class Process {
    * when one of dependent models will be changed.
    */
   bindComputed() {
-    if (!this.logic.computed) return;
-    const computedFields = this.safeExecFunction(() =>
-      this.logic.computed({ ...this.execProps, depends })
-    );
-
-    if (computedFields) {
-      this.computedFields = maybeMap(Object.keys(computedFields), k => {
-        let get = noop;
-        const computeVal = computedFields[k];
-
-        if (is.func(computeVal)) {
-          get = memoize(computeVal);
-        } else if (is.object(computeVal)) {
-          get = memoize(() => computeVal.computeFn(...computeVal.deps));
-          this.createPortDestroyPromise();
-          maybeForEach(computeVal.deps, m => {
-            handleModelChanges(m, () => {
-              get.reset();
-              this.emitModelUpdate();
-            }, this.portDestroyPromise);
-          });
-        }
-
-        Object.defineProperty(this.model, k, {
-          enumerable: true,
-          configurable: true,
-          set: noop,
-          get
+    this.computedFields = emptyArray;
+    if (this.logic.computed) {
+      const ownComputedFields = this.safeExecFunction(() =>
+        this.logic.computed({ ...this.execProps, depends })
+      );
+      if (ownComputedFields) {
+        this.computedFields = maybeMap(Object.keys(ownComputedFields), k => {
+          return this.defineComputedField(k, ownComputedFields[k]);
         });
-        return get;
+      }
+    }
+  }
+
+  defineComputedField(fieldName, computeVal) {
+    let get = noop;
+
+    if (is.func(computeVal)) {
+      get = memoize(computeVal);
+    } else if (is.object(computeVal)) {
+      get = memoize(() => computeVal.computeFn(...computeVal.deps));
+      const updateHandler = () => {
+        get.reset();
+        this.emitModelUpdate();
+      };
+      const destroyHandler = () => {
+        this.bindComputed();
+      };
+
+      this.createPortDestroyPromise();
+      maybeForEach(computeVal.deps, m => {
+        handleModelChanges(m, updateHandler, this.portDestroyPromise, destroyHandler);
       });
     }
+
+    Object.defineProperty(this.model, fieldName, {
+      enumerable: true,
+      configurable: true,
+      set: noop,
+      get
+    });
+
+    return get;
   }
 
   /**
@@ -235,6 +248,7 @@ export class Process {
   run() {
     if (this.running) return;
     this.running = true;
+
     const resPromise = createResultPromise();
     resPromise.add(this.runChildren());
     resPromise.add(this.runPorts());
@@ -283,11 +297,11 @@ export class Process {
     delete this.model.__proc;
     this.unbindCommands();
     this.stopPorts();
+    this.emit(DESTROY_MODEL_EVENT);
+    this.eventHandlers = null;
     if (deep) {
       this.mapChildren(this.model, x => x.__proc.destroy(true));
     }
-    this.emit(DESTROY_MODEL_EVENT);
-    this.eventHandlers = null;
   }
 
   stopPorts() {
@@ -324,9 +338,11 @@ export class Process {
    * @param {Function} listener
    */
   addListener(event, listener) {
-    this.eventHandlers = this.eventHandlers || {};
-    this.eventHandlers[event] = this.eventHandlers[event] || [];
-    this.eventHandlers[event].push(listener);
+    if (listener) {
+      this.eventHandlers = this.eventHandlers || {};
+      this.eventHandlers[event] = this.eventHandlers[event] || [];
+      this.eventHandlers[event].push(listener);
+    }
   }
 
   removeListener(event, listener) {

@@ -106,9 +106,6 @@ describe("Computed", () => {
       createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
       Logic: {
         name: "AppBlock",
-        config() {
-          return { manualSharedSubscribe: true };
-        },
         computed({ model, shared, depends }) {
           return {
             c: depends(shared).compute(() => shared.f + shared.e + model.a),

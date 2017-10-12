@@ -87,12 +87,16 @@ export const ensureCmdObject = cmd => {
   return cmd;
 };
 
-export const handleModelChanges = (model, handler, destroy, initRun) => {
+export const handleModelChanges = (model, handler, destroy, destroyHandler) => {
   if (model.__proc) {
     const proc = model.__proc;
     proc.addListener(MODEL_UPDATED_EVENT, handler);
+    proc.addListener(DESTROY_MODEL_EVENT, destroyHandler);
     if (destroy && destroy.then) {
-      destroy.then(() => proc.removeListener(MODEL_UPDATED_EVENT, handler));
+      destroy.then(() => {
+        proc.removeListener(MODEL_UPDATED_EVENT, handler)
+        proc.removeListener(DESTROY_MODEL_EVENT, destroyHandler);
+      });
     }
   }
   return Promise.resolve();

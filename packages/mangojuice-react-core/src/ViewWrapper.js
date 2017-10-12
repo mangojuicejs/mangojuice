@@ -14,7 +14,6 @@ export default reactImpl => {
       this.viewContext = {
         nest: props.nest,
         model: props.proc.model,
-        shared: props.proc.sharedModel,
         exec: this.execCommand
       };
       this.nestProps = {
