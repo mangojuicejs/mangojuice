@@ -5,7 +5,7 @@ import * as Tasks from './Tasks';
 export const Logic = {
   name: 'Intl',
 
-  config(ctx, languages) {
+  config(languages) {
     return {
       initCommands: this.LoadMessages,
       meta: { languages }

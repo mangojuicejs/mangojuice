@@ -9,6 +9,7 @@ import {
   ensureCmdObject,
   memoize,
   noop,
+  handleModelChanges,
   MODEL_UPDATED_EVENT,
   CHILD_MODEL_UPDATED_EVENT,
   DESTROY_MODEL_EVENT
@@ -125,11 +126,11 @@ export class Process {
    * If model already binded to some model do nothing.
    * Return true if model sucessfully binded to the process.
    * Othersise returns false
+   * @param  {Object} childModel
    * @param  {String} fieldName
    * @return {Boolean}
    */
-  bindChild(fieldName) {
-    const childModel = this.model[fieldName];
+  bindChild(childModel, fieldName) {
     if (childModel && !childModel.__proc) {
       const subProc = new Process(this.config.children[fieldName]);
       subProc.parentProc = this;
@@ -141,7 +142,7 @@ export class Process {
 
   bindChildren() {
     this.mapChildren(this.model, (childModel, fieldName) => {
-      this.bindChild(fieldName);
+      this.bindChild(childModel, fieldName);
     });
   }
 
@@ -187,7 +188,10 @@ export class Process {
           get = memoize(() => computeVal.computeFn(...computeVal.deps));
           this.createPortDestroyPromise();
           maybeForEach(computeVal.deps, m => {
-            Utils.handleModelChanges(m, this.emitModelUpdate, this.portDestroyPromise);
+            handleModelChanges(m, () => {
+              get.reset();
+              this.emitModelUpdate();
+            }, this.portDestroyPromise);
           });
         }
 
@@ -229,6 +233,8 @@ export class Process {
    * @return {Promise}
    */
   run() {
+    if (this.running) return;
+    this.running = true;
     const resPromise = createResultPromise();
     resPromise.add(this.runChildren());
     resPromise.add(this.runPorts());
@@ -237,9 +243,9 @@ export class Process {
   }
 
   runChildren() {
-    return this.mapChildren(this.model, childModel => {
-      return childModel.__proc.run();
-    });
+    return this.mapChildren(this.model, (childModel) =>
+      childModel.__proc.run()
+    );
   }
 
   runPorts() {
@@ -269,7 +275,7 @@ export class Process {
 
   /**
    * Destroy the process with unbinding from the model and cleaning
-   * up all the parts of the process (stop ports, subscribtions, computed
+   * up all the parts of the process (stop ports, computed
    * fields).
    * @param  {Boolean} deep If true then all children blocks will be destroyed
    */
@@ -342,7 +348,7 @@ export class Process {
   }
 
   emitModelUpdate = (cmd) => {
-    const finalCmd = is.cmd(cmd) ? cmd : Cmd.defaultNopeCmd;
+    const finalCmd = is.command(cmd) ? cmd : Cmd.defaultNopeCmd;
     return Promise.all([
       this.emit(MODEL_UPDATED_EVENT, finalCmd, this.model),
       this.rootProc.emit(CHILD_MODEL_UPDATED_EVENT, finalCmd, this.model)
@@ -392,7 +398,7 @@ export class Process {
     const tick = nextId();
     const updateKeys = Object.keys(updateObj);
     const updateMarker = (childModel, fieldName) => {
-      if (this.bindChild(fieldName)) {
+      if (this.bindChild(childModel, fieldName)) {
         rebindComputed = true;
         childModel.__proc.run();
       }

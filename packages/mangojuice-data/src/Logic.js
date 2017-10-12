@@ -6,13 +6,14 @@ import * as Utils from './Utils';
 export const Logic = {
   name: 'Data',
 
-  config({ nest }, opts = {}) {
-    return {
-      meta: opts,
-      children: opts.block
-        ? { rawData: nest(opts.block.Logic) }
-        : {}
-    };
+  config(meta = {}) {
+    return { meta };
+  },
+
+  children({ nest, meta }) {
+    return meta.block
+      ? { rawData: nest(meta.block.Logic) }
+      : {};
   },
 
   @Cmd.update

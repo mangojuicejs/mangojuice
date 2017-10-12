@@ -101,7 +101,7 @@ export const route = (pattern, children, options = {}) => {
  * @param  {Array} commands
  * @return {Object}
  */
-export const createRouteMaps = (commands) => {
+export const createRouteMaps = (commandsObj) => {
   const map = {};
   const children = {};
   const parents = {};
@@ -119,7 +119,10 @@ export const createRouteMaps = (commands) => {
   };
 
   // Create map, children and parents from routes
-  const routes = commands.filter(cmd => cmd && cmd.routeId);
+  const routes = Object.keys(commandsObj)
+    .map(k => commandsObj[k])
+    .filter(cmd => cmd && cmd.routeId);
+
   routes.forEach(r => {
     const suffix = r.children ? "(/*)" : "/";
     const normPatt = r.pattern.replace(/\/+$/, "") + suffix;

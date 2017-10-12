@@ -7,7 +7,7 @@ import * as Utils from "./Utils";
 export const Logic = {
   name: "Field",
 
-  config({ nest }, opts = {}) {
+  config(opts = {}) {
     const meta = {
       ...opts,
       normalize: opts.normalize || (x => x),
@@ -16,11 +16,14 @@ export const Logic = {
     return {
       meta,
       initCommands: this.InitField(),
-      children: {
-        options: nest(Data.Logic).handler(this.HandleOption).args({
-          retreiver: meta.optionsGetter
-        })
-      }
+    };
+  },
+
+  children({ meta, nest }) {
+    return {
+      options: nest(Data.Logic).handler(this.HandleOption).args({
+        retreiver: meta.optionsGetter
+      })
     };
   },
 

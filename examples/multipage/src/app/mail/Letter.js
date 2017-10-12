@@ -1,5 +1,5 @@
 import React from "mangojuice-react";
-import { Cmd } from "mangojuice-core";
+import { Cmd, Utils } from "mangojuice-core";
 import * as Intl from "mangojuice-intl";
 
 
@@ -18,13 +18,8 @@ export const createModel = (letter: Model): Model => ({
 export const Logic = {
   name: "Letter",
 
-  config({ shared, subscribe }) {
-    return {
-      subscriptions: subscribe(shared.intl).handler(this.SubSmth)
-    };
-  },
-
-  port({ destroy }) {
+  port({ exec, shared, destroy }) {
+    Utils.handleModelChanges(shared.route, () => exec(this.SubSmth()), destroy);
     destroy.then(() => console.log("port destroyed"));
   },
 

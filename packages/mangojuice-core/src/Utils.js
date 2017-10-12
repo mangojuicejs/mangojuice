@@ -87,7 +87,7 @@ export const ensureCmdObject = cmd => {
   return cmd;
 };
 
-export const handleModelChanges = (model, handler, destroy) => {
+export const handleModelChanges = (model, handler, destroy, initRun) => {
   if (model.__proc) {
     const proc = model.__proc;
     proc.addListener(MODEL_UPDATED_EVENT, handler);
@@ -95,7 +95,7 @@ export const handleModelChanges = (model, handler, destroy) => {
       destroy.then(() => proc.removeListener(MODEL_UPDATED_EVENT, handler));
     }
   }
-  return  Promise.resolve();
+  return Promise.resolve();
 };
 
 export const objectValues = (obj) => {

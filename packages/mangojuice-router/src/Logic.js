@@ -1,15 +1,39 @@
 import createBrowserHistory from "history/createBrowserHistory";
 import qs from "qs";
-import { Cmd } from "mangojuice-core";
-import * as Utils from './Utils';
+import { Cmd, Utils } from "mangojuice-core";
+import { createRouteMaps, findFirstPath } from './Utils';
 
 
-export const Logic = {
+/**
+ * Flatten routes tree and returns an object where each
+ * key is a unique path name
+ * @param  {Object} routesTree
+ * @return {Object}
+ */
+const flattenRoutesTree = (routesTree, res = {}) => {
+  for (const k in routesTree) {
+    const cmd = routesTree[k];
+    if (cmd && cmd.routeId) {
+      res[`Route_${Utils.nextId()}`] = cmd;
+      if (cmd.children) {
+        flattenRoutesTree(cmd.children, res);
+      }
+    }
+  }
+  return res;
+};
+
+/**
+ * By given routes tree create a Router logic and returns it
+ * @param  {Object} routesTree
+ * @return {Object}
+ */
+export const createLogic = (routesTree) => ({
+  ...flattenRoutesTree(routesTree),
   name: "Router",
 
-  config({ binded }, options = {}) {
-    const { request, createHistory = createBrowserHistory } = options;
-    const routes = Utils.createRouteMaps(binded);
+  config({ request, createHistory = createBrowserHistory } = {}) {
+    const routes = createRouteMaps(this);
     const history = request ? null : createHistory();
     return {
       meta: { routes, history, request }
@@ -40,7 +64,7 @@ export const Logic = {
 
   @Cmd.batch
   HandleLocationChange({ model, meta }, location) {
-    const firstPath = Utils.findFirstPath(meta.routes, location.pathname);
+    const firstPath = findFirstPath(meta.routes, location.pathname);
     const active = {};
     const changedRoutes = {};
     const appearedOnce = { ...model.appearedOnce };
@@ -101,4 +125,4 @@ export const Logic = {
       search: qs.stringify(newQuery)
     });
   }
-};
+});

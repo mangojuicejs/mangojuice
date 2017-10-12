@@ -14,20 +14,22 @@ export const getLettersIdnt = ({ route }) => {
 export const Logic = {
   name: "Inbox",
 
-  config({ subscribe, nest, shared }) {
+  children({ nest }) {
     return {
-      subscriptions: subscribe(shared.route).handler(this.HandleRouter),
-      children: {
-        boxes: nest(Data.Logic).args({
-          retreiver: Tasks.GetBoxesList
-        }),
-        letters: nest(Data.Logic).handler(this.HandleLetterData).args({
-          retreiver: Tasks.GetBoxLetters,
-          searcher: Tasks.GetSearchLetters,
-          block: Letter
-        })
-      }
+      boxes: nest(Data.Logic).args({
+        retreiver: Tasks.GetBoxesList
+      }),
+      letters: nest(Data.Logic).handler(this.HandleLetterData).args({
+        retreiver: Tasks.GetBoxLetters,
+        searcher: Tasks.GetSearchLetters,
+        block: Letter
+      })
     };
+  },
+
+  port({ exec, shared, destroy }) {
+    Utils.handleModelChanges(shared.route, () => exec(this.HandleRouter()), destroy);
+    return exec(this.HandleRouter());
   },
 
   @Cmd.batch

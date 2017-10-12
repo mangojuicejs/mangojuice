@@ -8,40 +8,39 @@ export const Logic = {
   ...Form.Logic,
   name: "CreateForm",
 
-  config(props) {
-    const { nest } = props;
-    const formConfig = Form.Logic.config(props, {
+  config() {
+    return Form.Logic.config({
       validateForm: Tasks.ValidateForm,
       submitForm: Tasks.SubmitNewArticle
     });
+  },
+
+  children({ nest }) {
     return {
-      ...formConfig,
-      children: {
-        title: nest(Field.Logic).handler(this.HandleField).args({
-          validator: x => (x.length < 10 ? "Title is too short" : ""),
-          normalize: x => x.toUpperCase()
-        }),
-        article: nest(Field.Logic).handler(this.HandleField).args({
-          validator: x => (!x.length ? "Required" : "")
-        }),
-        category: nest(Field.Logic).handler(this.HandleField).args({
-          validator: x => (!x.length ? "Required" : "")
-        }),
-        tags: nest(Field.Logic).handler(this.HandleField).args({
-          valueSep: ",",
-          validator: x => (!x.length ? "Required" : "")
-        }),
-        city: nest(Field.Logic).handler(this.HandleField).args({
-          optionsGetter: Tasks.GetCitySuggestions,
-          validator: x => {
-            if (!x) {
-              return "Required";
-            } else if (!x.title) {
-              return "You should select some city";
-            }
+      title: nest(Field.Logic).handler(this.HandleField).args({
+        validator: x => (x.length < 10 ? "Title is too short" : ""),
+        normalize: x => x.toUpperCase()
+      }),
+      article: nest(Field.Logic).handler(this.HandleField).args({
+        validator: x => (!x.length ? "Required" : "")
+      }),
+      category: nest(Field.Logic).handler(this.HandleField).args({
+        validator: x => (!x.length ? "Required" : "")
+      }),
+      tags: nest(Field.Logic).handler(this.HandleField).args({
+        valueSep: ",",
+        validator: x => (!x.length ? "Required" : "")
+      }),
+      city: nest(Field.Logic).handler(this.HandleField).args({
+        optionsGetter: Tasks.GetCitySuggestions,
+        validator: x => {
+          if (!x) {
+            return "Required";
+          } else if (!x.title) {
+            return "You should select some city";
           }
-        })
-      }
+        }
+      })
     };
   },
 

@@ -5,7 +5,7 @@ import * as Utils from "./Utils";
 export const Logic = {
   name: "Form",
 
-  config(ctx, { validateForm, submitForm } = {}) {
+  config({ validateForm, submitForm } = {}) {
     return { meta: { validateForm, submitForm } };
   },
 

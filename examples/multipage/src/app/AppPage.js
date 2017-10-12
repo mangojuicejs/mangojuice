@@ -29,13 +29,11 @@ export const createModel = () => ({
 export const Logic = {
   name: "AppPage",
 
-  config({ nest }) {
+  children({ nest }) {
     return {
-      children: {
-        mail: nest(Mail.Logic).handler(this.HandleMail),
-        news: nest(News.Logic),
-        login: nest(LoginLightbox.Logic)
-      }
+      mail: nest(Mail.Logic).handler(this.HandleMail),
+      news: nest(News.Logic),
+      login: nest(LoginLightbox.Logic)
     };
   },
 

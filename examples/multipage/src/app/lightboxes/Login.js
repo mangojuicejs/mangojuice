@@ -1,5 +1,4 @@
 import React from "mangojuice-react";
-import LightboxMounter from "./mounter";
 import { Cmd } from "mangojuice-core";
 import * as User from "src/shared/User";
 
@@ -9,13 +8,7 @@ export const createModel = (): Model => ({});
 
 // Logic
 export const Logic = {
-  name: "LoginLightbox",
-
-  config() {
-    return {
-      mounter: LightboxMounter
-    };
-  }
+  name: "LoginLightbox"
 };
 
 // View
