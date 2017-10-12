@@ -14,10 +14,44 @@ import {
 // Constants
 export const MODEL_UPDATED_EVENT = "updated";
 export const CHILD_MODEL_UPDATED_EVENT = "childUpdated";
+export const DESTROY_MODEL_EVENT = "destroy";
 
 // Utils
 export const createContext = () => ({
   bindings: {}
+});
+
+/**
+ * Helper for defining computed field dependencies. Returns
+ * an object with dependencies and compute function
+ * @param  {...object} deps  List of block models
+ * @return {Object}
+ */
+const depend = (...deps) => ({
+  computeFn: noop,
+  deps: deps,
+  compute(func) {
+    this.computeFn = func;
+    return this;
+  }
+});
+
+/**
+ * Helper function to create subscription object based
+ * on given arguments. Returned object will be used by
+ * `runSubscription` function of `Process`
+ *
+ * @param  {?Function|?Object} handler [description]
+ * @param  {Object} model
+ * @return {Object}
+ */
+const subscribe = (model) => ({
+  model,
+  handlerCmd: null,
+  handler(handler) {
+    this.handlerCmd = ensureCmdObject(handler);
+    return this;
+  },
 });
 
 /**
@@ -55,8 +89,8 @@ export class Process {
     this.bindCommands();
     this.prepareConfig();
     this.bindModel(model);
-    this.bindComputed();
     this.bindChildren();
+    this.bindComputed();
   }
 
   prepareConfig() {
@@ -65,7 +99,7 @@ export class Process {
       this.config = {};
     } else {
       const configProps = {
-        subscribe: this.subscribe,
+        subscribe: subscribe,
         nest: this.nest,
         shared: this.sharedModel,
         binded: this.bindedCommands
@@ -153,15 +187,35 @@ export class Process {
   /**
    * Replace fields in the model with computed getter with memoization
    * if defined in `logic.computed`.
+   * Provide a way to define computed field with object block models
+   * dependencies. So the field will be invalidated and re-computed
+   * when one of dependent models will be changed.
    */
   bindComputed() {
     if (!this.logic.computed) return;
-    const computedFields = this.safeExecFunction(
-      () => this.logic.computed(this.execProps));
+    const computedFields = this.safeExecFunction(() =>
+      this.logic.computed({ ...this.execProps, depend })
+    );
 
     if (computedFields) {
       this.computedFields = maybeMap(Object.keys(computedFields), k => {
-        const get = memoize(computedFields[k]);
+        let get = noop;
+        const computeVal = computedFields[k];
+
+        if (is.func(computeVal)) {
+          get = memoize(computeVal);
+        } else if (is.object(computeVal)) {
+          get = memoize(() => computeVal(...computeVal.deps));
+          maybeForEach(computeVal.deps, m => {
+            this.doSubscribe({
+              model: m,
+              handlerCmd: null,
+              initRun: false,
+              computedField: get
+            });
+          });
+        }
+
         Object.defineProperty(this.model, k, {
           enumerable: true,
           configurable: true,
@@ -238,7 +292,8 @@ export class Process {
     model,
     handlerCmd,
     initRun = true,
-    subEvent = MODEL_UPDATED_EVENT
+    subEvent = MODEL_UPDATED_EVENT,
+    computedField
   }) => {
     const proc = model.__proc;
     const subHandler = cmd => {
@@ -249,13 +304,18 @@ export class Process {
         );
       }
       if (!handlerCmd || this.config.manualSharedSubscribe) {
-        this.resetComputedFields();
+        if (computedField) {
+          computedField.reset();
+        } else {
+          this.resetComputedFields();
+        }
         resPromise.add(this.emit(MODEL_UPDATED_EVENT, cmd));
       }
       return resPromise.get();
     };
     const subStopper = () => proc.removeListener(subEvent, subHandler);
     proc.addListener(subEvent, subHandler);
+    proc.addListener(DESTROY_MODEL_EVENT, subStopper);
     this.subscriptions.push(subStopper);
     return initRun && subHandler(Cmd.defaultNopeCmd());
   }
@@ -318,6 +378,7 @@ export class Process {
     if (deep) {
       this.mapChildren(this.model, x => x.__proc.destroy(true));
     }
+    this.emit(DESTROY_MODEL_EVENT);
   }
 
   addListener(event, listener) {
@@ -372,23 +433,36 @@ export class Process {
    */
   updateModel(updateObj) {
     if (!updateObj) return false;
+    let rebindComputed = false;
     const tick = nextId();
     const updateKeys = Object.keys(updateObj);
     const updateMarker = (x, k) => {
       if (this.bindChild(x, k)) {
+        rebindComputed = true;
         x.__proc.run();
       }
       x.__proc.tick = tick;
     };
     const unmarkedDestroyer = x => {
       if (x.__proc.tick !== tick) {
+        rebindComputed = true;
         x.__proc.destroy();
       }
     };
 
+    // Go throught all children models and mark which one
+    // created and removed
     this.mapChildren(updateObj, updateMarker);
     this.mapChildren(this.model, unmarkedDestroyer, updateKeys);
-    this.resetComputedFields();
+
+    // Computed field may depend on child model, and when child
+    // model destroyed/created we should reflect it in computed fields
+    if (rebindComputed) {
+      this.bindComputed();
+    } else {
+      this.resetComputedFields();
+    }
+
     Object.assign(this.model, updateObj);
     return true;
   }
@@ -571,24 +645,6 @@ export class Process {
     });
     return proc;
   }
-
-  /**
-   * Helper function to create subscription object based
-   * on given arguments. Returned object will be used by
-   * `runSubscription` function of `Process`
-   *
-   * @param  {?Function|?Object} handler [description]
-   * @param  {Object} model
-   * @return {Object}
-   */
-  subscribe = (model) => ({
-    model,
-    handlerCmd: null,
-    handler(handler) {
-      this.handlerCmd = ensureCmdObject(handler);
-      return this;
-    },
-  })
 
   /**
    * Set command exec handler cmd, which will be executed after
