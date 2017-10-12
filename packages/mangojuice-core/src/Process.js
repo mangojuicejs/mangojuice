@@ -8,13 +8,12 @@ import {
   emptyArray,
   ensureCmdObject,
   memoize,
-  noop
+  noop,
+  MODEL_UPDATED_EVENT,
+  CHILD_MODEL_UPDATED_EVENT,
+  DESTROY_MODEL_EVENT
 } from "./Utils";
 
-// Constants
-export const MODEL_UPDATED_EVENT = "updated";
-export const CHILD_MODEL_UPDATED_EVENT = "childUpdated";
-export const DESTROY_MODEL_EVENT = "destroy";
 
 // Utils
 export const createContext = () => ({
@@ -27,7 +26,7 @@ export const createContext = () => ({
  * @param  {...object} deps  List of block models
  * @return {Object}
  */
-const depend = (...deps) => ({
+const depends = (...deps) => ({
   computeFn: noop,
   deps: deps,
   compute(func) {
@@ -36,23 +35,6 @@ const depend = (...deps) => ({
   }
 });
 
-/**
- * Helper function to create subscription object based
- * on given arguments. Returned object will be used by
- * `runSubscription` function of `Process`
- *
- * @param  {?Function|?Object} handler [description]
- * @param  {Object} model
- * @return {Object}
- */
-const subscribe = (model) => ({
-  model,
-  handlerCmd: null,
-  handler(handler) {
-    this.handlerCmd = ensureCmdObject(handler);
-    return this;
-  },
-});
 
 /**
  * Process class for executing logic on a model
@@ -93,20 +75,29 @@ export class Process {
     this.bindComputed();
   }
 
+  /**
+   * Run `children` and `config` methods of the logic object
+   * and create `config` object in the Process based on the result.
+   * @return {[type]} [description]
+   */
   prepareConfig() {
     if (this.config) return;
+
+    // Initialize config
     if (!this.logic.config) {
       this.config = {};
     } else {
-      const configProps = {
-        subscribe: subscribe,
-        nest: this.nest,
-        shared: this.sharedModel,
-        binded: this.bindedCommands
-      };
-      this.config = this.logic.config(configProps, ...this.configArgs) || {};
-      this.config.childrenKeys = Object.keys(this.config.children || {});
+      this.config = this.logic.config(...this.configArgs) || {};
     }
+
+    // Initialize children logic
+    if (this.logic.children) {
+      const childrenProps = { nest: this.nest };
+      this.config.children = this.logic.children(childrenProps) || {};
+      this.config.childrenKeys = Object.keys(this.config.children);
+    }
+
+    // Ensure some config fields
     this.config.meta = this.config.meta || {};
     this.config.childrenKeys = this.config.childrenKeys || [];
   }
@@ -128,9 +119,19 @@ export class Process {
     }
   }
 
-  bindChild(childModel, k) {
+  /**
+   * Create process and bind the process to child model
+   * with given name. If model field is empty then do nothing.
+   * If model already binded to some model do nothing.
+   * Return true if model sucessfully binded to the process.
+   * Othersise returns false
+   * @param  {String} fieldName
+   * @return {Boolean}
+   */
+  bindChild(fieldName) {
+    const childModel = this.model[fieldName];
     if (childModel && !childModel.__proc) {
-      const subProc = new Process(this.config.children[k]);
+      const subProc = new Process(this.config.children[fieldName]);
       subProc.parentProc = this;
       subProc.bind(childModel);
       return true;
@@ -139,47 +140,25 @@ export class Process {
   }
 
   bindChildren() {
-    return this.mapChildren(this.model, (childModel, k) => {
-      this.bindChild(childModel, k);
+    this.mapChildren(this.model, (childModel, fieldName) => {
+      this.bindChild(fieldName);
     });
   }
 
   /**
-   * Make all commands from logic (plus from `singleton` if provided
-   * an object or an array) to be binded to the model of this process.
+   * Make all commands from logic to be binded to the model of this process.
+   * Commands binded only in currecnt active app context.
    */
   bindCommands() {
     if (this.singletonValue && this.logic) {
-      // Ensure that commands is a list of objects or an object
-      let commands = emptyArray;
-      if (is.bool(this.singletonValue)) {
-        commands = this.logic;
-      } else if (is.array(this.singletonValue)) {
-        commands = [this.logic, ...this.singletonValue];
-      } else if (is.object(this.singletonValue)) {
-        commands = [this.logic, this.singletonValue];
-      } else {
-        throw new Error('You passed something weird in "singleton"');
-      }
-
-      // Create bindings in the app context
       const bindedCommands = [];
-      const processSingleton = (commandsArr) => {
-        maybeForEach(commandsArr, commandsObj => {
-          for (let k in commandsObj) {
-            const cmd = commandsObj[k];
-            if (cmd && cmd.id && cmd.Before && cmd.After) {
-              this.appContext.bindings[cmd.id] = this;
-              bindedCommands.push(cmd);
-            } else if (is.object(cmd)) {
-              processSingleton(cmd);
-            }
-          }
-        });
+      for (let k in this.logic) {
+        const cmd = this.logic[k];
+        if (is.command(cmd)) {
+          this.appContext.bindings[cmd.id] = this;
+          bindedCommands.push(cmd);
+        }
       }
-      processSingleton(commands);
-
-      // Set a list of binded commands in the Process
       this.bindedCommands = bindedCommands;
     }
   }
@@ -194,7 +173,7 @@ export class Process {
   bindComputed() {
     if (!this.logic.computed) return;
     const computedFields = this.safeExecFunction(() =>
-      this.logic.computed({ ...this.execProps, depend })
+      this.logic.computed({ ...this.execProps, depends })
     );
 
     if (computedFields) {
@@ -205,14 +184,10 @@ export class Process {
         if (is.func(computeVal)) {
           get = memoize(computeVal);
         } else if (is.object(computeVal)) {
-          get = memoize(() => computeVal(...computeVal.deps));
+          get = memoize(() => computeVal.computeFn(...computeVal.deps));
+          this.createPortDestroyPromise();
           maybeForEach(computeVal.deps, m => {
-            this.doSubscribe({
-              model: m,
-              handlerCmd: null,
-              initRun: false,
-              computedField: get
-            });
+            Utils.handleModelChanges(m, this.emitModelUpdate, this.portDestroyPromise);
           });
         }
 
@@ -246,10 +221,16 @@ export class Process {
     });
   }
 
+  /**
+   * Run the process – run children processes, then run port and
+   * init commands defined in config.
+   * Returns a Promise which resolves when all commands will be
+   * executed.
+   * @return {Promise}
+   */
   run() {
     const resPromise = createResultPromise();
     resPromise.add(this.runChildren());
-    resPromise.add(this.runSubscriptions());
     resPromise.add(this.runPorts());
     resPromise.add(this.runInitCommands());
     return resPromise.get();
@@ -261,72 +242,14 @@ export class Process {
     });
   }
 
-  runSubscriptions() {
-    this.stopSubscriptions();
-    this.subscriptions = [];
-
-    // Reflect to any update of the shared model if this behaviour
-    // is not disabled by `manualSharedSubscribe` config field.
-    if (
-      this.sharedModel &&
-      this.sharedModel.__proc &&
-      this.sharedModel !== this.rootProc.model &&
-      !this.config.manualSharedSubscribe
-    ) {
-      this.doSubscribe({
-        model: this.sharedModel,
-        handlerCmd: null,
-        initRun: false,
-        subEvent: CHILD_MODEL_UPDATED_EVENT
-      });
-    }
-
-    // Reflect to changes of specific shared sub-model by
-    // given subscriptions array in the config
-    if (this.config.subscriptions) {
-      return Promise.all(maybeMap(this.config.subscriptions, this.doSubscribe));
-    }
-  }
-
-  doSubscribe = ({
-    model,
-    handlerCmd,
-    initRun = true,
-    subEvent = MODEL_UPDATED_EVENT,
-    computedField
-  }) => {
-    const proc = model.__proc;
-    const subHandler = cmd => {
-      const resPromise = createResultPromise();
-      if (handlerCmd) {
-        resPromise.add(
-          this.exec(Cmd.appendArgs(handlerCmd.clone(), [cmd, model]))
-        );
-      }
-      if (!handlerCmd || this.config.manualSharedSubscribe) {
-        if (computedField) {
-          computedField.reset();
-        } else {
-          this.resetComputedFields();
-        }
-        resPromise.add(this.emit(MODEL_UPDATED_EVENT, cmd));
-      }
-      return resPromise.get();
-    };
-    const subStopper = () => proc.removeListener(subEvent, subHandler);
-    proc.addListener(subEvent, subHandler);
-    proc.addListener(DESTROY_MODEL_EVENT, subStopper);
-    this.subscriptions.push(subStopper);
-    return initRun && subHandler(Cmd.defaultNopeCmd());
-  }
-
   runPorts() {
-    this.stopPorts();
     if (this.logic.port) {
+      this.createPortDestroyPromise();
+
       const portProps = {
         ...this.execProps,
         exec: this.exec,
-        destroy: new Promise(r => (this.portDestroyResolver = r))
+        destroy: this.portDestroyPromise
       };
 
       // Run and resolve port
@@ -344,17 +267,28 @@ export class Process {
     }
   }
 
-  stopSubscriptions() {
-    if (this.subscriptions) {
-      maybeForEach(this.subscriptions, x => x());
-      this.subscriptions = null;
+  /**
+   * Destroy the process with unbinding from the model and cleaning
+   * up all the parts of the process (stop ports, subscribtions, computed
+   * fields).
+   * @param  {Boolean} deep If true then all children blocks will be destroyed
+   */
+  destroy(deep = true) {
+    delete this.model.__proc;
+    this.unbindCommands();
+    this.stopPorts();
+    if (deep) {
+      this.mapChildren(this.model, x => x.__proc.destroy(true));
     }
+    this.emit(DESTROY_MODEL_EVENT);
+    this.eventHandlers = null;
   }
 
   stopPorts() {
     if (this.portDestroyResolver) {
       this.portDestroyResolver();
       this.portDestroyResolver = null;
+      this.portDestroyPromise = null;
     }
   }
 
@@ -370,17 +304,19 @@ export class Process {
     }
   }
 
-  destroy(deep = true) {
-    delete this.model.__proc;
-    this.unbindCommands();
-    this.stopSubscriptions();
-    this.stopPorts();
-    if (deep) {
-      this.mapChildren(this.model, x => x.__proc.destroy(true));
+  createPortDestroyPromise() {
+    if (!this.portDestroyResolver) {
+      this.portDestroyPromise = new Promise(r =>
+        this.portDestroyResolver = r
+      );
     }
-    this.emit(DESTROY_MODEL_EVENT);
   }
 
+  /**
+   * Adds an event listener for given event name
+   * @param {String} event
+   * @param {Function} listener
+   */
   addListener(event, listener) {
     this.eventHandlers = this.eventHandlers || {};
     this.eventHandlers[event] = this.eventHandlers[event] || [];
@@ -405,6 +341,25 @@ export class Process {
     return Promise.all(maybeMap(handlers, handler => handler(arg)));
   }
 
+  emitModelUpdate = (cmd) => {
+    const finalCmd = is.cmd(cmd) ? cmd : Cmd.defaultNopeCmd;
+    return Promise.all([
+      this.emit(MODEL_UPDATED_EVENT, finalCmd, this.model),
+      this.rootProc.emit(CHILD_MODEL_UPDATED_EVENT, finalCmd, this.model)
+    ]);
+  }
+
+  /**
+   * Map children model fields which have associated
+   * logic in `children` function of the logic using given
+   * iterator function.
+   * Returns a Promise which resolves with a list with data
+   * returned by each call to iterator function.
+   * @param  {Object} model
+   * @param  {Function} iterator
+   * @param  {Array} iterKeys
+   * @return {Promise}
+   */
   mapChildren(model, iterator, iterKeys) {
     if (!iterator || !this.config.children) {
       return Promise.resolve();
@@ -436,17 +391,17 @@ export class Process {
     let rebindComputed = false;
     const tick = nextId();
     const updateKeys = Object.keys(updateObj);
-    const updateMarker = (x, k) => {
-      if (this.bindChild(x, k)) {
+    const updateMarker = (childModel, fieldName) => {
+      if (this.bindChild(fieldName)) {
         rebindComputed = true;
-        x.__proc.run();
+        childModel.__proc.run();
       }
-      x.__proc.tick = tick;
+      childModel.__proc.tick = tick;
     };
-    const unmarkedDestroyer = x => {
-      if (x.__proc.tick !== tick) {
+    const unmarkedDestroyer = (childModel) => {
+      if (childModel.__proc.tick !== tick) {
         rebindComputed = true;
-        x.__proc.destroy();
+        childModel.__proc.destroy();
       }
     };
 
@@ -563,13 +518,10 @@ export class Process {
     cmd.id = cmd.afterId;
     resPromise.add(this.handleCommand(this.model, cmd, false));
 
-    // Run subscriptions if model updated
+    // Run model update subscriptions
     if (modelUpdated) {
       this.logger.onEmitSubscriptions(cmd, this.model);
-      resPromise.add(this.emit(MODEL_UPDATED_EVENT, cmd));
-      if (!this.config.disableRootUpdate) {
-        resPromise.add(this.rootProc.emit(CHILD_MODEL_UPDATED_EVENT, cmd));
-      }
+      resPromise.add(this.emitModelUpdate(cmd));
     }
 
     // Move back id of the cmd (to make cmd object reusable)
@@ -676,11 +628,11 @@ export class Process {
    * attached Logic to be automatically binded to the model of this
    * process. So you will be able to write `Logic.Command` and not
    * `Logic.Command().model(...)`
-   * @param  {Boolean|Object|Array<Object>|null} val
+   * @param  {Boolean} val
    * @return {Process}
    */
   singleton(val = true) {
-    this.singletonValue = val;
+    this.singletonValue = !!val;
     return this;
   }
 }

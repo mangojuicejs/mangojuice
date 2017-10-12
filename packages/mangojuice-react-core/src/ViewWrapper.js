@@ -1,4 +1,4 @@
-import { Cmd, Utils, MODEL_UPDATED_EVENT } from "mangojuice-core";
+import { Cmd, Utils } from "mangojuice-core";
 import { setContext, getContext } from './ViewRenderContext';
 
 
@@ -34,12 +34,12 @@ export default reactImpl => {
     componentDidMount() {
       this.popContext();
       this.unmounted = false;
-      this.props.proc.addListener(MODEL_UPDATED_EVENT, this.updateView);
+      this.props.proc.addListener(Utils.MODEL_UPDATED_EVENT, this.updateView);
     }
 
     componentWillUnmount() {
       this.unmounted = true;
-      this.props.proc.removeListener(MODEL_UPDATED_EVENT, this.updateView);
+      this.props.proc.removeListener(Utils.MODEL_UPDATED_EVENT, this.updateView);
     }
 
     componentDidUpdate() {

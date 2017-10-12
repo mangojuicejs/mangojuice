@@ -1,4 +1,4 @@
-import { Cmd, Task, Run } from "mangojuice-core";
+import { Cmd, Task, Run, Utils } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
@@ -44,18 +44,24 @@ describe("Block specs", () => {
       }),
       Logic: {
         name: "BlockA",
-        config({ subscribe, shared, nest }) {
+        config() {
           return {
-            subscriptions: [subscribe(shared).handler(this.FromSubCmd)],
             initCommands: [this.FromInitOneCmd, this.FromInitTwoCmd(1, 2, 3)],
-            children: {
-              b_1: nest(BlockB.Logic).handler(this.HandleB_1),
-              b_2: nest(BlockB.Logic).handler(this.HandleB_2)
-            }
           };
         },
-        port({ model, destroy, exec }) {
+        children({ nest }) {
+          return {
+            b_1: nest(BlockB.Logic).handler(this.HandleB_1),
+            b_2: nest(BlockB.Logic).handler(this.HandleB_2)
+          }
+        },
+        port({ model, shared, destroy, exec }) {
+          Utils.handleModelChanges(shared, cmd => {
+            exec(this.FromSubCmd);
+          }, destroy);
+
           return Promise.all([
+            exec(this.FromSubCmd),
             exec(this.FromPortCmd),
             exec(this.FromPortAsync())
           ]);
@@ -133,14 +139,12 @@ describe("Block specs", () => {
       }),
       Logic: {
         name: "ParentBlock",
-        config({ nest }) {
+        children({ nest }) {
           return {
-            children: {
-              arr: nest(ChildBlock.Logic),
-              child_1: nest(ChildBlock.Logic),
-              child_2: nest(ChildBlock.Logic),
-              child_3: nest(ChildBlock.Logic)
-            }
+            arr: nest(ChildBlock.Logic),
+            child_1: nest(ChildBlock.Logic),
+            child_2: nest(ChildBlock.Logic),
+            child_3: nest(ChildBlock.Logic)
           };
         },
         @Cmd.update
@@ -243,11 +247,9 @@ describe("Block specs", () => {
         createModel: () => ({ recursive: null, a: 0, id: idCounter++ }),
         Logic: {
           name: "AppBlock",
-          config({ nest }) {
+          children({ nest }) {
             return {
-              children: {
-                recursive: nest(RecursiveBlock.Logic).handler(this.HandleChange)
-              }
+              recursive: nest(RecursiveBlock.Logic).handler(this.HandleChange)
             };
           },
           @Cmd.update
@@ -365,6 +367,99 @@ describe("Block specs", () => {
     });
   });
 
+  describe('Computed with dependencies', () => {
+    const SharedBlock = {
+      createModel: () => ({ e: 0, f: 4, g: 6 }),
+      Logic: {
+        name: "SharedBlock",
+        computed({ model }) {
+          return {
+            e: () => model.f + model.g
+          };
+        },
+        @Cmd.update
+        SetField(ctx, name, value) {
+          return { [name]: value };
+        }
+      }
+    };
+    const AppBlock = {
+      createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
+      Logic: {
+        name: "AppBlock",
+        config() {
+          return { manualSharedSubscribe: true };
+        },
+        computed({ model, shared, depends }) {
+          return {
+            c: depends(shared).compute(() => shared.f + shared.e + model.a),
+            d: depends(shared).compute(() => shared.f + shared.g + model.b)
+          };
+        },
+        @Cmd.update
+        SetField(ctx, name, value) {
+          return { [name]: value };
+        }
+      }
+    };
+    const AppParent = {
+      createModel: () => ({ a: 1, c: 0, d: 0, child: AppBlock.createModel() }),
+      Logic: {
+        name: "AppParent",
+        children({ nest }) {
+          return {
+            child: nest(AppBlock.Logic)
+          };
+        },
+        computed({ model, shared, depends }) {
+          return {
+            c: depends(shared, model.child).compute(() => shared.f + shared.e + model.a + model.child.a),
+            d: depends(shared).compute(() => shared.f + shared.g)
+          };
+        },
+        @Cmd.update
+        SetField(ctx, name, value) {
+          return { [name]: value };
+        }
+      }
+    };
+
+    it('should allow shared dependecy', async () => {
+      const { app, shared, commandNames } = await runWithTracking({
+        app: AppBlock,
+        shared: SharedBlock
+      });
+
+      expect(app.model.c).toEqual(15);
+      expect(app.model.d).toEqual(12);
+
+      await app.proc.exec(AppBlock.Logic.SetField("a", 5));
+
+      expect(app.model.c).toEqual(19);
+      expect(app.model.d).toEqual(12);
+
+      await app.proc.exec(SharedBlock.Logic.SetField("f", 5));
+
+      expect(app.model.c).toEqual(21);
+      expect(app.model.d).toEqual(13);
+    });
+
+    it('should allow child dependecy', async () => {
+      const { app, shared, commandNames, commands } = await runWithTracking({
+        app: AppParent,
+        shared: SharedBlock
+      });
+
+      expect(app.model.c).toEqual(16);
+      expect(app.model.d).toEqual(10);
+
+      await app.proc.exec(AppBlock.Logic.SetField("a", 5).model(app.model.child));
+
+      expect(app.model.c).toEqual(20);
+      expect(app.model.d).toEqual(10);
+    });
+  });
+
   describe('Singletone blocks', () => {
     const ChildBlock = {
       createModel: () => ({ a: 0 }),
@@ -380,8 +475,8 @@ describe("Block specs", () => {
       }),
       Logic: {
         name: "SharedBlock",
-        config({ nest }) {
-          return { children: { child: nest(ChildBlock.Logic).singleton() } };
+        children({ nest }) {
+          return { child: nest(ChildBlock.Logic).singleton() };
         },
         @Cmd.update UpdateModel() { return { a: 1 } },
       }

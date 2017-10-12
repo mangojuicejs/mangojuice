@@ -1,3 +1,9 @@
+// Constants
+export const MODEL_UPDATED_EVENT = "updated";
+export const CHILD_MODEL_UPDATED_EVENT = "childUpdated";
+export const DESTROY_MODEL_EVENT = "destroy";
+
+// Utils
 export const is = {
   undef: v => v === null || v === undefined,
   notUndef: v => v !== null && v !== undefined,
@@ -9,6 +15,7 @@ export const is = {
   object: obj => obj && !is.array(obj) && typeof obj === "object",
   promise: p => p && is.func(p.then),
   iterator: it => it && is.func(it.next) && is.func(it.throw),
+  command: cmd => cmd && cmd.id && cmd.Before && cmd.After,
   iterable: it =>
     it && is.func(Symbol) ? is.func(it[Symbol.iterator]) : is.array(it)
 };
@@ -78,6 +85,17 @@ export const ensureCmdObject = cmd => {
     }
   }
   return cmd;
+};
+
+export const handleModelChanges = (model, handler, destroy) => {
+  if (model.__proc) {
+    const proc = model.__proc;
+    proc.addListener(MODEL_UPDATED_EVENT, handler);
+    if (destroy && destroy.then) {
+      destroy.then(() => proc.removeListener(MODEL_UPDATED_EVENT, handler));
+    }
+  }
+  return  Promise.resolve();
 };
 
 export const objectValues = (obj) => {

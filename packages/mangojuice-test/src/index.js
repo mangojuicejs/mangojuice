@@ -14,7 +14,7 @@ export const runWithTracking = async (props) => {
   });
   await Promise.all([res.app.run, res.shared.run]);
   return {
-    commandNames: commands.map(x => x.name),
+    get commandNames() { return commands.map(x => x.name); },
     commands,
     ...res
   };

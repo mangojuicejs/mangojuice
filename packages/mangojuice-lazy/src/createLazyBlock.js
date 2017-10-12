@@ -1,4 +1,4 @@
-import { Utils, Cmd, Task, MODEL_UPDATED_EVENT } from "mangojuice-core";
+import { Utils, Cmd, Task } from "mangojuice-core";
 
 
 export function createBlockResolver(asyncRequire, lazyBlock) {
@@ -20,7 +20,7 @@ export function createBlockResolver(asyncRequire, lazyBlock) {
       model.__proc.logic = resolvedBlock.Logic;
       model.__proc.bind(model);
       model.__proc.run();
-      model.__proc.emit(MODEL_UPDATED_EVENT);
+      model.__proc.emit(Utils.MODEL_UPDATED_EVENT);
     }
   };
 
