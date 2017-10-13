@@ -246,9 +246,6 @@ export class Process {
    * @return {Promise}
    */
   run() {
-    if (this.running) return;
-    this.running = true;
-
     const resPromise = createResultPromise();
     resPromise.add(this.runChildren());
     resPromise.add(this.runPorts());

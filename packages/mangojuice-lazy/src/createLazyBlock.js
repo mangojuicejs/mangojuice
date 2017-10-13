@@ -92,7 +92,8 @@ export function createLazyLogic(resolver) {
   const logic = {
     name: "",
     port: () => {},
-    config: () => ({}),
+    children: () => {},
+    config: () => {},
     computed: () => {},
     __get: commandsProxy.get
   };
