@@ -16,7 +16,6 @@ export function createCommand(name, func, exec, opts) {
       isCmd: true,
       funcName: name,
       name: getCommandName(name, this),
-      context: this,
 
       model(modelObj) {
         this._model = modelObj;
@@ -52,7 +51,6 @@ export function appendArgs(cmd, args) {
 
 export function setContext(cmd, ctx) {
   cmd = ensureCmdObject(cmd);
-  cmd.context = ctx;
   cmd.name = getCommandName(cmd.funcName, ctx);
   return cmd;
 }
@@ -69,11 +67,12 @@ export function hash(cmd) {
 }
 
 export function getCommandName(funcName, ctx) {
-  return ctx && ctx.name ? `${ctx.name}.${funcName}` : funcName;
+  const ctxName = ctx && (ctx.name || ctx.constructor.name);
+  return ctxName ? `${ctxName}.${funcName}` : funcName;
 }
 
-export function execDefault(props) {
-  return this.func && this.func.call(this.context, props, ...this.args);
+export function execDefault(context) {
+  return this.func && this.func.call(context, ...this.args);
 }
 
 export function getCommandDescriptor(obj, name, descr, cmdCreator, opts = {}) {
@@ -121,11 +120,7 @@ export function execTask(props) {
   let proc;
   const execId = nextId();
   const procId = props.model.__proc.id;
-  const { task, successCmd, failCmd } = this.func.call(
-    this.context,
-    props,
-    ...this.args
-  );
+  const { task, successCmd, failCmd } = this.func.call(props, ...this.args);
 
   if (this.opts.debounce) {
     this.opts.cancelAll(props);
@@ -139,7 +134,7 @@ export function execTask(props) {
         reject(createNopeCmd(`${this.funcName}.Cancelled`)());
       } else {
         const actualFailCmd = failCmd && appendArgs(failCmd, [err])
-        if (!actualFailCmd) proc.logExecutionError(err);
+        if (!actualFailCmd) props.model.__proc.logExecutionError(err);
         reject(actualFailCmd);
       }
     };
@@ -151,7 +146,7 @@ export function execTask(props) {
     };
 
     try {
-      proc = Task.call(task, props, ...this.args);
+      proc = Task.call.call(props, task, ...this.args);
       return proc.then(handleSuccess, handleFail);
     } catch (err) {
       handleFail(err);
@@ -222,10 +217,8 @@ export function createThrottleCmd(name, func, { throttleTime, debounceTime }) {
 
   // Throttle logic commands
   const throttleNopeCmd = createNopeCmd(`${name}.Throttle.Nope`);
-  const throttleExecCmd = createBatchCmd(`${name}.Throttle.Exec`, function(
-    props
-  ) {
-    const procId = props.model.__proc.id;
+  const throttleExecCmd = createBatchCmd(`${name}.Throttle.Exec`, function() {
+    const procId = this.model.__proc.id;
     const args = helpers.extractExecContext(procId);
     return func(...args);
   });
@@ -239,18 +232,13 @@ export function createThrottleCmd(name, func, { throttleTime, debounceTime }) {
     },
     { debounce: debounceTime > 0 }
   );
-  const throttleCancelCmd = createBatchCmd(`${name}.Throttle.Cancel`, function(
-    props
-  ) {
-    const procId = props.model.__proc.id;
+  const throttleCancelCmd = createBatchCmd(`${name}.Throttle.Cancel`, function() {
+    const procId = this.model.__proc.id;
     helpers.extractExecContext(procId);
     return [throttleDelayCmd.Cancel(), func.Cancel && func.Cancel()];
   });
-  const throttleDecideCmd = createBatchCmd(`${name}.Throttle`, function(
-    props,
-    ...args
-  ) {
-    const procId = props.model.__proc.id;
+  const throttleDecideCmd = createBatchCmd(`${name}.Throttle`, function(...args) {
+    const procId = this.model.__proc.id;
     helpers.saveExecContext(procId, args);
     if (helpers.isExecuting(procId) && !debounceTime) {
       return throttleNopeCmd();

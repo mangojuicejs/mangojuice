@@ -53,9 +53,10 @@ export function registerCancelHandler(callback) {
  * any active context.
  * @return {Object}
  */
-export function getInitContext() {
+export function getInitContext(initContext) {
   const token = new CancellationToken();
   return {
+    ...initContext,
     cancelTask: token.cancel,
     onCancel: registerCancelHandler,
     token,
@@ -100,7 +101,7 @@ export function call(fn, ...args) {
   const context =
     this && this.token
       ? { ...this, token: this.token.createDependentToken() }
-      : getInitContext();
+      : getInitContext(this);
 
   const res = new Promise((resolve, reject) => {
     try {
@@ -132,7 +133,9 @@ export function call(fn, ...args) {
  */
 export function delay(ms, val = true) {
   let timeoutId;
-  this.onCancel(() => clearTimeout(timeoutId));
+  if (this.onCancel) {
+    this.onCancel(() => clearTimeout(timeoutId));
+  }
   return new Promise(resolve => {
     timeoutId = setTimeout(() => resolve(val), ms);
   });

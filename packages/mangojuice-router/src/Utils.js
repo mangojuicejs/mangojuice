@@ -59,7 +59,7 @@ export function link(model, cmd) {
  * @param  {object} query
  * @param  {object} options
  */
-export function routeUpdateCommand(routeId, { model, meta }, ...args) {
+export function routeUpdateCommand(routeId, ...args) {
   // Stop handling a click to a link by the browser
   const event = args[args.length - 1];
   if (event && event.preventDefault) {
@@ -69,8 +69,8 @@ export function routeUpdateCommand(routeId, { model, meta }, ...args) {
 
   // Calculate next url to push to history
   const [ , , opts = {} ] = args;
-  const updateHistory = meta.history[opts.replace ? "replace" : "push"];
-  const nextUrl = createHref(model, meta.routes, routeId, args);
+  const updateHistory = this.meta.history[opts.replace ? "replace" : "push"];
+  const nextUrl = createHref(this.model, this.meta.routes, routeId, args);
   updateHistory(nextUrl);
 }
 
@@ -85,8 +85,9 @@ export function routeUpdateCommand(routeId, { model, meta }, ...args) {
  */
 export const route = (pattern, children, options = {}) => {
   const routeId = Utils.nextId();
-  const func = routeUpdateCommand.bind(null, routeId);
-  const routeCmd = Cmd.createUpdateCmd(pattern, func);
+  const routeCmd = Cmd.createUpdateCmd(pattern, function(...args) {
+    return routeUpdateCommand.call(this, routeId, ...args);
+  });
   routeCmd.routeId = routeId;
   routeCmd.pattern = pattern;
   routeCmd.options = options;
@@ -101,7 +102,7 @@ export const route = (pattern, children, options = {}) => {
  * @param  {Array} commands
  * @return {Object}
  */
-export const createRouteMaps = (commands) => {
+export const createRouteMaps = (commandsObj) => {
   const map = {};
   const children = {};
   const parents = {};
@@ -119,7 +120,10 @@ export const createRouteMaps = (commands) => {
   };
 
   // Create map, children and parents from routes
-  const routes = commands.filter(cmd => cmd && cmd.routeId);
+  const routes = Object.keys(commandsObj)
+    .map(k => commandsObj[k])
+    .filter(cmd => cmd && cmd.routeId);
+
   routes.forEach(r => {
     const suffix = r.children ? "(/*)" : "/";
     const normPatt = r.pattern.replace(/\/+$/, "") + suffix;

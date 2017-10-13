@@ -65,7 +65,6 @@ export default (reactImpl) => {
       if (props.model && props.model.__proc) {
         if (props.model.__proc.id === context.model.__proc.id) {
           props.model = context.model;
-          props.shared = context.shared;
           props.exec = context.exec;
           props.nest = context.nest;
           return reactImpl.createElement(View, props, ...args);

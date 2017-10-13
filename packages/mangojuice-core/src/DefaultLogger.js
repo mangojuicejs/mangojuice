@@ -14,7 +14,9 @@ export class DefaultLogger {
 
   onEndHandling(cmd, model) {}
 
-  onCatchError(error, cmd, model) {}
+  onCatchError(error, cmd, model) {
+    console.error(error);
+  }
 
   onExecuted(cmd, model, result) {}
 

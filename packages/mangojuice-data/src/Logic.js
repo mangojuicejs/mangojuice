@@ -6,17 +6,18 @@ import * as Utils from './Utils';
 export const Logic = {
   name: 'Data',
 
-  config({ nest }, opts = {}) {
-    return {
-      meta: opts,
-      children: opts.block
-        ? { rawData: nest(opts.block.Logic) }
-        : {}
-    };
+  config(meta = {}) {
+    return { meta };
+  },
+
+  children({ nest, meta }) {
+    return meta.block
+      ? { rawData: nest(meta.block.Logic) }
+      : {};
   },
 
   @Cmd.update
-  TrackError(ctx, error) {
+  TrackError(error) {
     return {
       errorMsg: (error && error.message) || 'Unknown error',
       state: 'Failure'
@@ -24,18 +25,18 @@ export const Logic = {
   },
 
   @Cmd.update
-  SetDataState(ctx, state) {
+  SetDataState(state) {
     return { state };
   },
 
   @Cmd.update
-  SetIdentifier({ model }, identifier) {
-    const loadedOnce = model.loadedOnce && model.identifier !== identifier;
+  SetIdentifier(identifier) {
+    const loadedOnce = this.model.loadedOnce && this.model.identifier !== identifier;
     return { identifier, loadedOnce };
   },
 
   @Cmd.update
-  SetRetreivedData(ctx, { data, indexes }) {
+  SetRetreivedData({ data, indexes }) {
     return {
       rawData: data,
       filteredIndexes: indexes,
@@ -44,7 +45,7 @@ export const Logic = {
   },
 
   @Cmd.batch
-  RetreiveSuccess(ctx, result) {
+  RetreiveSuccess(result) {
     return [
       this.SetRetreivedData(result),
       this.SetDataState('Success')
@@ -59,18 +60,18 @@ export const Logic = {
   },
 
   @Cmd.batch
-  Retreive({ meta }, ...args) {
-    return meta.retreiver && [
+  Retreive(...args) {
+    return this.meta.retreiver && [
       this.SetDataState('Loading'),
       this.RetreiveStart(...args)
     ];
   },
 
   @Cmd.update
-  Filter({ model }, target) {
-    if (!model.rawData || !Array.isArray(model.rawData)) return;
+  Filter(target) {
+    if (!this.model.rawData || !Array.isArray(this.model.rawData)) return;
 
-    const targetIdx = model.rawData.indexOf(target);
+    const targetIdx = this.model.rawData.indexOf(target);
     if (targetIdx >= 0) {
       const filterReducer = (acc, x) => {
         if (x !== targetIdx) {
@@ -79,22 +80,22 @@ export const Logic = {
         return acc;
       };
       return {
-        rawData: model.rawData.filter(x => x !== target),
+        rawData: this.model.rawData.filter(x => x !== target),
         filteredIndexes:
-          model.filteredIndexes &&
-          model.filteredIndexes.reduce(filterReducer, [])
+          this.model.filteredIndexes &&
+          this.model.filteredIndexes.reduce(filterReducer, [])
       };
     }
   },
 
   @Cmd.update
-  SetFilteredIndexes(ctx, indexes) {
+  SetFilteredIndexes(indexes) {
     return { filteredIndexes: indexes };
   },
 
   @Cmd.batch
-  SearchSuccess({ model }, result) {
-    if (Utils.isSearching(model)) {
+  SearchSuccess(result) {
+    if (Utils.isSearching(this.model)) {
       return [
         this.SetFilteredIndexes(result),
         this.SetDataState('Success')
@@ -103,8 +104,8 @@ export const Logic = {
   },
 
   @Cmd.batch
-  SearchFailed({ model }, error) {
-    return Utils.isSearching(model) && this.TrackError(error);
+  SearchFailed(error) {
+    return Utils.isSearching(this.model) && this.TrackError(error);
   },
 
   @Cmd.execLatest
@@ -115,29 +116,29 @@ export const Logic = {
   },
 
   @Cmd.update
-  SetSearchQuery(ctx, query) {
+  SetSearchQuery(query) {
     return { query };
   },
 
   @Cmd.batch
-  Search({ model }, e) {
+  Search(e) {
     return [
       this.SetSearchQuery(e && e.target ? e.target.value : e),
-      Utils.isReady(model) && this.SetDataState('Searching'),
-      Utils.isReady(model) && this.SearchStart()
+      Utils.isReady(this.model) && this.SetDataState('Searching'),
+      Utils.isReady(this.model) && this.SearchStart()
     ];
   },
 
   @Cmd.batch
-  Cancel({ model }) {
+  Cancel() {
     const result = [
       this.RetreiveStart.Cancel(),
       this.SearchStart.Cancel()
     ];
-    if (!model.loadedOnce) {
+    if (!this.model.loadedOnce) {
       result.push(this.SetIdentifier(''));
       result.push(this.SetDataState('NotAsked'));
-    } else if (!Utils.isReady(model)) {
+    } else if (!Utils.isReady(this.model)) {
       result.push(this.SetDataState('Success'));
     }
     return result;

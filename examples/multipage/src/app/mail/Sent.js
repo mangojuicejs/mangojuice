@@ -1,5 +1,5 @@
 import React from "mangojuice-react";
-import { Cmd } from "mangojuice-core";
+import { Cmd, Utils } from "mangojuice-core";
 import { MailRoutes } from "src/routes";
 import * as Intl from "mangojuice-intl";
 import * as Router from "mangojuice-router";
@@ -17,17 +17,16 @@ export const createModel = (): Model => ({
 export const Logic = {
   name: "Sent",
 
-  config({ subscribe, shared }) {
-    return {
-      subs: subscribe(shared.route).handler(this.HandlerRouter)
-    };
-  },
+  port({ exec, shared, destroy }) {
+    Utils.handleModelChanges(shared.route, () => exec(this.HandlerRouter()), destroy);
+    return exec(this.HandlerRouter());
+  }
 
   @Cmd.nope InitSentLetters() {},
 
   @Cmd.batch
-  HandlerRouter({ shared }) {
-    if (Router.isFirstAppear(shared.route, MailRoutes.Sent)) {
+  HandlerRouter() {
+    if (Router.isFirstAppear(this.shared.route, MailRoutes.Sent)) {
       return this.InitSentLetters();
     }
   }
