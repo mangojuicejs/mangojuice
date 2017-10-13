@@ -133,7 +133,9 @@ export function call(fn, ...args) {
  */
 export function delay(ms, val = true) {
   let timeoutId;
-  this.onCancel(() => clearTimeout(timeoutId));
+  if (this.onCancel) {
+    this.onCancel(() => clearTimeout(timeoutId));
+  }
   return new Promise(resolve => {
     timeoutId = setTimeout(() => resolve(val), ms);
   });

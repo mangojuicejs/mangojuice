@@ -120,10 +120,7 @@ export function execTask(props) {
   let proc;
   const execId = nextId();
   const procId = props.model.__proc.id;
-  const { task, successCmd, failCmd } = this.func.call(
-    props,
-    ...this.args
-  );
+  const { task, successCmd, failCmd } = this.func.call(props, ...this.args);
 
   if (this.opts.debounce) {
     this.opts.cancelAll(props);
@@ -137,7 +134,7 @@ export function execTask(props) {
         reject(createNopeCmd(`${this.funcName}.Cancelled`)());
       } else {
         const actualFailCmd = failCmd && appendArgs(failCmd, [err])
-        if (!actualFailCmd) proc.logExecutionError(err);
+        if (!actualFailCmd) props.model.__proc.logExecutionError(err);
         reject(actualFailCmd);
       }
     };
