@@ -13,8 +13,8 @@ describe('Independed runner by rendere', () => {
       config() {
         return { initCommands: this.UpdateModel() };
       },
-      @Cmd.update UpdateModel({ model }) {
-        return { a: model.a + 2 };
+      @Cmd.update UpdateModel() {
+        return { a: this.model.a + 2 };
       },
     },
     View: {}
@@ -26,8 +26,8 @@ describe('Independed runner by rendere', () => {
       config() {
         return { initCommands: this.UpdateModel() };
       },
-      @Cmd.update UpdateModel({ model }) {
-        return { a: model.a + 2 };
+      @Cmd.update UpdateModel() {
+        return { a: this.model.a + 2 };
       },
     },
     View: {}

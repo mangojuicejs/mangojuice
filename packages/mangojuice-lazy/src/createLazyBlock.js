@@ -71,7 +71,7 @@ export function createLazyLogic(resolver) {
         return target[name];
       }
       const WrapperCmd = Cmd.createBatchCmd(`Lazy.${name}.Wrapper`,
-        function(ctx, ...args) {
+        function(...args) {
           const readyBlock = args[args.length - 1];
           const actualArgs = args.slice(0, args.length - 1);
           target[name] = readyBlock.Logic[name];
@@ -79,7 +79,7 @@ export function createLazyLogic(resolver) {
         }
       );
       target[name] = Cmd.createTaskCmd(`Lazy.${name}.Resolver`,
-        function(props, ...args) {
+        function(...args) {
           return Task.create(function({ model }) {
             return resolver(model);
           }).success(WrapperCmd(...args));

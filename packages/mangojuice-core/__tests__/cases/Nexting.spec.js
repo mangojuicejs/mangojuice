@@ -35,15 +35,15 @@ import { runWithTracking } from "mangojuice-test";
         };
       },
       @Cmd.update
-      AddChild({ model }) {
-        return { arr: [...model.arr, ChildBlock.createModel()] };
+      AddChild() {
+        return { arr: [...this.model.arr, ChildBlock.createModel()] };
       },
       @Cmd.update
-      RemoveChild({ model }) {
-        return { arr: model.arr.slice(1) };
+      RemoveChild() {
+        return { arr: this.model.arr.slice(1) };
       },
       @Cmd.update
-      SetChild({ model }, name, value) {
+      SetChild(name, value) {
         return { [name]: value };
       }
     }
@@ -140,16 +140,16 @@ import { runWithTracking } from "mangojuice-test";
           };
         },
         @Cmd.update
-        SetField({ model }, name, value) {
+        SetField(name, value) {
           return { [name]: value };
         },
         @Cmd.update
-        Increment({ model }, name, value) {
-          return { [name]: model[name] + value };
+        Increment(name, value) {
+          return { [name]: this.model[name] + value };
         },
         @Cmd.batch
-        HandleChange({ model }, cmd) {
-          if (cmd.is(this.Increment.Before, model.recursive)) {
+        HandleChange(cmd) {
+          if (cmd.is(this.Increment.Before, this.model.recursive)) {
             return this.Increment('a', cmd.args[1]);
           }
         }

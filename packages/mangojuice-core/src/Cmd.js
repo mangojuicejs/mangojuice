@@ -16,7 +16,6 @@ export function createCommand(name, func, exec, opts) {
       isCmd: true,
       funcName: name,
       name: getCommandName(name, this),
-      context: this,
 
       model(modelObj) {
         this._model = modelObj;
@@ -52,7 +51,6 @@ export function appendArgs(cmd, args) {
 
 export function setContext(cmd, ctx) {
   cmd = ensureCmdObject(cmd);
-  cmd.context = ctx;
   cmd.name = getCommandName(cmd.funcName, ctx);
   return cmd;
 }
@@ -69,11 +67,12 @@ export function hash(cmd) {
 }
 
 export function getCommandName(funcName, ctx) {
-  return ctx && ctx.name ? `${ctx.name}.${funcName}` : funcName;
+  const ctxName = ctx && (ctx.name || ctx.constructor.name);
+  return ctxName ? `${ctxName}.${funcName}` : funcName;
 }
 
-export function execDefault(props) {
-  return this.func && this.func.call(this.context, props, ...this.args);
+export function execDefault(context) {
+  return this.func && this.func.call(context, ...this.args);
 }
 
 export function getCommandDescriptor(obj, name, descr, cmdCreator, opts = {}) {
@@ -122,7 +121,6 @@ export function execTask(props) {
   const execId = nextId();
   const procId = props.model.__proc.id;
   const { task, successCmd, failCmd } = this.func.call(
-    this.context,
     props,
     ...this.args
   );

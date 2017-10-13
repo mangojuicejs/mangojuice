@@ -15,7 +15,7 @@ describe("Computed", () => {
           };
         },
         @Cmd.update
-        SetField(ctx, name, value) {
+        SetField(name, value) {
           return { [name]: value };
         }
       }
@@ -31,7 +31,7 @@ describe("Computed", () => {
           };
         },
         @Cmd.update
-        SetField(ctx, name, value) {
+        SetField(name, value) {
           return { [name]: value };
         }
       }
@@ -97,7 +97,7 @@ describe("Computed", () => {
           };
         },
         @Cmd.update
-        SetField(ctx, name, value) {
+        SetField(name, value) {
           return { [name]: value };
         }
       }
@@ -113,7 +113,7 @@ describe("Computed", () => {
           };
         },
         @Cmd.update
-        SetField(ctx, name, value) {
+        SetField(name, value) {
           return { [name]: value };
         }
       }
@@ -134,7 +134,7 @@ describe("Computed", () => {
           };
         },
         @Cmd.update
-        SetField(ctx, name, value) {
+        SetField(name, value) {
           return { [name]: value };
         }
       }

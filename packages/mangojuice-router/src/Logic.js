@@ -63,17 +63,17 @@ export const createLogic = (routesTree) => ({
   },
 
   @Cmd.batch
-  HandleLocationChange({ model, meta }, location) {
-    const firstPath = findFirstPath(meta.routes, location.pathname);
+  HandleLocationChange(location) {
+    const firstPath = findFirstPath(this.meta.routes, location.pathname);
     const active = {};
     const changedRoutes = {};
-    const appearedOnce = { ...model.appearedOnce };
+    const appearedOnce = { ...this.model.appearedOnce };
 
     if (firstPath) {
       firstPath.chain.forEach(x => {
         active[x] = true;
         changedRoutes[x] =
-          (!model.active[x] && !model.changedRoutes[x]) || !meta.handledOnce;
+          (!this.model.active[x] && !this.model.changedRoutes[x]) || !this.meta.handledOnce;
         if (appearedOnce[x] === undefined) {
           appearedOnce[x] = true;
         } else if (appearedOnce[x] === true) {
@@ -83,17 +83,17 @@ export const createLogic = (routesTree) => ({
     }
 
     const leftRoutes = {};
-    for (let k in model.active) {
+    for (let k in this.model.active) {
       if (!active[k]) {
         leftRoutes[k] = true;
       }
     }
 
-    meta.handledOnce = true;
+    this.meta.handledOnce = true;
     const search = location.search.replace(/^\?(.*)/, "$1");
     const params = firstPath
-      ? { ...model.params, ...firstPath.params }
-      : model.params;
+      ? { ...this.model.params, ...firstPath.params }
+      : this.model.params;
 
     return this.UpdateRouter({
       query: qs.parse(search),
@@ -106,21 +106,21 @@ export const createLogic = (routesTree) => ({
   },
 
   @Cmd.batch
-  UpdateRouter(ctx, newValues) {
+  UpdateRouter(newValues) {
     return this.DoUpdateRouter(newValues);
   },
 
   @Cmd.update
-  DoUpdateRouter(ctx, newValues) {
+  DoUpdateRouter(newValues) {
     return newValues;
   },
 
   @Cmd.update
-  Query({ model, meta }, query = {}, { replace, keep } = {}) {
-    const newQuery = keep ? { ...query, ...model.query } : query;
-    const location = meta.history.location;
+  Query(query = {}, { replace, keep } = {}) {
+    const newQuery = keep ? { ...query, ...this.model.query } : query;
+    const location = this.meta.history.location;
 
-    meta.history[replace ? "replace" : "push"]({
+    this.meta.history[replace ? "replace" : "push"]({
       ...location,
       search: qs.stringify(newQuery)
     });

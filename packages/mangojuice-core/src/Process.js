@@ -178,7 +178,7 @@ export class Process {
     this.computedFields = emptyArray;
     if (this.logic.computed) {
       const ownComputedFields = this.safeExecFunction(() =>
-        this.logic.computed({ ...this.execProps, depends })
+        this.logic.computed(this.execProps)
       );
       if (ownComputedFields) {
         this.computedFields = maybeMap(Object.keys(ownComputedFields), k => {
@@ -227,9 +227,11 @@ export class Process {
   bindModel(model) {
     this.model = model;
     this.execProps = {
+      ...this.logic,
       model: this.model,
       shared: this.sharedModel,
-      meta: this.config.meta
+      meta: this.config.meta,
+      depends
     };
     Object.defineProperty(this.model, "__proc", {
       value: this,
