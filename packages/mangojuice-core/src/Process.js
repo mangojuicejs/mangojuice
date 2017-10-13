@@ -453,7 +453,6 @@ export class Process {
    */
   logExecutionError(error, cmd) {
     this.logger.onCatchError(error, cmd, this.model);
-    console.error(error);
   }
 
   /**
