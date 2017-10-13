@@ -23,13 +23,11 @@ export const createModel = (): Model => ({
 export const Logic = {
   name: "Shared",
 
-  config({ nest }, request) {
+  children({ nest }) {
     return {
-      children: {
-        route: nest(Router.Logic).singleton(routes).args(request),
-        intl: nest(Intl.Logic).singleton().args(languages),
-        user: nest(User.Logic).singleton().args(request)
-      }
+      route: nest(Router.createLogic(routes)).singleton(),
+      intl: nest(Intl.Logic).singleton().args(languages),
+      user: nest(User.Logic).singleton()
     };
   }
 };

@@ -5,33 +5,33 @@ import * as Utils from "./Utils";
 export const Logic = {
   name: "Form",
 
-  config(ctx, { validateForm, submitForm } = {}) {
+  config({ validateForm, submitForm } = {}) {
     return { meta: { validateForm, submitForm } };
   },
 
   // Others
   @Cmd.update
-  SetFormState(ctx, state) {
+  SetFormState(state) {
     return { state };
   },
 
   @Cmd.batch
-  ResetForm({ model }) {
-    const fields = Utils.getFormFieldModels(model);
+  ResetForm() {
+    const fields = Utils.getFormFieldModels(this.model);
     return fields.map(f => Field.Logic.Reset().model(f));
   },
 
   @Cmd.batch
-  TouchForm({ model }) {
-    const fields = Utils.getFormFieldModels(model);
+  TouchForm() {
+    const fields = Utils.getFormFieldModels(this.model);
     return fields.map(f => Field.Logic.TouchField().model(f));
   },
 
   @Cmd.batch
-  HandleField({ model }, cmd) {
+  HandleField(cmd) {
     if (cmd.is(Field.Logic.HandleChange)) {
       return [
-        Utils.isInvalid(model) && this.SetFormState("Typing")
+        Utils.isInvalid(this.model) && this.SetFormState("Typing")
         // isSubmitting(model) && cmd.Terminate() TODO
       ];
     }
@@ -39,8 +39,8 @@ export const Logic = {
 
   // Validation
   @Cmd.batch
-  ValidationSuccess({ model }) {
-    if (Utils.isSubmitting(model)) {
+  ValidationSuccess() {
+    if (Utils.isSubmitting(this.model)) {
       return this.DoSubmitForm();
     }
   },
@@ -51,15 +51,15 @@ export const Logic = {
   },
 
   @Cmd.execLatest
-  ValidateForm({ meta }) {
-    return Task.create(meta.validateForm)
+  ValidateForm() {
+    return Task.create(this.meta.validateForm)
       .success(this.ValidationSuccess())
       .fail(this.ValidationError());
   },
 
   // Submit
   @Cmd.batch
-  SubmitForm(ctx, e) {
+  SubmitForm(e) {
     if (e && e.preventDefault) {
       e.preventDefault();
     }
@@ -78,8 +78,8 @@ export const Logic = {
   @Cmd.nope SubmitFailed() {},
 
   @Cmd.execLatest
-  DoSubmitForm({ meta }) {
-    return Task.create(meta.submitForm)
+  DoSubmitForm() {
+    return Task.create(this.meta.submitForm)
       .success(this.SubmitSuccess())
       .fail(this.SubmitFailed());
   }

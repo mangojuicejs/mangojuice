@@ -4,20 +4,20 @@ import createMemoryHistory from "history/createMemoryHistory";
 import Router from "mangojuice-router";
 
 
-const createSharedBlock = (routes, historyOpts = {}) => {
+const createSharedBlock = (rootRoutes, historyOpts = {}) => {
   const SharedBlock = {
     createModel: () => ({
       router: Router.createModel()
     }),
     Logic: {
       name: "SharedBlock",
-      config({ nest }) {
-        return { children: {
-          router: nest(Router.Logic)
+      children({ nest }) {
+        return {
+          router: nest(Router.createLogic(rootRoutes))
             .handler(this.HandleRouter)
             .args({ createHistory: createMemoryHistory.bind(null, historyOpts) })
-            .singleton(routes)
-        } };
+            .singleton()
+        };
       },
       @Cmd.batch
       HandleRouter() {
@@ -39,10 +39,9 @@ describe("Router basic usage cases", () => {
   const DefaultRoutes = {
     Root: Router.route('/', null, { default: true }),
   }
-  const routes = { MainRoutes, NewsRoutes };
 
   it("should activate default non root route", async () => {
-    const SharedBlock = createSharedBlock(routes);
+    const SharedBlock = createSharedBlock(MainRoutes);
     const { app, commands } = await runWithTracking({ app: SharedBlock });
 
     expect(Router.isActive(app.model.router, MainRoutes.Articles)).toBeTruthy();
@@ -52,7 +51,7 @@ describe("Router basic usage cases", () => {
   });
 
   it("should recognize nested route on startup", async () => {
-    const SharedBlock = createSharedBlock(routes, { initialEntries: [ '/news/123' ] });
+    const SharedBlock = createSharedBlock(MainRoutes, { initialEntries: [ '/news/123' ] });
     const { app, commands } = await runWithTracking({ app: SharedBlock });
 
     expect(Router.isActive(app.model.router, MainRoutes.Articles)).toBeFalsy();
@@ -63,7 +62,7 @@ describe("Router basic usage cases", () => {
   });
 
   it("should recognize not found route at root", async () => {
-    const SharedBlock = createSharedBlock(routes, { initialEntries: [ '/some_page' ] });
+    const SharedBlock = createSharedBlock(MainRoutes, { initialEntries: [ '/some_page' ] });
     const { app, commands } = await runWithTracking({ app: SharedBlock });
 
     expect(Router.isActive(app.model.router, MainRoutes.Articles)).toBeFalsy();
@@ -74,7 +73,7 @@ describe("Router basic usage cases", () => {
   });
 
   it("should recognize not found route at nested level", async () => {
-    const SharedBlock = createSharedBlock(routes, { initialEntries: [ '/news/category/123' ] });
+    const SharedBlock = createSharedBlock(MainRoutes, { initialEntries: [ '/news/category/123' ] });
     const { app, commands } = await runWithTracking({ app: SharedBlock });
 
     expect(Router.isActive(app.model.router, MainRoutes.Articles)).toBeFalsy();
@@ -86,7 +85,7 @@ describe("Router basic usage cases", () => {
   });
 
   it("should be able to change the route", async () => {
-    const SharedBlock = createSharedBlock(routes);
+    const SharedBlock = createSharedBlock(MainRoutes);
     const { app, commandNames } = await runWithTracking({ app: SharedBlock });
 
     await app.proc.exec(NewsRoutes.Category({ category: '321' }));
@@ -102,7 +101,7 @@ describe("Router basic usage cases", () => {
   });
 
   it("should provide a way to create a link", async () => {
-    const SharedBlock = createSharedBlock(routes);
+    const SharedBlock = createSharedBlock(MainRoutes);
     const { app, commandNames } = await runWithTracking({ app: SharedBlock });
 
     const cmd = NewsRoutes.Category({ category: '321' });
@@ -112,7 +111,7 @@ describe("Router basic usage cases", () => {
   });
 
   it("should provide a way to create a link with command creator", async () => {
-    const SharedBlock = createSharedBlock(routes);
+    const SharedBlock = createSharedBlock(MainRoutes);
     const { app, commandNames } = await runWithTracking({ app: SharedBlock });
 
     const cmd = NewsRoutes.All;

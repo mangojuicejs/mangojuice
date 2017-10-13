@@ -14,44 +14,46 @@ export const getLettersIdnt = ({ route }) => {
 export const Logic = {
   name: "Inbox",
 
-  config({ subscribe, nest, shared }) {
+  children({ nest }) {
     return {
-      subscriptions: subscribe(shared.route).handler(this.HandleRouter),
-      children: {
-        boxes: nest(Data.Logic).args({
-          retreiver: Tasks.GetBoxesList
-        }),
-        letters: nest(Data.Logic).handler(this.HandleLetterData).args({
-          retreiver: Tasks.GetBoxLetters,
-          searcher: Tasks.GetSearchLetters,
-          block: Letter
-        })
-      }
+      boxes: nest(Data.Logic).args({
+        retreiver: Tasks.GetBoxesList
+      }),
+      letters: nest(Data.Logic).handler(this.HandleLetterData).args({
+        retreiver: Tasks.GetBoxLetters,
+        searcher: Tasks.GetSearchLetters,
+        block: Letter
+      })
     };
   },
 
+  port({ exec, shared, destroy }) {
+    Utils.handleModelChanges(shared.route, () => exec(this.HandleRouter()), destroy);
+    return exec(this.HandleRouter());
+  },
+
   @Cmd.batch
-  HandleLetterData({ model }, cmd, cmdModel) {
+  HandleLetterData(cmd, cmdModel) {
     if (cmd.is(Letter.Logic.Delete)) {
-      return Data.Logic.Filter(cmdModel).model(model.letters);
+      return Data.Logic.Filter(cmdModel).model(this.model.letters);
     }
   },
 
   @Cmd.batch
-  HandleRouter({ shared, model }, cmd, route) {
+  HandleRouter(cmd, route) {
     const result = [];
     if (Router.isActive(route, MailRoutes.Inbox)) {
       result.push(this.FocusSearchField());
-      if (Data.isNotAsked(model.boxes)) {
+      if (Data.isNotAsked(this.model.boxes)) {
         result.push(this.RetreiveBoxes());
       }
-      if (Data.isDifferent(model.letters, getLettersIdnt(shared))) {
+      if (Data.isDifferent(this.model.letters, getLettersIdnt(this.shared))) {
         result.push(this.RetreiveBoxLetters());
       }
     }
     if (Router.isLeft(route, MailRoutes.Inbox)) {
-      result.push(Data.Logic.Cancel().model(model.boxes));
-      result.push(Data.Logic.Cancel().model(model.letters));
+      result.push(Data.Logic.Cancel().model(this.model.boxes));
+      result.push(Data.Logic.Cancel().model(this.model.letters));
     }
     return result;
   },
@@ -61,20 +63,20 @@ export const Logic = {
   },
 
   @Cmd.batch
-  RetreiveBoxLetters({ shared, model }) {
+  RetreiveBoxLetters() {
     return [
-      Data.Logic.SetIdentifier(getLettersIdnt(shared)).model(model.letters),
-      Data.Logic.Retreive().model(model.letters)
+      Data.Logic.SetIdentifier(getLettersIdnt(this.shared)).model(this.model.letters),
+      Data.Logic.Retreive().model(this.model.letters)
     ];
   },
 
   @Cmd.batch
-  RetreiveBoxes({ model }) {
-    return Data.Logic.Retreive().model(model.boxes);
+  RetreiveBoxes() {
+    return Data.Logic.Retreive().model(this.model.boxes);
   },
 
   @Cmd.batch
-  OpenBox(ctx, box) {
+  OpenBox(box) {
     return MailRoutes.Inbox({ box });
   }
 };

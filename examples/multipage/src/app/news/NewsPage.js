@@ -1,7 +1,7 @@
 import React from "mangojuice-react";
 import * as Router from "mangojuice-router";
 import * as Intl from "mangojuice-intl";
-import { Cmd } from "mangojuice-core";
+import { Cmd, Utils } from "mangojuice-core";
 import { Routes } from "src/routes";
 import * as CreateForm from "mangojuice-lazy/loader!./CreateForm";
 
@@ -21,13 +21,15 @@ export const createModel = (): Model => ({
 export const Logic = {
   name: "NewsPage",
 
-  config({ subscribe, nest, shared }) {
+  children({ nest }) {
     return {
-      subscriptions: subscribe(shared.route).handler(this.HandleRouter),
-      children: {
-        form: nest(CreateForm.Logic).handler(this.HandleForm)
-      }
+      form: nest(CreateForm.Logic).handler(this.HandleForm)
     };
+  },
+
+  port({ shared, exec, destroy }) {
+    Utils.handleModelChanges(shared.route, () => exec(this.HandleRouter), destroy);
+    return exec(this.HandleRouter);
   },
 
   @Cmd.update
@@ -36,19 +38,19 @@ export const Logic = {
   },
 
   @Cmd.batch
-  HandleForm({ model }, cmd) {
+  HandleForm(cmd) {
     if (cmd.is(CreateForm.Logic.SubmitSuccess)) {
       return [
-        CreateForm.Logic.ResetForm().model(model.form),
+        CreateForm.Logic.ResetForm().model(this.model.form),
         this.AddNewArticle(cmd.args[0])
       ];
     }
   },
 
   @Cmd.batch
-  HandleRouter({ shared, model }) {
-    if (Router.isChanged(shared.route, Routes.News)) {
-      return CreateForm.Logic.FocusForm().model(model.form);
+  HandleRouter() {
+    if (Router.isChanged(this.shared.route, Routes.News)) {
+      return CreateForm.Logic.FocusForm().model(this.model.form);
     }
   }
 };

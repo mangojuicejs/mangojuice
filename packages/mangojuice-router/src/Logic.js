@@ -1,15 +1,39 @@
 import createBrowserHistory from "history/createBrowserHistory";
 import qs from "qs";
-import { Cmd } from "mangojuice-core";
-import * as Utils from './Utils';
+import { Cmd, Utils } from "mangojuice-core";
+import { createRouteMaps, findFirstPath } from './Utils';
 
 
-export const Logic = {
+/**
+ * Flatten routes tree and returns an object where each
+ * key is a unique path name
+ * @param  {Object} routesTree
+ * @return {Object}
+ */
+const flattenRoutesTree = (routesTree, res = {}) => {
+  for (const k in routesTree) {
+    const cmd = routesTree[k];
+    if (cmd && cmd.routeId) {
+      res[`Route_${Utils.nextId()}`] = cmd;
+      if (cmd.children) {
+        flattenRoutesTree(cmd.children, res);
+      }
+    }
+  }
+  return res;
+};
+
+/**
+ * By given routes tree create a Router logic and returns it
+ * @param  {Object} routesTree
+ * @return {Object}
+ */
+export const createLogic = (routesTree) => ({
+  ...flattenRoutesTree(routesTree),
   name: "Router",
 
-  config({ binded }, options = {}) {
-    const { request, createHistory = createBrowserHistory } = options;
-    const routes = Utils.createRouteMaps(binded);
+  config({ request, createHistory = createBrowserHistory } = {}) {
+    const routes = createRouteMaps(this);
     const history = request ? null : createHistory();
     return {
       meta: { routes, history, request }
@@ -39,17 +63,17 @@ export const Logic = {
   },
 
   @Cmd.batch
-  HandleLocationChange({ model, meta }, location) {
-    const firstPath = Utils.findFirstPath(meta.routes, location.pathname);
+  HandleLocationChange(location) {
+    const firstPath = findFirstPath(this.meta.routes, location.pathname);
     const active = {};
     const changedRoutes = {};
-    const appearedOnce = { ...model.appearedOnce };
+    const appearedOnce = { ...this.model.appearedOnce };
 
     if (firstPath) {
       firstPath.chain.forEach(x => {
         active[x] = true;
         changedRoutes[x] =
-          (!model.active[x] && !model.changedRoutes[x]) || !meta.handledOnce;
+          (!this.model.active[x] && !this.model.changedRoutes[x]) || !this.meta.handledOnce;
         if (appearedOnce[x] === undefined) {
           appearedOnce[x] = true;
         } else if (appearedOnce[x] === true) {
@@ -59,17 +83,17 @@ export const Logic = {
     }
 
     const leftRoutes = {};
-    for (let k in model.active) {
+    for (let k in this.model.active) {
       if (!active[k]) {
         leftRoutes[k] = true;
       }
     }
 
-    meta.handledOnce = true;
+    this.meta.handledOnce = true;
     const search = location.search.replace(/^\?(.*)/, "$1");
     const params = firstPath
-      ? { ...model.params, ...firstPath.params }
-      : model.params;
+      ? { ...this.model.params, ...firstPath.params }
+      : this.model.params;
 
     return this.UpdateRouter({
       query: qs.parse(search),
@@ -82,23 +106,23 @@ export const Logic = {
   },
 
   @Cmd.batch
-  UpdateRouter(ctx, newValues) {
+  UpdateRouter(newValues) {
     return this.DoUpdateRouter(newValues);
   },
 
   @Cmd.update
-  DoUpdateRouter(ctx, newValues) {
+  DoUpdateRouter(newValues) {
     return newValues;
   },
 
   @Cmd.update
-  Query({ model, meta }, query = {}, { replace, keep } = {}) {
-    const newQuery = keep ? { ...query, ...model.query } : query;
-    const location = meta.history.location;
+  Query(query = {}, { replace, keep } = {}) {
+    const newQuery = keep ? { ...query, ...this.model.query } : query;
+    const location = this.meta.history.location;
 
-    meta.history[replace ? "replace" : "push"]({
+    this.meta.history[replace ? "replace" : "push"]({
       ...location,
       search: qs.stringify(newQuery)
     });
   }
-};
+});

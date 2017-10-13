@@ -209,13 +209,11 @@ export const createModel = () => ({
 export const Logic = {
   name: 'Main',
 
-  config({ nest }) {
+  children({ nest }) {
     return {
-      children: {
-        form: nest(SearchForm.Logic).handler(this.HandleSearchForm),
-        results: nest(SearchResults.Logic),
-      }
-    }
+      form: nest(SearchForm.Logic).handler(this.HandleSearchForm),
+      results: nest(SearchResults.Logic),
+    };
   },
 
   @Cmd.batch
@@ -236,7 +234,7 @@ The main block contains the Form and Results blocks and ties them together.
 
 **`const createModel = () =>`** as usual makes the initial block's model, but it also creates models for children blocks using their own `createModel` functions.
 
-**`config({ nest })`** helps to define what logic should be associated with what model. In the example above we are saying that the block have two child blocks.
+**`children({ nest })`** helps to define what logic should be associated with what model. In the example above we are saying that the block have two child logical blocks.
 
 **`form: nest(SearchForm.Logic).handler(this.HandleSearchForm),`** not only defines that `SearchForm.Logic` will be associated with the `form` model's field, but also set a handler command that will be executed before and after each command from `SearchForm` block. The handler will be also called for every nested block of the `SearchForm` and so on.
 
@@ -286,12 +284,10 @@ export const View = ({ model }) => (
 import * as ResultsItem from './ResultsItem';
 
 export const Logic = {
-  config({ nest }) {
+  children({ nest }) {
     return {
-      children: {
-        results: nest(ResultsItem.Logic)
-      }
-    }
+      results: nest(ResultsItem.Logic)
+    };
   }
   ...
   @Cmd.update
@@ -334,12 +330,10 @@ export const createModel = () => ({
 });
 export const Logic = {
   name: 'Shared',
-  config({ nest }) {
+  children({ nest }) {
     return {
-      children: {
-        user: nest(User.Logic).singleton(),
-      }
-    }
+      user: nest(User.Logic).singleton(),
+    };
   }
 };
 
@@ -386,11 +380,22 @@ Run.mount({
 ```js
 // Main.js
 import * as User from './User';
-...
-export const View = ({ model, shared }) => (
+
+export const Logic = {
+  ...
+  computed({ shared, depends }) {
+    return {
+      userAuthorized: depends(shared.user).compute(() => shared.user.authorized),
+      userName: depends(shared.user).compute(() => shared.user.name),
+      user: depends(shared.user).compute(() => shared.user),
+    };
+  },
+};
+
+export const View = ({ model }) => (
   <div>
-    {shared.user.authorized && <div>Hello, {shared.user.name}</div>}
-    {!shared.user.authorized && (
+    {model.userAuthorized && <div>Hello, {model.userName}</div>}
+    {!model.userAuthorized && (
       <button onClick={User.Logic.Login}>Login</button>
     )}
     <SearchForm.View model={model.form} />
@@ -398,48 +403,24 @@ export const View = ({ model, shared }) => (
   </div>
 )
 ```
-**`const View = ({ model, shared })`** now also have a `shared` field in the props which is just a model of a shared block.
 
-### App depends on Shared (and how to disable it)
-It is important to notice that every Block from app tree depends on changes of the model of a shared tree. For example, when the user logs in (`authorized` changes to `true` by `Login` command) each View of the app (of each block from the app's tree) will be re-rendered. For instance `Main.View`, `SearchForm.View`, `SearchResults.View`, all of these views will be re-rendered.
+**`computed({ shared, depends })`** here you can see two new things provided to the `computed` function – shared and depends. In MJS defined very strict rule – View renders only one Model and updates only when the model updated. It means that we can't use `shared` model directly in the View. But with `computed` we can get something from `shared` and **subscribe** to changes in used models. In the example we are defining two new computed fields `userAuthorized` and `userName` which are computed from `shared.user` model. Also, by `depends` we are defining that this computed fields should be recomputed when given model will be changed. So, everytime when `shared.user` changed, then `Main` model also will be changed and the view of `Main` will be rerendered.
 
-That imposes an important restriction to shared blocks. They should be changed rarely to have a good performance. But there is also a way to disable shared dependency for a specific block:
-
-```js
-// SearchResults.js
-...
-export const Logic = {
-  config({ subscribe, shared }) {
-    return {
-      manualSharedSubscribe: true,
-      subscriptions: [
-        subscribe(shared.user).handler(this.HandleUserUpdate)
-      ]
-    }
-  },
-
-  @Cmd.batch
-  HandleUserUpdate(ctx, cmd, userModel) {
-  }
-  ...
-}
-```
-
-**`manualSharedSubscribe: true`** disables View re-rendering of `SearchResults` block when shared model changed.
-
-**`subscriptions: ...`** provides a way to subscribe only to some of shared model changes. Above we subscribed to changes of `shared.user` and added an update handler command `HandleUserUpdate`. This command will be executed on every change of `shared.user`. But not on changes of `shared` model itself.
-
-`subscriptions` defined there just to demonstrate the mechanism. If you want to remove Shared dependency from `SearchResults` you just need to add `manualSharedSubscribe: true` and no subscriptions.
+**`user: depends(shared.user).compute(() => shared.user)`** alternitabely to define two separate computed fields you can just grab a full `shared.user` model object and used in the View as part of the Model.
 
 ### Dealing with the real world
 We showed above how to handle events from a View. But complex applications could have to handle not only view events, but some more, like WebSocket messages, or presses to `esc` in the window scope, or execute someting in the interval. The good news is that MJS also provides a way to handle this kind of events.
 
 ```js
 // SearchResults.js
+import { Utils } from 'mangojuice-core';
 ...
 export const Logic = {
   ...
-  port({ model, destroy, exec }) {
+  port({ model, destroy, exec, shared }) {
+    Utils.handleModelChanges(shared.user, () => {
+      // Do something when shared.user changed
+    }, destroy);
     const timer = setInterval(() => {
       exec(this.Search(model.query));
     }, 10000);
@@ -451,6 +432,8 @@ export const Logic = {
 **`port({ model, destroy, exec })`** is a special function of logic object, that is aimed to subscribe to some global events. In the example we just made an interval for refreshing the search results every 10 secs.
 
 **`destroy.then(() => clearInterval(timer));`** subscribes to the destroy Promise, which will be resolved when the block is removed. For example when model of the `SearchResults` will be removed – set to `null` – in `Main` block.
+
+**`Utils.handleModelChanges`** helps to subscribe to shared model changes. In the handler you can check new state of the model and exec some commands.
 
 ## Conclusion
 These are the basics of MJS. It was inspired by many existing frameworks/languages that the author used for a while. So probably there is not anything extremely new. MJS is all about defining a scalable, flexible way of implementing logic of your app in following the MVC pattern with the help of the Command Pattern and of the latest available ES6/ES7 features, like decorators or async/await.

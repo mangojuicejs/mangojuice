@@ -22,19 +22,17 @@ export const createModel = (): Model => ({
 export const Logic = {
   name: "MailPage",
 
-  config({ nest }) {
+  children({ nest }) {
     return {
-      children: {
-        inbox: nest(Inbox.Logic),
-        sent: nest(Sent.Logic)
-      }
+      inbox: nest(Inbox.Logic),
+      sent: nest(Sent.Logic)
     };
   },
 
   @Cmd.batch
-  OpenLatestBox({ shared }) {
+  OpenLatestBox() {
     return MailRoutes.Inbox({
-      box: shared.route.params.box || 0
+      box: this.shared.route.params.box || 0
     });
   },
 
