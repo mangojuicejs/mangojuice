@@ -30,9 +30,9 @@ export const Logic = {
   },
 
   @Cmd.batch
-  OpenLatestBox({ shared }) {
+  OpenLatestBox() {
     return MailRoutes.Inbox({
-      box: shared.route.params.box || 0
+      box: this.shared.route.params.box || 0
     });
   },
 

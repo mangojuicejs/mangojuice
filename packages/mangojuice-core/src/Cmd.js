@@ -149,7 +149,7 @@ export function execTask(props) {
     };
 
     try {
-      proc = Task.call(task, props, ...this.args);
+      proc = Task.call.call(props, task, ...this.args);
       return proc.then(handleSuccess, handleFail);
     } catch (err) {
       handleFail(err);
@@ -220,10 +220,8 @@ export function createThrottleCmd(name, func, { throttleTime, debounceTime }) {
 
   // Throttle logic commands
   const throttleNopeCmd = createNopeCmd(`${name}.Throttle.Nope`);
-  const throttleExecCmd = createBatchCmd(`${name}.Throttle.Exec`, function(
-    props
-  ) {
-    const procId = props.model.__proc.id;
+  const throttleExecCmd = createBatchCmd(`${name}.Throttle.Exec`, function() {
+    const procId = this.model.__proc.id;
     const args = helpers.extractExecContext(procId);
     return func(...args);
   });
@@ -237,18 +235,13 @@ export function createThrottleCmd(name, func, { throttleTime, debounceTime }) {
     },
     { debounce: debounceTime > 0 }
   );
-  const throttleCancelCmd = createBatchCmd(`${name}.Throttle.Cancel`, function(
-    props
-  ) {
-    const procId = props.model.__proc.id;
+  const throttleCancelCmd = createBatchCmd(`${name}.Throttle.Cancel`, function() {
+    const procId = this.model.__proc.id;
     helpers.extractExecContext(procId);
     return [throttleDelayCmd.Cancel(), func.Cancel && func.Cancel()];
   });
-  const throttleDecideCmd = createBatchCmd(`${name}.Throttle`, function(
-    props,
-    ...args
-  ) {
-    const procId = props.model.__proc.id;
+  const throttleDecideCmd = createBatchCmd(`${name}.Throttle`, function(...args) {
+    const procId = this.model.__proc.id;
     helpers.saveExecContext(procId, args);
     if (helpers.isExecuting(procId) && !debounceTime) {
       return throttleNopeCmd();

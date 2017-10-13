@@ -25,8 +25,8 @@ export const Logic = {
   @Cmd.nope InitSentLetters() {},
 
   @Cmd.batch
-  HandlerRouter({ shared }) {
-    if (Router.isFirstAppear(shared.route, MailRoutes.Sent)) {
+  HandlerRouter() {
+    if (Router.isFirstAppear(this.shared.route, MailRoutes.Sent)) {
       return this.InitSentLetters();
     }
   }

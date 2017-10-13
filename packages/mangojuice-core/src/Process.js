@@ -69,6 +69,7 @@ export class Process {
     this.execHandlers = execHandlers;
     this.singletonValue = singletonValue;
     this.parentComputedFn = parentComputedFn;
+    this.portDestroyPromise = new Promise(r => this.portDestroyResolver = r);
   }
 
   bind(model) {
@@ -203,7 +204,6 @@ export class Process {
         this.bindComputed();
       };
 
-      this.createPortDestroyPromise();
       maybeForEach(computeVal.deps, m => {
         handleModelChanges(m, updateHandler, this.portDestroyPromise, destroyHandler);
       });
@@ -231,6 +231,8 @@ export class Process {
       model: this.model,
       shared: this.sharedModel,
       meta: this.config.meta,
+      exec: this.exec,
+      destroy: this.portDestroyPromise,
       depends
     };
     Object.defineProperty(this.model, "__proc", {
@@ -263,17 +265,8 @@ export class Process {
 
   runPorts() {
     if (this.logic.port) {
-      this.createPortDestroyPromise();
-
-      const portProps = {
-        ...this.execProps,
-        exec: this.exec,
-        destroy: this.portDestroyPromise
-      };
-
-      // Run and resolve port
       const result = this.safeExecFunction(
-        () => this.logic.port(portProps));
+        () => this.logic.port(this.execProps));
       return Promise.resolve(result);
     }
   }
@@ -319,14 +312,6 @@ export class Process {
     if (this.bindedCommands) {
       maybeForEach(this.bindedCommands, cmd =>
         delete this.appContext.bindings[cmd.id]
-      );
-    }
-  }
-
-  createPortDestroyPromise() {
-    if (!this.portDestroyResolver) {
-      this.portDestroyPromise = new Promise(r =>
-        this.portDestroyResolver = r
       );
     }
   }

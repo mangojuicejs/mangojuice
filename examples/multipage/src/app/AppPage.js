@@ -38,7 +38,7 @@ export const Logic = {
   },
 
   @Cmd.batch
-  ShowNotification(ctx, message: String) {
+  ShowNotification(message: String) {
     return [this.SetNotificationMsg(message), this.DelayHideNotification()];
   },
 
@@ -50,31 +50,31 @@ export const Logic = {
   },
 
   @Cmd.update
-  SetNotificationMsg(ctx, message: string) {
+  SetNotificationMsg(message: string) {
     return { notification: message };
   },
 
   @Cmd.update
-  LogModel({ model, shared }) {
-    console.log(JSON.stringify(model, null, 2));
-    console.log(JSON.stringify(shared, null, 2));
+  LogModel() {
+    console.log(JSON.stringify(this.model, null, 2));
+    console.log(JSON.stringify(this.shared, null, 2));
   },
 
   @Cmd.batch
-  HandleMail(ctx, cmd) {
+  HandleMail(cmd) {
     if (cmd.is(Letter.Logic.Delete)) {
       return this.ShowNotification(Messages.letterRemoved);
     }
   },
 
   @Cmd.batch
-  ChangeLocale(ctx, lang) {
+  ChangeLocale(lang) {
     return Intl.Logic.ChangeLocale(lang);
   },
 
   @Cmd.batch
-  OpenInbox({ shared }) {
-    return MailRoutes.Inbox({ box: shared.route.params.box || 0 });
+  OpenInbox() {
+    return MailRoutes.Inbox({ box: this.shared.route.params.box || 0 });
   },
 
   @Cmd.batch

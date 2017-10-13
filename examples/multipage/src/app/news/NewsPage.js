@@ -38,19 +38,19 @@ export const Logic = {
   },
 
   @Cmd.batch
-  HandleForm({ model }, cmd) {
+  HandleForm(cmd) {
     if (cmd.is(CreateForm.Logic.SubmitSuccess)) {
       return [
-        CreateForm.Logic.ResetForm().model(model.form),
+        CreateForm.Logic.ResetForm().model(this.model.form),
         this.AddNewArticle(cmd.args[0])
       ];
     }
   },
 
   @Cmd.batch
-  HandleRouter({ shared, model }) {
-    if (Router.isChanged(shared.route, Routes.News)) {
-      return CreateForm.Logic.FocusForm().model(model.form);
+  HandleRouter() {
+    if (Router.isChanged(this.shared.route, Routes.News)) {
+      return CreateForm.Logic.FocusForm().model(this.model.form);
     }
   }
 };

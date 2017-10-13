@@ -13,7 +13,7 @@ export const Logic = {
   },
 
   @Cmd.batch
-  ChangeLocale(ctx, nextLocale) {
+  ChangeLocale(nextLocale) {
     return [
       this.SetNewLocale(nextLocale),
       this.LoadMessages()
@@ -21,12 +21,12 @@ export const Logic = {
   },
 
   @Cmd.update
-  SetNewLocale(ctx, nextLocale) {
+  SetNewLocale(nextLocale) {
     return { locale: nextLocale };
   },
 
   @Cmd.update
-  SetMessages(ctx, messages) {
+  SetMessages(messages) {
     return {
       messages,
       loaded: true

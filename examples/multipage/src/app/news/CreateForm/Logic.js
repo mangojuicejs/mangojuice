@@ -49,7 +49,7 @@ export const Logic = {
   },
 
   @Cmd.batch
-  SubmitFailed(ctx, error) {
+  SubmitFailed(error) {
     console.error(error)
   }
 };
