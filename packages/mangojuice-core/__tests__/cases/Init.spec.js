@@ -13,8 +13,8 @@ describe("Init commands execution", () => {
       config() {
         return { initCommands: [this.FromInitOneCmd()] };
       },
-      port({ exec }) {
-        return exec(this.FromPortAsync);
+      port() {
+        return this.exec(this.FromPortAsync);
       },
       @Cmd.execLatest
       FromPortAsync() {
@@ -48,13 +48,14 @@ describe("Init commands execution", () => {
           initCommands: [this.FromInitOneCmd, this.FromInitTwoCmd(1, 2, 3)],
         };
       },
-      children({ nest }) {
+      children() {
         return {
-          b_1: nest(BlockB.Logic).handler(this.HandleB_1),
-          b_2: nest(BlockB.Logic).handler(this.HandleB_2)
+          b_1: this.nest(BlockB.Logic).handler(this.HandleB_1),
+          b_2: this.nest(BlockB.Logic).handler(this.HandleB_2)
         }
       },
-      port({ model, shared, destroy, exec }) {
+      port() {
+        const { model, shared, destroy, exec } = this;
         Utils.handleModelChanges(shared, cmd => {
           exec(this.FromSubCmd);
         }, destroy);

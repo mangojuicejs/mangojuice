@@ -9,7 +9,8 @@ describe("Computed", () => {
       createModel: () => ({ e: 0, f: 4, g: 6 }),
       Logic: {
         name: "SharedBlock",
-        computed({ model }) {
+        computed() {
+          const { model } = this;
           return {
             e: () => model.f + model.g
           };
@@ -24,7 +25,8 @@ describe("Computed", () => {
       createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
       Logic: {
         name: "AppBlock",
-        computed({ model, shared, depends }) {
+        computed() {
+          const { model, shared, depends } = this;
           return {
             c: () => model.a + model.b,
             d: depends(shared).compute(() => model.a + shared.e)
@@ -91,7 +93,8 @@ describe("Computed", () => {
       createModel: () => ({ e: 0, f: 4, g: 6 }),
       Logic: {
         name: "SharedBlock",
-        computed({ model }) {
+        computed() {
+          const { model } = this;
           return {
             e: () => model.f + model.g
           };
@@ -106,7 +109,8 @@ describe("Computed", () => {
       createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
       Logic: {
         name: "AppBlock",
-        computed({ model, shared, depends }) {
+        computed() {
+          const { model, shared, depends } = this;
           return {
             c: depends(shared).compute(() => shared.f + shared.e + model.a),
             d: depends(shared).compute(() => shared.f + shared.g + model.b)
@@ -122,12 +126,14 @@ describe("Computed", () => {
       createModel: () => ({ a: 1, c: 0, d: 0, child: AppBlock.createModel() }),
       Logic: {
         name: "AppParent",
-        children({ nest }) {
+        children() {
+          const { nest } = this;
           return {
             child: nest(AppBlock.Logic)
           };
         },
-        computed({ model, shared, depends }) {
+        computed() {
+          const { model, shared, depends } = this;
           return {
             c: depends(shared, model.child).compute(() => shared.f + shared.e + model.a + model.child.a),
             d: depends(shared).compute(() => shared.f + shared.g)

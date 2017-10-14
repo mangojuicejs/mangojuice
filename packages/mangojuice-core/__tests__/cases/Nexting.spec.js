@@ -10,7 +10,8 @@ import { runWithTracking } from "mangojuice-test";
       config() {
         return { initCommands: this.InitChild };
       },
-      port({ destroy, exec, model }) {
+      port() {
+        const { destroy, exec, model } = this;
         destroy.then(() => (model.deleted = true));
       },
       @Cmd.nope InitChild() {},
@@ -26,7 +27,8 @@ import { runWithTracking } from "mangojuice-test";
     }),
     Logic: {
       name: "ParentBlock",
-      children({ nest }) {
+      children() {
+        const { nest } = this;
         return {
           arr: nest(ChildBlock.Logic),
           child_1: nest(ChildBlock.Logic),
@@ -134,7 +136,8 @@ import { runWithTracking } from "mangojuice-test";
       createModel: () => ({ recursive: null, a: 0, id: idCounter++ }),
       Logic: {
         name: "AppBlock",
-        children({ nest }) {
+        children() {
+          const { nest } = this;
           return {
             recursive: nest(RecursiveBlock.Logic).handler(this.HandleChange)
           };

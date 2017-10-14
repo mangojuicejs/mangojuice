@@ -57,14 +57,14 @@ export const createModel = () => ({
 export const Logic = {
   name: 'SearchForm',
 
-  computed({ model }) {
+  computed() {
     return {
-      count: () => model.query.length
+      count: () => this.model.query.length
     };
   },
 
   @Cmd.update
-  SetQuery(ctx, e) {
+  SetQuery(e) {
     return { query: e.target.value };
   },
 
@@ -86,15 +86,13 @@ Module `SearchForm.js` is a `Block`. It exports `createModel`, `View` and `Logic
 
 **`name: 'SearchForm'`** defines a name for the logical block. Each logic object should have a name for easier debugging and namespacing commands.
 
-**`computed({ model }) {`** is a way to attach some computation to the model's fields. In the example we are computing amount of symbols in the search query.
+**`computed() {`** is a way to attach some computation to the model's fields. In the example we are computing amount of symbols in the search query.
 
 **`@Cmd.update`** defines that the decorated function is a function for updating a model. MJS implements the so called `command pattern`, and `Cmd` decorators help to convert plain function to a command creator with defined behaviour.
 
 For instance, if you call `Logic.SetQuery(1,2,3)` it will return you a plain object (command), which contains original function, array of arguments `[1,2,3]` and some other internally used information, that defines that this is a command for updating a model.
 
 If you are familiar with Redux, then you can think about it as an action creator tied with function that will actually handle the action.
-
-**`ctx`** as first argument of each command is just an object with `model` field. So you can use it to define next state of a model, or to take some information to decide what command should be executed next.
 
 **`@Cmd.nope`** is a no-op. We will see why this is useful a bit later. And there is some more command types in MJS core and we will meet them a bit later too.
 
@@ -130,7 +128,7 @@ export const createModel = () => ({
   error: ''
 });
 export const Tasks = {
-  async findResults({ model }) {
+  async findResults() {
     const res = await this.call(fetch, 'www.google.com/search');
     return res.items;
   }
@@ -139,7 +137,7 @@ export const Logic = {
   name: 'SearchResults',
 
   @Cmd.batch
-  Search(ctx, query) {
+  Search(query) {
     return [
       this.InitSearch(query),
       this.DoSearch()
@@ -155,12 +153,12 @@ export const Logic = {
   },
 
   @Cmd.update
-  InitSearch(ctx, query) {
+  InitSearch(query) {
     return { query, loading: true };
   },
 
   @Cmd.update
-  SetResultsList(ctx, results) {
+  SetResultsList(results) {
     return {
       results,
       loading: false
@@ -168,7 +166,7 @@ export const Logic = {
   },
 
   @Cmd.update
-  HandleSearchFail(ctx, err) {
+  HandleSearchFail(err) {
     return {
       error: 'Something weird happened',
       loading: false
@@ -209,17 +207,17 @@ export const createModel = () => ({
 export const Logic = {
   name: 'Main',
 
-  children({ nest }) {
+  children() {
     return {
-      form: nest(SearchForm.Logic).handler(this.HandleSearchForm),
-      results: nest(SearchResults.Logic),
+      form: this.nest(SearchForm.Logic).handler(this.HandleSearchForm),
+      results: this.nest(SearchResults.Logic),
     };
   },
 
   @Cmd.batch
-  HandleSearchForm({ model }, cmd) {
+  HandleSearchForm(cmd) {
     if (cmd.is(SearchForm.Logic.Search.Before)) {
-      return SearchResults.Logic.Search(model.form.query).model(model.results);
+      return SearchResults.Logic.Search(model.form.query).model(this.model.results);
     }
   }
 };
@@ -234,7 +232,7 @@ The main block contains the Form and Results blocks and ties them together.
 
 **`const createModel = () =>`** as usual makes the initial block's model, but it also creates models for children blocks using their own `createModel` functions.
 
-**`children({ nest })`** helps to define what logic should be associated with what model. In the example above we are saying that the block have two child logical blocks.
+**`children()`** helps to define what logic should be associated with what model. In the example above we are saying that the block have two child logical blocks.
 
 **`form: nest(SearchForm.Logic).handler(this.HandleSearchForm),`** not only defines that `SearchForm.Logic` will be associated with the `form` model's field, but also set a handler command that will be executed before and after each command from `SearchForm` block. The handler will be also called for every nested block of the `SearchForm` and so on.
 
@@ -262,8 +260,8 @@ export const Logic = {
   name: 'ResultsItem',
 
   @Cmd.update
-  Increment({ model }, amount) {
-    return { counter: model.counter + amount };
+  Increment(amount) {
+    return { counter: this.model.counter + amount };
   }
 };
 export const View = ({ model }) => (
@@ -284,14 +282,14 @@ export const View = ({ model }) => (
 import * as ResultsItem from './ResultsItem';
 
 export const Logic = {
-  children({ nest }) {
+  children() {
     return {
-      results: nest(ResultsItem.Logic)
+      results: this.nest(ResultsItem.Logic)
     };
   }
   ...
   @Cmd.update
-  SetResultsList(ctx, results) {
+  SetResultsList(results) {
     return {
       results: results.map(x => ResultsItem.createModel(x)),
       loading: false
@@ -307,7 +305,7 @@ export const View = ({ model }) => (
   </div>
 )
 ```
-**`results: nest(ResultsItem.Logic)`** associates a logic with `results` model's field. But `results` is an array. In this case logic will be associated with each object of an array.
+**`results: this.nest(ResultsItem.Logic)`** associates a logic with `results` model's field. But `results` is an array. In this case logic will be associated with each object of an array.
 
 **`results: results.map(x => ResultsItem.createModel(x))`** in `SetResultsList` command just creates a `ResultsItem` model for each result item.
 
@@ -330,9 +328,9 @@ export const createModel = () => ({
 });
 export const Logic = {
   name: 'Shared',
-  children({ nest }) {
+  children() {
     return {
-      user: nest(User.Logic).singleton(),
+      user: this.nest(User.Logic).singleton(),
     };
   }
 };
@@ -358,7 +356,7 @@ export const Logic = {
 ```
 You should already understand what is going on above, except one thing...
 
-**`nest(User.Logic).singleton()`** makes `User.Logic` logic as "singleton" in scope of your app. It means that all commands form the `User.Logic` will be automatically binded to the `shared.user` model. So, if you will want to execute the `User.Logic.Login` commands from anywhere in the app, then you will just need to execute `User.Logic.Login` instead of `User.Logic.Login().model(shared.user)`
+**`this.nest(User.Logic).singleton()`** makes `User.Logic` logic as "singleton" in scope of your app. It means that all commands form the `User.Logic` will be automatically binded to the `shared.user` model. So, if you will want to execute the `User.Logic.Login` commands from anywhere in the app, then you will just need to execute `User.Logic.Login` instead of `User.Logic.Login().model(shared.user)`
 
 Shared block's Logic is singleton by default. So, all commands from your shared block can be executed without `.model(shared)` part.
 
@@ -383,7 +381,8 @@ import * as User from './User';
 
 export const Logic = {
   ...
-  computed({ shared, depends }) {
+  computed() {
+    const { shared, depends } = this;
     return {
       userAuthorized: depends(shared.user).compute(() => shared.user.authorized),
       userName: depends(shared.user).compute(() => shared.user.name),
@@ -404,7 +403,7 @@ export const View = ({ model }) => (
 )
 ```
 
-**`computed({ shared, depends })`** here you can see two new things provided to the `computed` function – shared and depends. In MJS defined very strict rule – View renders only one Model and updates only when the model updated. It means that we can't use `shared` model directly in the View. But with `computed` we can get something from `shared` and **subscribe** to changes in used models. In the example we are defining two new computed fields `userAuthorized` and `userName` which are computed from `shared.user` model. Also, by `depends` we are defining that this computed fields should be recomputed when given model will be changed. So, everytime when `shared.user` changed, then `Main` model also will be changed and the view of `Main` will be rerendered.
+**`computed()`** here you can see two new things provided to the `computed` function – shared and depends. In MJS defined very strict rule – View renders only one Model and updates only when the model updated. It means that we can't use `shared` model directly in the View. But with `computed` we can get something from `shared` and **subscribe** to changes in used models. In the example we are defining two new computed fields `userAuthorized` and `userName` which are computed from `shared.user` model. Also, by `depends` we are defining that this computed fields should be recomputed when given model will be changed. So, everytime when `shared.user` changed, then `Main` model also will be changed and the view of `Main` will be rerendered.
 
 **`user: depends(shared.user).compute(() => shared.user)`** alternitabely to define two separate computed fields you can just grab a full `shared.user` model object and used in the View as part of the Model.
 
@@ -417,7 +416,10 @@ import { Utils } from 'mangojuice-core';
 ...
 export const Logic = {
   ...
-  port({ model, destroy, exec, shared }) {
+  port() {
+    // For reducing `this`
+    const { model, destroy, exec, shared } = this;
+
     Utils.handleModelChanges(shared.user, () => {
       // Do something when shared.user changed
     }, destroy);
@@ -429,7 +431,7 @@ export const Logic = {
   ...
 }
 ```
-**`port({ model, destroy, exec })`** is a special function of logic object, that is aimed to subscribe to some global events. In the example we just made an interval for refreshing the search results every 10 secs.
+**`port()`** is a special function of logic object, that is aimed to subscribe to some global events. In the example we just made an interval for refreshing the search results every 10 secs.
 
 **`destroy.then(() => clearInterval(timer));`** subscribes to the destroy Promise, which will be resolved when the block is removed. For example when model of the `SearchResults` will be removed – set to `null` – in `Main` block.
 

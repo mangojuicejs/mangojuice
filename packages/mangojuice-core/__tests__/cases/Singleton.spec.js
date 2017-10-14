@@ -17,7 +17,8 @@ import { runWithTracking } from "mangojuice-test";
     }),
     Logic: {
       name: "SharedBlock",
-      children({ nest }) {
+      children() {
+        const { nest } = this;
         return { child: nest(ChildBlock.Logic).singleton() };
       },
       @Cmd.update UpdateModel() { return { a: 1 } },

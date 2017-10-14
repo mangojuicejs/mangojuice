@@ -38,12 +38,13 @@ export const initProcess = (
   const proc = new Process({
     logic: Logic,
     sharedModel: sharedModel || model,
+    singletonValue: singleton,
     logger,
     appContext,
-    configArgs
+    configArgs,
   });
 
-  proc.singleton(singleton).bind(model);
+  proc.bind(model);
   return { proc, model };
 };
 

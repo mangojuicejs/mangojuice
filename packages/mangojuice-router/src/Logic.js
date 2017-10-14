@@ -40,7 +40,8 @@ export const createLogic = (routesTree) => ({
     };
   },
 
-  port({ exec, meta, destroy }) {
+  port() {
+    const { exec, meta, destroy } = this;
     const handleHistoryChange = location =>
       exec(this.HandleLocationChange(location));
 

@@ -1,10 +1,11 @@
-import { Cmd, Task, Run, Utils } from "mangojuice-core";
+import { Cmd, Task, Run, Utils, LogicBase } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
 describe('Loigc as a class', () => {
-  class AppLogic {
-    computed({ model, shared, depends }) {
+  class AppLogic extends LogicBase {
+    computed() {
+      const { model, shared, depends } = this;
       return {
         c: () => model.a + model.b,
         d: depends(shared).compute(() => model.a + shared.e)

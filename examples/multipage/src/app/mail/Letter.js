@@ -18,7 +18,8 @@ export const createModel = (letter: Model): Model => ({
 export const Logic = {
   name: "Letter",
 
-  port({ exec, shared, destroy }) {
+  port() {
+    const { exec, shared, destroy } = this;
     Utils.handleModelChanges(shared.route, () => exec(this.SubSmth()), destroy);
     destroy.then(() => console.log("port destroyed"));
   },

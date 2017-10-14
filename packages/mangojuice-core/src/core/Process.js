@@ -1,4 +1,6 @@
 import * as Cmd from "./Cmd";
+import LogicBase from './LogicBase';
+import DefaultLogger from './DefaultLogger';
 import {
   nextId,
   createResultPromise,
@@ -23,20 +25,21 @@ export const createContext = () => ({
 });
 
 /**
- * Helper for defining computed field dependencies. Returns
- * an object with dependencies and compute function
- * @param  {...object} deps  List of block models
+ * By provided value returns a new logic object
+ * if possible. Otherwise throws an error;
+ * @param  {Class|Object} logic
  * @return {Object}
  */
-const depends = (...deps) => ({
-  computeFn: noop,
-  deps: deps,
-  compute(func) {
-    this.computeFn = func;
-    return this;
+const ensureLogicObject = (logic) => {
+  if (logic instanceof LogicBase) {
+    return { ...logic };
+  } else if (is.object(logic)) {
+    return { ...LogicBase.prototype, ...logic };
+  } else if (is.func(logic)) {
+    return new logic();
   }
-});
-
+  throw new Error('You passed something weird instead of logic');
+};
 
 /**
  * Process class for executing logic on a model
@@ -61,11 +64,11 @@ export class Process {
     this.parentProc = parentProc;
     this.sharedModel = sharedModel;
     this.execHandler = ensureCmdObject(execHandler);
-    this.logger = logger;
+    this.logger = logger || new DefaultLogger();
     this.appContext = appContext || createContext();
-    this.logic = logic;
-    this.config = config;
     this.configArgs = configArgs || emptyArray;
+    this.logic = ensureLogicObject(logic);
+    this.config = config;
     this.execHandlers = execHandlers;
     this.singletonValue = singletonValue;
     this.parentComputedFn = parentComputedFn;
@@ -73,9 +76,9 @@ export class Process {
   }
 
   bind(model) {
-    this.bindCommands();
     this.prepareConfig();
     this.bindModel(model);
+    this.bindCommands();
     this.bindChildren();
     this.bindComputed();
   }
@@ -97,8 +100,7 @@ export class Process {
 
     // Initialize children logic
     if (this.logic.children) {
-      const childrenProps = { nest: this.nest };
-      this.config.children = this.logic.children(childrenProps) || {};
+      this.config.children = this.logic.children() || {};
       this.config.childrenKeys = Object.keys(this.config.children);
     }
 
@@ -136,8 +138,14 @@ export class Process {
    */
   bindChild(childModel, fieldName) {
     if (childModel && !childModel.__proc) {
-      const subProc = new Process(this.config.children[fieldName]);
-      subProc.parentProc = this;
+      const subProc = new Process({
+        ...this.config.children[fieldName],
+        rootProc: this.rootProc,
+        parentProc: this,
+        sharedModel: this.sharedModel,
+        appContext: this.appContext,
+        logger: this.logger,
+      });
       subProc.bind(childModel);
       return true;
     }
@@ -178,9 +186,7 @@ export class Process {
   bindComputed() {
     this.computedFields = emptyArray;
     if (this.logic.computed) {
-      const ownComputedFields = this.safeExecFunction(() =>
-        this.logic.computed(this.execProps)
-      );
+      const ownComputedFields = this.safeExecFunction(() => this.logic.computed());
       if (ownComputedFields) {
         this.computedFields = maybeMap(Object.keys(ownComputedFields), k => {
           return this.defineComputedField(k, ownComputedFields[k]);
@@ -225,16 +231,11 @@ export class Process {
    * @param  {Object} model
    */
   bindModel(model) {
+    this.logic.model = model;
+    this.logic.shared = this.sharedModel;
+    this.logic.exec = this.exec;
+    this.logic.destroy = this.portDestroyPromise;
     this.model = model;
-    this.execProps = {
-      ...this.logic,
-      model: this.model,
-      shared: this.sharedModel,
-      meta: this.config.meta,
-      exec: this.exec,
-      destroy: this.portDestroyPromise,
-      depends
-    };
     Object.defineProperty(this.model, "__proc", {
       value: this,
       enumerable: false,
@@ -265,8 +266,7 @@ export class Process {
 
   runPorts() {
     if (this.logic.port) {
-      const result = this.safeExecFunction(
-        () => this.logic.port(this.execProps));
+      const result = this.safeExecFunction(() => this.logic.port());
       return Promise.resolve(result);
     }
   }
@@ -573,72 +573,6 @@ export class Process {
     }
 
     return this.doExecCmd(cmd);
-  }
-
-  /**
-   * This function creates a `Process` object by given logic.
-   * Then you can call `handler` and `args` functions to set
-   * specific command to handle all commands in the logic and
-   * to set arguments which will be passed to `config` of the logic.
-   *
-   * Returns ready to bind/run Process instance. Created process
-   * instance used by `bindChildren`/`runChildren` functions
-   * to bind a process to some children logic and run the process.
-   *
-   * @param  {Object}  logic
-   * @return {Process}
-   */
-  nest = (logic) => {
-    if (!logic) {
-      throw new Error("Passed logic is undefined");
-    }
-    const proc = new Process({
-      rootProc: this.rootProc,
-      parentProc: this,
-      sharedModel: this.sharedModel,
-      appContext: this.appContext,
-      logger: this.logger,
-      logic
-    });
-    return proc;
-  }
-
-  /**
-   * Set command exec handler cmd, which will be executed after
-   * each execution of a command in this process or in any
-   * child process. The handler executed in scope of parent process
-   * (because parent process usually wants to handle commands of child
-   * process)
-   * @param  {?Function|?Object} handler
-   * @return {Process}
-   */
-  handler(handler) {
-    this.execHandler = ensureCmdObject(handler);
-    return this;
-  }
-
-  /**
-   * Set arguments which will be passed to config function of the
-   * logic of this process.
-   * @param  {...any} args
-   * @return {Process}
-   */
-  args(...args) {
-    this.configArgs = args;
-    return this;
-  }
-
-  /**
-   * Mark this process as singleton. It will make all commands from
-   * attached Logic to be automatically binded to the model of this
-   * process. So you will be able to write `Logic.Command` and not
-   * `Logic.Command().model(...)`
-   * @param  {Boolean} val
-   * @return {Process}
-   */
-  singleton(val = true) {
-    this.singletonValue = !!val;
-    return this;
   }
 }
 

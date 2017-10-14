@@ -29,18 +29,21 @@ export default (reactImpl) => {
     ) {
       return;
     }
-    extendPrototypeWithSuper(View.prototype, 'componentWillMount', function() {
-      this.__appContext = getContext();
-    });
-    extendPrototypeWithSuper(View.prototype, 'componentWillUpdate', function() {
-      this.__oldContext = getContext();
-      setContext(this.__appContext);
-    });
-    extendPrototypeWithSuper(View.prototype, 'componentDidUpdate', function() {
-      setContext(this.__oldContext);
-      this.__oldContext = null;
-    });
+
+    // Replace render safely with restoring old context
+    // even if original render contains an error
     View.__contextInjected = true;
+    const orgRender = View.prototype.render;
+    View.prototype.render = function(...args) {
+      this.__appContext = getContext() || this.__appContext;
+      const oldContext = getContext();
+      setContext(this.__appContext);
+      try {
+        return orgRender.apply(this, args);
+      } finally {
+        setContext(oldContext);
+      }
+    }
   };
 
   // Patching createElement fuction to support
