@@ -67,7 +67,7 @@ export class Process {
     this.logger = logger || new DefaultLogger();
     this.appContext = appContext || createContext();
     this.configArgs = configArgs || emptyArray;
-    this.logic = ensureLogicObject(logic);
+    this.logic = logic;
     this.config = config;
     this.execHandlers = execHandlers;
     this.singletonValue = singletonValue;
@@ -90,6 +90,7 @@ export class Process {
    */
   prepareConfig() {
     if (this.config) return;
+    this.logic = ensureLogicObject(this.logic);
 
     // Initialize config
     if (!this.logic.config) {
