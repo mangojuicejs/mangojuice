@@ -15,7 +15,7 @@ const createMockBlockResolver = (Block) => {
 
 describe('Lazy block loading', () => {
   const AppBlock = {
-    createModel: () => ({ e: 0, f: 4, g: 6 }),
+    createModel: () => ({ e: 0, f: 4, g: 6, c: null }),
     Logic: {
       name: "AppBlock",
       config() {
@@ -37,7 +37,9 @@ describe('Lazy block loading', () => {
         return { [name]: value };
       },
       @Cmd.batch CmdFromPort() {},
-      @Cmd.batch CmdFromInit() {}
+      @Cmd.update CmdFromInit() {
+        return { c: this.meta }
+      }
     }
   };
 
@@ -85,6 +87,6 @@ describe('Lazy block loading', () => {
       'AppBlock.Lazy.SetField.Wrapper',
       'AppBlock.SetField'
     ]);
-    expect(app.model).toEqual({ e: 12, f: 6, g: 6 });
+    expect(app.model).toEqual({ e: 12, f: 6, g: 6, c: 'test-meta' });
   });
 });
