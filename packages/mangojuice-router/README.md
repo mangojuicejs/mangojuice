@@ -16,7 +16,7 @@ As said above, this module is a Block. So you just need to nest it to your share
 ```js
 // Shared.js
 import Router from 'mangojuice-router';
-import * as routes from './routes';
+import { MainRoutes } from './routes';
 
 export const createModel = () => ({
   router: Router.createModel()
@@ -25,19 +25,17 @@ export const createModel = () => ({
 export const Logic = {
   name: "SharedBlock",
 
-  config({ nest }) {
-    return {
-      children: {
-        router: nest(Router.Logic).singleton(routes)
-      }
+  children() {
+    return
+      router: this.nest(Router.createLogic(MainRoutes)).singleton()
     };
   }
 };
 ```
 
-**`import * as routes from './routes';`** it imports all your routes definition. `routes` is just an object with sub-objects where each field of a sub-object is a route. You will see the example of routes definition below.
+**`import { MainRoutes } from './routes';`** it imports a root route. It is required to create Router logic.
 
-**`router: nest(Router.Logic).singleton(routes)`** nests the Router logic to the Shared logic and bind it to the `router` field of the shared model. Also it makes the Router Logic to be singleton in the scope of your app. Which means that you won't need to bind Router commands explicitly to the `shared.router` model to execute it.
+**`router: this.nest(Router.createLogic(MainRoutes)).singleton(routes)`** nests the Router logic to the Shared logic and bind it to the `router` field of the shared model. Also it makes the Router Logic to be singleton in the scope of your app. Which means that you won't need to bind Router commands explicitly to the `shared.router` model to execute it.
 
 Now let's see how you can define the routes.
 
@@ -90,12 +88,10 @@ export const createModel = () => ({
 export const Logic = {
   name: 'MainBlock',
 
-  config({ nest }) {
+  config() {
     return {
-      children: {
-        news: nest(News.Logic),
-        landing: nest(Landing.Logic)
-      }
+      news: this.nest(News.Logic),
+      landing: this.nest(Landing.Logic)
     };
   }
 };

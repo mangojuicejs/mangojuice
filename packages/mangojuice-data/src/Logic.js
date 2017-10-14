@@ -10,7 +10,8 @@ export const Logic = {
     return { meta };
   },
 
-  children({ nest, meta }) {
+  children() {
+    const { nest, meta } = this;
     return meta.block
       ? { rawData: nest(meta.block.Logic) }
       : {};

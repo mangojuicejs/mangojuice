@@ -19,7 +19,8 @@ export const Logic = {
     };
   },
 
-  children({ meta, nest }) {
+  children() {
+    const { nest, meta } = this;
     return {
       options: nest(Data.Logic).handler(this.HandleOption).args({
         retreiver: meta.optionsGetter
@@ -28,7 +29,7 @@ export const Logic = {
   },
 
   @Cmd.update
-  SelectOption(ctx, option, event) {
+  SelectOption(option, event) {
     if (event && event.preventDefault && event.stopPropagation) {
       event.preventDefault();
       event.stopPropagation();
@@ -37,7 +38,7 @@ export const Logic = {
 
   // Options
   @Cmd.batch
-  HandleOption(ctx, cmd) {
+  HandleOption(cmd) {
     if (cmd.is(this.SelectOption)) {
       return [
         this.SetFieldValue(cmd.args[0]),
@@ -48,15 +49,15 @@ export const Logic = {
   },
 
   @Cmd.batch
-  LoadOptions({ model }) {
+  LoadOptions() {
     return Data.Logic
-      .Retreive(Utils.valueHead(model), model)
-      .model(model.options);
+      .Retreive(Utils.valueHead(this.model), this.model)
+      .model(this.model.options);
   },
 
   // Validation
   @Cmd.update
-  ValidationFinished(ctx, error) {
+  ValidationFinished(error) {
     return {
       state: "Typing",
       error: (error && error.message) || error,
@@ -83,9 +84,9 @@ export const Logic = {
 
   // Resetting
   @Cmd.update
-  SetInitialValue({ model }) {
+  SetInitialValue() {
     return {
-      value: model.initialValue,
+      value: this.model.initialValue,
       touched: false
     };
   },
@@ -97,7 +98,8 @@ export const Logic = {
 
   // Field change handling
   @Cmd.update
-  SetFieldValue({ meta, model }, e) {
+  SetFieldValue(e) {
+    const { meta, model } = this;
     const val = e && e.target ? e.target.files || e.target.value : e;
     const valueSep = Utils.resolve(meta.valueSep, model);
     const emptyValue = Utils.resolve(meta.emptyValue, model);
@@ -121,11 +123,11 @@ export const Logic = {
   },
 
   @Cmd.update
-  RemoveValuePart({ model }, valueIndex) {
+  RemoveValuePart(valueIndex) {
     return {
-      value: Utils.valueTail(model)
+      value: Utils.valueTail(this.model)
         .filter((x, i) => i !== valueIndex)
-        .concat(Utils.valueHead(model))
+        .concat(Utils.valueHead(this.model))
     };
   },
 
@@ -138,11 +140,11 @@ export const Logic = {
   },
 
   @Cmd.batch
-  HandleChange({ meta }, e) {
+  HandleChange(e) {
     return [
       this.SetFieldValue(e),
       this.Validate(),
-      meta.optionsGetter && this.LoadOptions()
+      this.meta.optionsGetter && this.LoadOptions()
     ];
   },
 
@@ -157,7 +159,8 @@ export const Logic = {
   },
 
   @Cmd.batch
-  InitField({ meta, model }) {
+  InitField() {
+    const { meta, model } = this;
     const loadOptions = meta.optionsGetter && Data.isNotAsked(model.options);
     return [loadOptions && this.LoadOptions(), this.Validate()];
   }

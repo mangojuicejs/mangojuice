@@ -94,8 +94,8 @@ export function nope(obj, name, descr) {
 export const defaultNopeCmd = createNopeCmd("Nope");
 
 // Update command
-export function execUpdate(props) {
-  return execDefault.call(this, props);
+export function execUpdate(context) {
+  return execDefault.call(this, context);
 }
 export function createUpdateCmd(name, func) {
   return createCommand(name, func, execUpdate);
@@ -105,8 +105,8 @@ export function update(obj, name, descr) {
 }
 
 // Batch cmd
-export function execBatch(props) {
-  return execDefault.call(this, props);
+export function execBatch(context) {
+  return execDefault.call(this, context);
 }
 export function createBatchCmd(name, func) {
   return createCommand(name, func, execBatch);

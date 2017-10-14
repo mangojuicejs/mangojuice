@@ -16,10 +16,10 @@ export const Logic = {
 
   children({ nest }) {
     return {
-      boxes: nest(Data.Logic).args({
+      boxes: this.nest(Data.Logic).args({
         retreiver: Tasks.GetBoxesList
       }),
-      letters: nest(Data.Logic).handler(this.HandleLetterData).args({
+      letters: this.nest(Data.Logic).handler(this.HandleLetterData).args({
         retreiver: Tasks.GetBoxLetters,
         searcher: Tasks.GetSearchLetters,
         block: Letter

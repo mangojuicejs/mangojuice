@@ -7,6 +7,9 @@ export const runWithTracking = async (props) => {
   const errors = [];
   class TrackerLogger extends DefaultLogger {
     onCatchError(e) {
+      if (!props.expectErrors) {
+        throw e;
+      }
       errors.push(e);
     }
     onStartExec(cmd) {

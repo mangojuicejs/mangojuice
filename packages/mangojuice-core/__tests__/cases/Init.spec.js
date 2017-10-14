@@ -88,11 +88,12 @@ describe("Init commands execution", () => {
   };
 
   it("should execute init commands in correct order and finish", async () => {
-    const { app, shared, commandNames } = await runWithTracking({
+    const { app, shared, commandNames, errors } = await runWithTracking({
       app: BlockA,
       shared: SharedBlock
     });
 
+    expect(errors).toEqual([]);
     expect(commandNames).toEqual([
       "SharedBlock.FromPortAsync",
       "SharedBlock.FromInitOneCmd",

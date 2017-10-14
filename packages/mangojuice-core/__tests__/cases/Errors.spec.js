@@ -29,7 +29,10 @@ describe('Errors handling', () => {
     };
 
     it('shuold notify logger about the error on update', async () => {
-      const { app, errors } = await runWithTracking({ app: AppBlock });
+      const { app, errors } = await runWithTracking({
+        app: AppBlock,
+        expectErrors: true
+      });
 
       expect(errors).toHaveLength(0);
       await app.proc.exec(AppBlock.Logic.SetField("a", 12));
@@ -38,7 +41,10 @@ describe('Errors handling', () => {
     });
 
     it('shuold notify logger about the error on batch', async () => {
-      const { app, errors } = await runWithTracking({ app: AppBlock });
+      const { app, errors } = await runWithTracking({
+        app: AppBlock,
+        expectErrors: true
+      });
 
       expect(errors).toHaveLength(0);
       await app.proc.exec(AppBlock.Logic.SomeBatch("a", 12));
@@ -47,7 +53,10 @@ describe('Errors handling', () => {
     });
 
     it('shuold notify logger about the error on exec', async () => {
-      const { app, errors } = await runWithTracking({ app: AppBlock });
+      const { app, errors } = await runWithTracking({
+        app: AppBlock,
+        expectErrors: true
+      });
 
       expect(errors).toHaveLength(0);
       await app.proc.exec(AppBlock.Logic.SomeTaskCreator("a", 12));
@@ -86,7 +95,10 @@ describe('Errors handling', () => {
     };
 
     it('shuold notify logger about the error if fail cmd not defined', async () => {
-      const { app, errors } = await runWithTracking({ app: AppBlock });
+      const { app, errors } = await runWithTracking({
+        app: AppBlock,
+        expectErrors: true
+      });
 
       expect(errors).toHaveLength(0);
       await app.proc.exec(AppBlock.Logic.SomeTaskCreator("a", 12));
@@ -95,7 +107,10 @@ describe('Errors handling', () => {
     });
 
     it('shuold NOT notify logger about the error if fail cmd defined', async () => {
-      const { app, errors, commandNames } = await runWithTracking({ app: AppBlock });
+      const { app, errors, commandNames } = await runWithTracking({
+        app: AppBlock,
+        expectErrors: true
+      });
 
       expect(errors).toHaveLength(0);
       await app.proc.exec(AppBlock.Logic.HandledTaskCreator("a", 12));
@@ -120,7 +135,10 @@ describe('Errors handling', () => {
         }
       };
 
-      await expect(runWithTracking({ app: AppBlock })).rejects.toBe(testError);
+      await expect(runWithTracking({
+        app: AppBlock,
+        expectErrors: true
+      })).rejects.toBe(testError);
     })
   });
 });

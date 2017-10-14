@@ -11,9 +11,9 @@ const createSharedBlock = (rootRoutes, historyOpts = {}) => {
     }),
     Logic: {
       name: "SharedBlock",
-      children({ nest }) {
+      children() {
         return {
-          router: nest(Router.createLogic(rootRoutes))
+          router: this.nest(Router.createLogic(rootRoutes))
             .handler(this.HandleRouter)
             .args({ createHistory: createMemoryHistory.bind(null, historyOpts) })
             .singleton()

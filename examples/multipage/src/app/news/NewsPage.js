@@ -21,9 +21,9 @@ export const createModel = (): Model => ({
 export const Logic = {
   name: "NewsPage",
 
-  children({ nest }) {
+  children() {
     return {
-      form: nest(CreateForm.Logic).handler(this.HandleForm)
+      form: this.nest(CreateForm.Logic).handler(this.HandleForm)
     };
   },
 

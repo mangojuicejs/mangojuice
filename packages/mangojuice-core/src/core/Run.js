@@ -1,7 +1,7 @@
 import { Process, createContext } from "./Process";
 import { NopeCmd } from "./Cmd";
 import { emptyArray } from './Utils';
-import DefaultLogger from "./DefaultLogger";
+import DefaultLogger from "../classes/DefaultLogger";
 
 // Constants
 const EMPTY_BLOCK = {

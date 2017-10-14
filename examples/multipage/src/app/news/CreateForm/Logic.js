@@ -15,23 +15,23 @@ export const Logic = {
     });
   },
 
-  children({ nest }) {
+  children() {
     return {
-      title: nest(Field.Logic).handler(this.HandleField).args({
+      title: this.nest(Field.Logic).handler(this.HandleField).args({
         validator: x => (x.length < 10 ? "Title is too short" : ""),
         normalize: x => x.toUpperCase()
       }),
-      article: nest(Field.Logic).handler(this.HandleField).args({
+      article: this.nest(Field.Logic).handler(this.HandleField).args({
         validator: x => (!x.length ? "Required" : "")
       }),
-      category: nest(Field.Logic).handler(this.HandleField).args({
+      category: this.nest(Field.Logic).handler(this.HandleField).args({
         validator: x => (!x.length ? "Required" : "")
       }),
-      tags: nest(Field.Logic).handler(this.HandleField).args({
+      tags: this.nest(Field.Logic).handler(this.HandleField).args({
         valueSep: ",",
         validator: x => (!x.length ? "Required" : "")
       }),
-      city: nest(Field.Logic).handler(this.HandleField).args({
+      city: this.nest(Field.Logic).handler(this.HandleField).args({
         optionsGetter: Tasks.GetCitySuggestions,
         validator: x => {
           if (!x) {

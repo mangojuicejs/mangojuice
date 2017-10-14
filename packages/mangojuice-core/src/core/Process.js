@@ -1,6 +1,6 @@
 import * as Cmd from "./Cmd";
-import LogicBase from './LogicBase';
-import DefaultLogger from './DefaultLogger';
+import LogicBase from '../classes/LogicBase';
+import DefaultLogger from '../classes/DefaultLogger';
 import {
   nextId,
   createResultPromise,
@@ -32,7 +32,7 @@ export const createContext = () => ({
  */
 const ensureLogicObject = (logic) => {
   if (logic instanceof LogicBase) {
-    return { ...logic };
+    return new logic.constructor();
   } else if (is.object(logic)) {
     return { ...LogicBase.prototype, ...logic };
   } else if (is.func(logic)) {
@@ -235,6 +235,7 @@ export class Process {
     this.logic.shared = this.sharedModel;
     this.logic.exec = this.exec;
     this.logic.destroy = this.portDestroyPromise;
+    this.logic.meta = this.config.meta;
     this.model = model;
     Object.defineProperty(this.model, "__proc", {
       value: this,
@@ -504,7 +505,7 @@ export class Process {
     // Run the command
     let modelUpdated = false;
     const result = this.safeExecFunction(
-      () => cmd.exec(this.execProps), cmd);
+      () => cmd.exec(this.logic), cmd);
 
     // Handle results of the execution
     if (result) {

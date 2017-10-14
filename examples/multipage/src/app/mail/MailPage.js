@@ -22,10 +22,10 @@ export const createModel = (): Model => ({
 export const Logic = {
   name: "MailPage",
 
-  children({ nest }) {
+  children() {
     return {
-      inbox: nest(Inbox.Logic),
-      sent: nest(Sent.Logic)
+      inbox: this.nest(Inbox.Logic),
+      sent: this.nest(Sent.Logic)
     };
   },
 
