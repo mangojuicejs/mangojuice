@@ -80,8 +80,8 @@ export function createLazyLogic(resolver) {
       );
       target[name] = Cmd.createTaskCmd(`Lazy.${name}.Resolver`,
         function(...args) {
-          return Task.create(function({ model }) {
-            return resolver(model);
+          return Task.create(function() {
+            return resolver(this.model);
           }).success(WrapperCmd(...args));
         }
       );
@@ -90,7 +90,7 @@ export function createLazyLogic(resolver) {
   };
 
   const logic = {
-    name: "",
+    name: "LazyBlock",
     port: () => {},
     children: () => {},
     config: () => {},
@@ -98,7 +98,9 @@ export function createLazyLogic(resolver) {
     __get: commandsProxy.get
   };
 
-  return typeof Proxy !== "undefined" ? new Proxy(logic, commandsProxy) : logic;
+  return typeof Proxy !== "undefined"
+    ? new Proxy(logic, commandsProxy)
+    : logic;
 }
 
 export function createLazyBlock(blockRequire) {
