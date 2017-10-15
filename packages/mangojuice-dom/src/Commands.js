@@ -2,7 +2,7 @@ import { Task, Cmd } from "mangojuice-core";
 import * as Tasks from "./Tasks";
 
 export function focus(selector) {
-  function focusTask(opts = {}) {
+  function focusTask(ctx, opts = {}) {
     return this.call(
       Tasks.findDomNodes,
       selector,

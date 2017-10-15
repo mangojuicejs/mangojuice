@@ -80,8 +80,8 @@ export function createLazyLogic(resolver) {
       );
       target[name] = Cmd.createTaskCmd(`Lazy.${name}.Resolver`,
         function(...args) {
-          return Task.create(function() {
-            return resolver(this.model);
+          return Task.create(function({ model }) {
+            return resolver(model);
           }).success(WrapperCmd(...args));
         }
       );

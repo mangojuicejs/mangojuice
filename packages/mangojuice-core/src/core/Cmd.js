@@ -146,7 +146,7 @@ export function execTask(props) {
     };
 
     try {
-      proc = Task.call.call(props, task, ...this.args);
+      proc = Task.call(task, props, ...this.args);
       return proc.then(handleSuccess, handleFail);
     } catch (err) {
       handleFail(err);

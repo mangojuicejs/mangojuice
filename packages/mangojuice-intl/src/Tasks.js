@@ -1,3 +1,3 @@
-export function loadTranslationsTask() {
-  return this.call(this.meta.languages[this.model.locale].translations);
+export function loadTranslationsTask({ meta, model }) {
+  return this.call(meta.languages[model.locale].translations);
 }
