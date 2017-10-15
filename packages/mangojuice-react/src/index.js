@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { ReactMounter, createElementWrapper } from "mangojuice-react-core";
+import ReactBindCore from "mangojuice-react-core";
 
 
 // React interface implementation
@@ -10,8 +10,9 @@ const reactImpl = {
   unmountComponentAtNode: ReactDOM.unmountComponentAtNode,
   render: ReactDOM.render
 };
-const Mounter = ReactMounter(reactImpl);
-const createElement = createElementWrapper(reactImpl);
+const createElement = ReactBindCore.createElementWrapper(reactImpl);
+reactImpl.wrappedCreateElement = createElement;
+const Mounter = ReactBindCore.ReactMounter(reactImpl);
 
 // Export react with createElement overrided
 const toExport = { ...React, Mounter, createElement };

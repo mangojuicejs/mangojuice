@@ -11,8 +11,9 @@ var reactImpl = {
     return ReactDOMServer.renderToString(elem);
   }
 };
-var Mounter = ReactMounterCore.ReactMounter(reactImpl);
 var createElement = ReactMounterCore.createElementWrapper(reactImpl);
+reactImpl.wrappedCreateElement = createElement;
+var Mounter = ReactMounterCore.ReactMounter(reactImpl);
 
 // Export react with createElement overrided
 const toExport = Object.assign({}, React);

@@ -22,5 +22,8 @@
   },
   "dependencies": {
     "mangojuice-core": "0.2.2-9"
+  },
+  "devDependencies": {
+    "jsdom-simulant": "1.1.2"
   }
 }

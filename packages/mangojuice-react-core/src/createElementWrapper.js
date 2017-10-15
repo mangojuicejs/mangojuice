@@ -1,17 +1,6 @@
-import { getContext, setContext } from "./ViewRenderContext";
+import { getContext, setContext, contextInjector } from "./ViewRenderContext";
+import { childContextTypes } from './ViewWrapper';
 
-
-// Replace some function in prototype and call
-// the original after replaced one if defined
-const extendPrototypeWithSuper = (proto, name, func) => {
-  const oldFunc = proto[name];
-  proto[name] = function(...args) {
-    func.apply(this, args);
-    if (oldFunc) {
-      return oldFunc.apply(this, args);
-    }
-  }
-};
 
 export default (reactImpl) => {
   // Check if already wrapped
@@ -22,35 +11,49 @@ export default (reactImpl) => {
   // Extend statefull component by adding extra lifecycle
   // methods to track context while render function
   const injectContextToStatefull = (View) => {
-    // Do nothing if context injected pr not statefull
-    if (
-      View.__contextInjected ||
-      !(View.prototype instanceof reactImpl.Component)
-    ) {
-      return;
+    if (!View || typeof View === 'string') return View;
+
+    // Inject to statefull compoent
+    if (View.prototype instanceof reactImpl.Component) {
+      if (View.__contextInjected) return View;
+      View.__contextInjected = true;
+
+      const orgRender = View.prototype.render;
+      View.prototype.render = function(...args) {
+        return contextInjector.call(this, this.context, orgRender, args);
+      };
+      View.contextTypes = {
+        ...View.contextTypes,
+        ...childContextTypes
+      };
+      return View;
     }
 
-    // Replace render safely with restoring old context
-    // even if original render contains an error
-    View.__contextInjected = true;
-    const orgRender = View.prototype.render;
-    View.prototype.render = function(...args) {
-      this.__appContext = getContext() || this.__appContext;
-      const oldContext = getContext();
-      setContext(this.__appContext);
-      try {
-        return orgRender.apply(this, args);
-      } finally {
-        setContext(oldContext);
-      }
+    // Inject to stateless function
+    if (typeof View === 'function') {
+      if (View.__wrapperFunc) return View.__wrapperFunc;
+      if (View.__isWrapper) return View;
+
+      const WrapperViewFunc = function (props, context) {
+        return contextInjector.call(this, context, View, [props, context]);
+      };
+      WrapperViewFunc.__isWrapper = true;
+      WrapperViewFunc.contextTypes = {
+        ...View.contextTypes,
+        ...childContextTypes
+      };
+      View.__wrapperFunc = WrapperViewFunc;
+      return WrapperViewFunc;
     }
+
+    return View;
   };
 
   // Patching createElement fuction to support
   // commands and command creators as a prop
   const wrappedCreateElement = function(View, props, ...args) {
     const context = getContext();
-    injectContextToStatefull(View);
+    View = injectContextToStatefull(View);
 
     if (props && context) {
       // Convert commands to handler functions, which will
@@ -65,13 +68,10 @@ export default (reactImpl) => {
       }
 
       // Nest views for current or child models
-      if (props.model && props.model.__proc) {
-        if (props.model.__proc.id === context.model.__proc.id) {
-          props.model = context.model;
-          props.exec = context.exec;
-          props.nest = context.nest;
-          return reactImpl.createElement(View, props, ...args);
-        }
+      if (
+        props.model && props.model.__proc && context.model &&
+        props.model.__proc.id !== context.model.__proc.id
+      ) {
         return context.nest(props.model, View, props);
       }
     }

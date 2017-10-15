@@ -1,37 +1,28 @@
 import { Cmd, Utils } from "mangojuice-core";
 import { setContext, getContext } from './ViewRenderContext';
 
+export const childContextTypes = {
+  model: () => null,
+  nest: () => null,
+  exec: () => null
+};
 
 export default reactImpl => {
-  const { Component, createElement } = reactImpl;
+  const { Component, wrappedCreateElement } = reactImpl;
 
   class ViewWrapper extends Component {
     execsMap = {};
     prevExecsMap = {};
 
-    constructor(props, ...args) {
-      super(props, ...args);
-      this.viewContext = {
-        nest: props.nest,
-        model: props.proc.model,
+    getChildContext() {
+      return {
+        nest: this.props.nest,
+        model: this.props.proc.model,
         exec: this.execCommand
       };
-      this.nestProps = {
-        ...this.viewContext,
-        ...props.props
-      };
-    }
-
-    componentWillMount() {
-      this.pushContext();
-    }
-
-    componentWillUpdate() {
-      this.pushContext();
     }
 
     componentDidMount() {
-      this.popContext();
       this.unmounted = false;
       this.props.proc.addListener(Utils.MODEL_UPDATED_EVENT, this.updateView);
     }
@@ -42,22 +33,11 @@ export default reactImpl => {
     }
 
     componentDidUpdate() {
-      this.popContext();
       this.prevExecsMap = {};
     }
 
-    shuoldComponentUpdate() {
+    shouldComponentUpdate() {
       return false;
-    }
-
-    pushContext() {
-      this.prevContext = getContext();
-      setContext(this.viewContext);
-    }
-
-    popContext() {
-      setContext(this.prevContext);
-      this.prevContext = null;
     }
 
     updateView = () => {
@@ -81,18 +61,15 @@ export default reactImpl => {
       return this.execsMap[cmdHash];
     }
 
-    renderView() {
-      const { View, children } = this.props;
-      return createElement(View, this.nestProps, children);
-    }
-
     render() {
       if (!this.props.proc.model.__proc) {
-        return createElement("div");
+        return wrappedCreateElement("div");
       }
-      return this.renderView();
+      const { View, children, props } = this.props;
+      const actualProps = { ...props, model: this.props.proc.model };
+      return wrappedCreateElement(View, actualProps, children);
     }
   }
-
+  ViewWrapper.childContextTypes = childContextTypes;
   return ViewWrapper;
 };

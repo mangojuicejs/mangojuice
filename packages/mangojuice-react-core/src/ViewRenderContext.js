@@ -6,12 +6,12 @@ export const setContext = (nextContext) =>
 export const getContext = () =>
   currContext;
 
-export const runInContext = (func, props) => {
-  let oldContext = currContext;
-  currContext = props;
+export function contextInjector(context, orgRender, args) {
+  const oldContext = getContext();
+  setContext(context);
   try {
-    return func(props);
+    return orgRender.apply(this, args);
   } finally {
-    currContext = oldContext;
+    setContext(oldContext);
   }
-};
+}
