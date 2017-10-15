@@ -102,6 +102,10 @@
   },
   "dependencies": {
     "react": "^15.6.1",
-    "react-dom": "^15.6.1"
+    "react-dom": "^15.6.1",
+    "preact": "^8.2.5",
+    "inferno": "^3.10.1",
+    "inferno-component": "^3.10.1",
+    "inferno-create-element": "^3.10.1"
   }
 }

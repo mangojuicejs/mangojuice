@@ -24,6 +24,8 @@ module.exports = {
     "^mangojuice-form": "<rootDir>/packages/mangojuice-form/src",
     "^mangojuice-intl": "<rootDir>/packages/mangojuice-intl/src",
     "^mangojuice-lazy": "<rootDir>/packages/mangojuice-lazy/src",
+    "^mangojuice-preact": "<rootDir>/packages/mangojuice-preact/src",
+    "^mangojuice-inferno": "<rootDir>/packages/mangojuice-inferno/src",
     "^mangojuice-react-core/tests": "<rootDir>/packages/mangojuice-react-core/__tests__/tests.js",
     "^mangojuice-react-core": "<rootDir>/packages/mangojuice-react-core/src",
     "^mangojuice-react": "<rootDir>/packages/mangojuice-react/src",

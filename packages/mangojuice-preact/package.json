@@ -1,5 +1,5 @@
 {
-  "name": "mangojuice-react-core",
+  "name": "mangojuice-preact",
   "version": "0.2.2-10",
   "description": "",
   "author": {
@@ -14,13 +14,18 @@
   "license": "MIT",
   "main": "index.js",
   "rollup": {
-    "moduleName": "Mjs.ReactCore",
+    "moduleName": "Mjs.Preact",
     "bundledDependencies": [],
     "moduleGlobals": {
-      "mangojuice": "Mjs"
+      "mangojuice": "Mjs",
+      "preact": "Preact"
     }
   },
   "dependencies": {
-    "mangojuice-core": "0.2.2-10"
+    "mangojuice-core": "0.2.2-10",
+    "mangojuice-react-core": "0.2.2-10"
+  },
+  "peerDependencies": {
+    "preact": "x.x.x"
   }
 }
