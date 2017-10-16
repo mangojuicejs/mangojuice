@@ -19,7 +19,7 @@ export const Logic = {
 
   port() {
     const { exec, shared, destroy } = this;
-    Utils.handleModelChanges(shared.route, () => exec(this.HandlerRouter()), destroy);
+    Utils.handleModelChanges(shared.route, destroy, () => exec(this.HandlerRouter()));
     return exec(this.HandlerRouter());
   }
 

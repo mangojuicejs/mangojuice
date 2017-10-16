@@ -420,12 +420,14 @@ export const Logic = {
     // For reducing `this`
     const { model, destroy, exec, shared } = this;
 
-    Utils.handleModelChanges(shared.user, () => {
+    Utils.handleModelChanges(shared.user, destroy, () => {
       // Do something when shared.user changed
-    }, destroy);
+    });
+
     const timer = setInterval(() => {
       exec(this.Search(model.query));
     }, 10000);
+
     destroy.then(() => clearInterval(timer));
   }
   ...
