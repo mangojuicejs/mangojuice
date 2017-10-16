@@ -1,5 +1,34 @@
 // @flow
 
+// Cmd
+//
+declare export var Cmd: {
+  update: any,
+  batch: any,
+  execLatest: any,
+  execEvery: any,
+  debounce: any,
+  throttle: any
+};
+
+// Task
+//
+type TaskObject = {
+  success: (cmd: any) => TaskObject,
+  fail: (cmd: any) => TaskObject
+};
+declare export var Task: {
+  create: (Function) => TaskObject;
+};
+
+
+// Run
+//
+declare export var Run: any;
+
+
+// LogicBase
+//
 type NestType<A, T, Y, U> = {
   +logic: A,
   args: (c1?: T, c2?: Y, c3?: U) => NestType<A, T, Y, U>,
@@ -20,7 +49,7 @@ type ConfigType<M> = {
   meta?: M
 };
 
-declare class LogicBase<ModelType = any, SharedType = any, MetaType = any> {
+declare export class LogicBase<ModelType = any, SharedType = any, MetaType = any> {
   +model: ModelType;
   +shared: SharedType;
   +meta: MetaType;
