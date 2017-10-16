@@ -55,7 +55,7 @@ declare module "mangojuice-core" {
 
     depends(...deps: Array<Object>): DependsType;
 
-    nest<T, Y, U, L: ConfigFunction<MetaType, T, Y, U>&LogicBase<*,SharedType,*>>(logic: L): NestType<L, T, Y, U>;
+    nest<T, Y, U, L: ConfigFunction<MetaType, T, Y, U>&LogicBase<>>(logic: L): NestType<L, T, Y, U>;
   }
 
   declare export default {|
