@@ -1,27 +1,27 @@
-import { Utils, Cmd, Task } from "mangojuice-core";
+import { Utils, Cmd, Task, LogicBase } from "mangojuice-core";
 
 
-export function createBlockResolver(asyncRequire, lazyBlock) {
+function createBlockResolver(asyncRequire, resolveState) {
   let required = false;
   let resolvedBlock = null;
   let resolveRequirePromise = null;
   const requirePromise = new Promise(r => (resolveRequirePromise = r));
 
   const restartModelBlock = model => {
-    const modelArgs = model.__args;
-    if (modelArgs) {
-      delete model.__args;
-      const actualModel = resolvedBlock.createModel(...modelArgs);
-      Object.assign(model, actualModel);
-    }
+    if (!model || !model.__proc || !model.__args) return;
 
-    if (model.__proc && modelArgs) {
-      delete model.__proc.config;
-      model.__proc.logic = resolvedBlock.Logic;
-      model.__proc.bind(model);
-      model.__proc.run();
-      model.__proc.emitModelUpdate();
-    }
+    // Make real model
+    const modelArgs = model.__args;
+    delete model.__args;
+    const actualModel = resolvedBlock.createModel(...modelArgs);
+    Object.assign(model, actualModel);
+
+    // Run real process
+    delete model.__proc.config;
+    model.__proc.logic = resolveState.lazyLogic;
+    model.__proc.bind(model);
+    model.__proc.run();
+    model.__proc.emitModelUpdate();
   };
 
   const handleRequireResult = actualBlock => {
@@ -29,18 +29,29 @@ export function createBlockResolver(asyncRequire, lazyBlock) {
       ? actualBlock : actualBlock.default;
 
     resolvedBlock = block;
-    resolver.resolvedBlock = block;
+    resolveState.block = block;
 
-    Object.keys(lazyBlock.Logic).forEach(k => {
+    Object.keys(resolveState.lazyLogic).forEach(k => {
       const cmd = block.Logic[k];
-      if (cmd && cmd.id) {
-        block.Logic[k].id = lazyBlock.Logic[k].id;
-        block.Logic[k].Before = lazyBlock.Logic[k].Before;
-        block.Logic[k].After = lazyBlock.Logic[k].After;
+      if (Utils.is.command(cmd)) {
+        block.Logic[k].id = resolveState.lazyLogic[k].id;
+        block.Logic[k].Before = resolveState.lazyLogic[k].Before;
+        block.Logic[k].After = resolveState.lazyLogic[k].After;
       }
     });
-    Object.assign(lazyBlock.Logic, block.Logic);
-    Object.assign(lazyBlock, block);
+
+    if (block.Logic instanceof LogicBase) {
+      Object.keys(Object.getPrototypeOf(block.Logic)).forEach(k => {
+        const cmd = block.Logic[k];
+        if (Utils.is.command(cmd)) {
+          resolveState.lazyLogic[k] = cmd;
+        }
+      });
+    } else {
+      Object.assign(resolveState.lazyLogic, block.Logic);
+    }
+
+    resolveState.lazyLogic.name = block.Logic.name || block.Logic.constructor.name;
     resolveRequirePromise(block);
   };
 
@@ -64,7 +75,11 @@ export function createBlockResolver(asyncRequire, lazyBlock) {
   return resolver;
 }
 
-export function createLazyLogic(resolver) {
+function createLazyLogic(resolveState) {
+  const getRealLogic = () => {
+    return resolveState.block && resolveState.block.Logic;
+  };
+
   const commandsProxy = {
     get: function(target, name) {
       if (Utils.is.notUndef(target[name])) {
@@ -81,7 +96,7 @@ export function createLazyLogic(resolver) {
       target[name] = Cmd.createTaskCmd(`Lazy.${name}.Resolver`,
         function(...args) {
           return Task.create(function({ model }) {
-            return resolver(model);
+            return resolveState.resolver(model);
           }).success(WrapperCmd(...args));
         }
       );
@@ -89,34 +104,56 @@ export function createLazyLogic(resolver) {
     }
   };
 
+  const createLazyLogicFunc = (name) => {
+    return function lazyLogicFunc(...args) {
+      const realLogic = getRealLogic();
+      if (realLogic && realLogic[name]) {
+        return realLogic[name].apply(this, args);
+      }
+    };
+  };
+
   const logic = {
     name: "LazyBlock",
-    port: () => {},
-    children: () => {},
-    config: () => {},
-    computed: () => {},
+    port: createLazyLogicFunc('port'),
+    children: createLazyLogicFunc('children'),
+    config: createLazyLogicFunc('config'),
+    computed: createLazyLogicFunc('computed'),
     __get: commandsProxy.get
   };
 
+  resolveState.lazyLogic = logic;
   return typeof Proxy !== "undefined"
     ? new Proxy(logic, commandsProxy)
     : logic;
 }
 
+function createLazyView(resolveState) {
+  return props => {
+    const block = resolveState.resolver(props.model);
+    return block && block.View ? block.View(props) : null;
+  }
+}
+
+function createLazyModel(resolveState) {
+  return (...args) => {
+    return resolveState.block
+      ? resolveState.block.createModel(...args)
+      : { __args: args };
+  }
+}
+
 export function createLazyBlock(blockRequire) {
-  const lazyBlock = {};
-  const resolver = createBlockResolver(blockRequire, lazyBlock);
-  return Object.assign(lazyBlock, {
-    resolver,
-    Logic: createLazyLogic(resolver),
-    View: props => {
-      const block = resolver(props.model);
-      return block && block.View ? block.View(props) : null;
-    },
-    createModel: (...args) => {
-      return resolver.resolvedBlock
-        ? resolver.resolvedBlock.createModel(...args)
-        : { __args: args };
-    }
-  });
+  const resolveState = { resolver: null, block: null };
+  resolveState.resolver = createBlockResolver(blockRequire, resolveState);
+  const lazyLogic = createLazyLogic(resolveState);
+  const lazyView = createLazyView(resolveState);
+  const lazyCreateModel = createLazyModel(resolveState);
+
+  return {
+    resolver: resolveState.resolver,
+    Logic: lazyLogic,
+    View: lazyView,
+    createModel: lazyCreateModel
+  };
 }
