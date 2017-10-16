@@ -1,6 +1,6 @@
 {
   "name": "mangojuice-form",
-  "version": "0.2.2-10",
+  "version": "0.2.2-11",
   "description": "",
   "author": {
     "name": "Artem Artemev",
@@ -21,7 +21,7 @@
     }
   },
   "dependencies": {
-    "mangojuice-core": "0.2.2-10",
-    "mangojuice-data": "0.2.2-10"
+    "mangojuice-core": "0.2.2-11",
+    "mangojuice-data": "0.2.2-11"
   }
 }
