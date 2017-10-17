@@ -1,7 +1,6 @@
 import { Cmd, Task, Run, Utils } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 import MounterCore from 'mangojuice-react-core';
-import sumulant from 'jsdom-simulant';
 
 
 export default (React, MounterClass, implName) => {

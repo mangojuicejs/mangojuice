@@ -212,7 +212,7 @@ export class Process {
       };
 
       maybeForEach(computeVal.deps, m => {
-        handleModelChanges(m, updateHandler, this.portDestroyPromise, destroyHandler);
+        handleModelChanges(m, this.portDestroyPromise, updateHandler, destroyHandler);
       });
     }
 

@@ -20,7 +20,7 @@ export const Logic = {
 
   port() {
     const { exec, shared, destroy } = this;
-    Utils.handleModelChanges(shared.route, () => exec(this.SubSmth()), destroy);
+    Utils.handleModelChanges(shared.route, destroy, () => exec(this.SubSmth()));
     destroy.then(() => console.log("port destroyed"));
   },
 

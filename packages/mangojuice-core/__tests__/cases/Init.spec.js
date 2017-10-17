@@ -56,9 +56,9 @@ describe("Init commands execution", () => {
       },
       port() {
         const { model, shared, destroy, exec } = this;
-        Utils.handleModelChanges(shared, cmd => {
+        Utils.handleModelChanges(shared, destroy, cmd => {
           exec(this.FromSubCmd);
-        }, destroy);
+        });
 
         return Promise.all([
           exec(this.FromSubCmd),

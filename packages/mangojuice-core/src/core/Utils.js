@@ -87,7 +87,7 @@ export const ensureCmdObject = cmd => {
   return cmd;
 };
 
-export const handleModelChanges = (model, handler, destroy, destroyHandler) => {
+export const handleModelChanges = (model, destroy, handler, destroyHandler) => {
   if (model.__proc) {
     const proc = model.__proc;
     proc.addListener(MODEL_UPDATED_EVENT, handler);
