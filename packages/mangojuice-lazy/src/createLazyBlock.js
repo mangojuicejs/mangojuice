@@ -8,20 +8,24 @@ function createBlockResolver(asyncRequire, resolveState) {
   const requirePromise = new Promise(r => (resolveRequirePromise = r));
 
   const restartModelBlock = model => {
-    if (!model || !model.__proc || !model.__args) return;
+    if (!model) return;
 
     // Make real model
     const modelArgs = model.__args;
-    delete model.__args;
-    const actualModel = resolvedBlock.createModel(...modelArgs);
-    Object.assign(model, actualModel);
+    if (modelArgs) {
+      delete model.__args;
+      const actualModel = resolvedBlock.createModel(...modelArgs);
+      Object.assign(model, actualModel);
+    }
 
     // Run real process
-    delete model.__proc.config;
-    model.__proc.logic = resolveState.lazyLogic;
-    model.__proc.bind(model);
-    model.__proc.run();
-    model.__proc.emitModelUpdate();
+    if (modelArgs && model.__proc) {
+      delete model.__proc.config;
+      model.__proc.logic = resolveState.lazyLogic;
+      model.__proc.bind(model);
+      model.__proc.run();
+      model.__proc.emitModelUpdate();
+    }
   };
 
   const handleRequireResult = actualBlock => {

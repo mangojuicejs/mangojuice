@@ -92,7 +92,7 @@ describe('Lazy block loading', () => {
 
   it('should works on re-render after resolve', async () => {
     const BlockChild = {
-      createModel: () => ({}),
+      createModel: (props) => ({ ...props }),
       Logic: new (class AppLogic extends LogicBase {
         config() {
           return {
@@ -131,7 +131,7 @@ describe('Lazy block loading', () => {
       app: BlockParent
     });
 
-    await app.proc.exec(BlockParent.Logic.SetField('child', LazyBlock.createModel()));
+    await app.proc.exec(BlockParent.Logic.SetField('child', LazyBlock.createModel({'b': 321})));
     await app.model.child.__proc.exec(LazyBlock.Logic.SetField('a', 123));
     await resolved;
     await app.proc.exec(BlockParent.Logic.SetField('child', LazyBlock.createModel()));
@@ -148,5 +148,87 @@ describe('Lazy block loading', () => {
       'AppLogic.CmdFromInit',
     ]);
     expect(app.model.child).toEqual({ c: 'test-meta' });
+  });
+
+  it('should update model after resolve', async () => {
+    const BlockChild = {
+      createModel: (props) => ({ ...props }),
+      Logic: new (class AppLogic extends LogicBase {
+        @Cmd.update
+        SetField(name, value) {
+          return { [name]: value };
+        }
+      })
+    };
+    const { resolver, resolved } = createMockBlockResolver(BlockChild);
+    const LazyBlock = lazyUtils.createLazyBlock(resolver);
+    const BlockParent = {
+      createModel: () => ({ child: null }),
+      Logic: {
+        name: "BlockParent",
+        children() {
+          return { child: this.nest(LazyBlock.Logic) };
+        },
+        @Cmd.update SetField(name, value) {
+          return { [name]: value };
+        }
+      }
+    };
+    const { app, shared, commandNames, errors } = await runWithTracking({
+      app: BlockParent
+    });
+
+    const lazyModel = LazyBlock.createModel({'b': 321});
+    expect(lazyModel).toEqual({ __args: [{'b': 321}] });
+
+    await app.proc.exec(BlockParent.Logic.SetField('child', lazyModel));
+    await app.model.child.__proc.exec(LazyBlock.Logic.SetField('a', 123));
+    await resolved;
+    expect(app.model.child).toEqual({ a: 123, b: 321 });
+
+    const realModel = LazyBlock.createModel({'b': 321});
+    expect(realModel).toEqual({'b': 321});
+
+    await app.proc.exec(BlockParent.Logic.SetField('child', LazyBlock.createModel()));
+    expect(app.model.child).toEqual({});
+  });
+
+  it('should fill model with actual data even if the model was detached', async () => {
+    const BlockChild = {
+      createModel: (props) => ({ ...props }),
+      Logic: new (class AppLogic extends LogicBase {
+        @Cmd.update
+        SetField(name, value) {
+          return { [name]: value };
+        }
+      })
+    };
+    const { resolver, resolved } = createMockBlockResolver(BlockChild);
+    const LazyBlock = lazyUtils.createLazyBlock(resolver);
+    const BlockParent = {
+      createModel: () => ({ child: null }),
+      Logic: {
+        name: "BlockParent",
+        children() {
+          return { child: this.nest(LazyBlock.Logic) };
+        },
+        @Cmd.update SetField(name, value) {
+          return { [name]: value };
+        }
+      }
+    };
+    const { app, shared, commandNames, errors } = await runWithTracking({
+      app: BlockParent
+    });
+
+    const lazyModel = LazyBlock.createModel({'b': 321});
+    app.proc.exec(BlockParent.Logic.SetField('child', lazyModel));
+    const changeLazy = app.model.child.__proc.exec(LazyBlock.Logic.SetField('a', 123));
+    app.proc.exec(BlockParent.Logic.SetField('child', null));
+    await resolved;
+    await changeLazy;
+
+    expect(lazyModel).toEqual({ b: 321 });
+    expect(app.model.child).toEqual(null);
   });
 });
