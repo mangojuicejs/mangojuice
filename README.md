@@ -37,7 +37,7 @@ Logic consists of commands creators and `config` function which defines children
 
 * `Cmd.update` – command for updating a model
 * `Cmd.batch` – command for executing another commands
-* `Cmd.execLatest/Cmd.execLatest` – command for executing async task
+* `Cmd.task` – command for executing async task
 
 #### The Process put everything together
 There is one thing that makes everything to work, called `Process`. It is an internal class and you won't interact with it directly. But you should understand that the instance of this class created for every Model of every Block of your app and it actually executes commands and it takes care of View updates when model of a Block changed. The instance of the Process initially created during the run of the up.
@@ -144,7 +144,7 @@ export const Logic = {
     ];
   },
 
-  @Cmd.execLatest
+  @Cmd.task
   DoSearch() {
     return Task
       .create(Tasks.findResults)
@@ -183,14 +183,16 @@ export const View = ({ model }) => (
 ```
 **`@Cmd.batch`** is a command type aimed to execute other commands. `batch` commands should decide what will be done next and in what order. Returned value can be an array, a command or null/undefined.
 
-**`@Cmd.execLatest`**. There is also `@Cmd.execEvery`. It is a command for executing an async function. A command of this type should return a `Task` object, which defines what async function should be executed, and also the success and fail handler commands. The success command will be executed with a value returned by async function, and the fail command will be executed with an error object thrown by the async function. The success and fail commands are optional (a no-op will be executed if there is no defined handler). A task function gets the same arguments as the command function which created the task.
+**`@Cmd.task`**. It is a command for executing an async function (Task). A command of this type should return a `Task` object, which defines what async function should be executed, and also the success and fail handler commands. The success command will be executed with a value returned by async function, and the fail command will be executed with an error object thrown by the async function. The success and fail commands are optional (a no-op will be executed if there is no defined handler). A task function gets the same arguments as the command function which created the task (be default). You can override arguments by `.args(a,b,c)` function of a `Task`.
+
+By default taks is a "single thread". It means that only one async fucnction can be executing at one point in time for one model. So, if you will execute the task while another one already executing, then exucuting task will be canceled and the new one will be started.
+
+To make a task "multi-thread" you just need to write `@Cmd.task({ every: true })`. With this, if you will call a task command 10 times, it will be executed 10 times in parallel.
 
 **`this.call(fetch, 'www.google.com/search')`** is the task. This was inspired by `redux-saga` and needed to achive two goals:
 
 * it creates a task cancellation point and
 * it makes easier to test a task (you can pass some testing `call` func in a context which will mock results of `call`s).
-
-If some task marked as `execLatest`, then only one async fucnction can be executing at one point in time. So, if you will execute the task while another one already executing, then exucuting task will be canceled and the new one will be started.
 
 ### All together – Main Block
 ```js

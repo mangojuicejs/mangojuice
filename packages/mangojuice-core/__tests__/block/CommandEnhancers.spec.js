@@ -1,11 +1,11 @@
 describe('Command enhancers', () => {
-  describe('#debounce', () => {
+  describe('Cmd.debounce', () => {
     it('should work', () => {
 
     });
   });
 
-  describe('#throttle', () => {
+  describe('Cmd.throttle', () => {
     it('should work', () => {
 
     });

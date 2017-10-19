@@ -21,7 +21,7 @@ describe('Errors handling', () => {
           throw testError;
         },
 
-        @Cmd.execLatest
+        @Cmd.task
         SomeTaskCreator(name, value) {
           throw testError;
         },
@@ -72,7 +72,7 @@ describe('Errors handling', () => {
       Logic: {
         name: "AppBlock",
 
-        @Cmd.execLatest
+        @Cmd.task
         SomeTaskCreator(name, value) {
           return Task.create(async function() {
             await this.call(Task.delay, 100);
@@ -80,7 +80,7 @@ describe('Errors handling', () => {
           });
         },
 
-        @Cmd.execLatest
+        @Cmd.task
         HandledTaskCreator(name, value) {
           return Task.create(async function() {
             await this.call(Task.delay, 100);

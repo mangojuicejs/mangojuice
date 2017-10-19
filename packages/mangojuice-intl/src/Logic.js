@@ -33,7 +33,7 @@ export const Logic = {
     };
   },
 
-  @Cmd.execLatest
+  @Cmd.task
   LoadMessages() {
     return Task
       .create(Tasks.loadTranslationsTask)

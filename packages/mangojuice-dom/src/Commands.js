@@ -17,6 +17,6 @@ export function focus(selector) {
   }
   return function(obj, name, descr) {
     descr.value = focusTaskCommand;
-    return Cmd.execLatest(obj, name, descr);
+    return Cmd.task(obj, name, descr);
   };
 }

@@ -12,6 +12,7 @@ import {
   memoize,
   noop,
   handleModelChanges,
+  fastTry,
 
   MODEL_UPDATED_EVENT,
   CHILD_MODEL_UPDATED_EVENT,
@@ -438,10 +439,8 @@ export class Process {
    * @return {any}
    */
   safeExecFunction(func, cmd) {
-    let result = null;
-    try {
-      result = func();
-    } catch (error) {
+    const { result, error } = fastTry(func);
+    if (error) {
       this.logExecutionError(error, cmd);
     }
     return result;

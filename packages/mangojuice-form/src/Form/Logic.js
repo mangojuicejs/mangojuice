@@ -50,7 +50,7 @@ export const Logic = {
     return this.SetFormState("Invalid");
   },
 
-  @Cmd.execLatest
+  @Cmd.task
   ValidateForm() {
     return Task.create(this.meta.validateForm)
       .success(this.ValidationSuccess())
@@ -77,7 +77,7 @@ export const Logic = {
 
   @Cmd.nope SubmitFailed() {},
 
-  @Cmd.execLatest
+  @Cmd.task
   DoSubmitForm() {
     return Task.create(this.meta.submitForm)
       .success(this.SubmitSuccess())

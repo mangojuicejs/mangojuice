@@ -65,7 +65,7 @@ export const Logic = {
     };
   },
 
-  @Cmd.execLatest
+  @Cmd.task
   ValidationStart() {
     return Task.create(Tasks.validatorTask)
       .success(this.ValidationFinished())

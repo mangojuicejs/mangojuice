@@ -1,8 +1,9 @@
-import { nextId, is, maybeForEach, ensureCmdObject } from "./Utils";
+import { nextId, is, maybeForEach, ensureCmdObject, fastTry } from "./Utils";
 import * as Task from "./Task";
 
+
 // Utils
-export function createCommand(name, func, exec, opts) {
+function createCommand(name, func, exec, opts) {
   const creator = function(...args) {
     return {
       func,
@@ -43,6 +44,24 @@ export function createCommand(name, func, exec, opts) {
   return creator;
 }
 
+function getCommandName(funcName, ctx) {
+  const ctxName = ctx && (ctx.name || ctx.constructor.name);
+  return ctxName ? `${ctxName}.${funcName}` : funcName;
+}
+
+function execDefault(context) {
+  return this.func && this.func.call(context, ...this.args);
+}
+
+function getCommandDescriptor(obj, name, descr, cmdCreator, opts = {}) {
+  return {
+    configurable: true,
+    enumerable: true,
+    value: cmdCreator(name, descr.value, opts)
+  };
+}
+
+// Utils
 export function appendArgs(cmd, args) {
   cmd = ensureCmdObject(cmd);
   cmd.args = cmd.args.concat(args);
@@ -64,23 +83,6 @@ export function hash(cmd) {
     const argsHash = cmd.args.length > 0 ? JSON.stringify(cmd.args) : "";
     return `${cmd.id}${argsHash}`;
   }
-}
-
-export function getCommandName(funcName, ctx) {
-  const ctxName = ctx && (ctx.name || ctx.constructor.name);
-  return ctxName ? `${ctxName}.${funcName}` : funcName;
-}
-
-export function execDefault(context) {
-  return this.func && this.func.call(context, ...this.args);
-}
-
-export function getCommandDescriptor(obj, name, descr, cmdCreator, opts = {}) {
-  return {
-    configurable: true,
-    enumerable: true,
-    value: cmdCreator(name, descr.value, opts)
-  };
 }
 
 // Nope command
@@ -120,80 +122,100 @@ export function execTask(props) {
   let proc;
   const execId = nextId();
   const procId = props.model.__proc.id;
-  const { task, successCmd, failCmd } = this.func.call(props, ...this.args);
+  const {
+    task, executor, successCmd,
+    failCmd, customArgs
+  } = this.func.call(props, ...this.args);
 
-  if (this.opts.debounce) {
-    this.opts.cancelAll(props);
+  // Debounce the execution (by default)
+  if (!this.opts.options.every) {
+    this.opts.cancelProcess(procId);
   }
 
+  // Trun the task on next cycle
   const cancel = () => proc && proc.cancel();
-  const done = new Promise((resolve, reject) => {
-    const handleFail = err => {
-      this.opts.cleanupExec(procId, execId);
-      if (err && err.cancelled) {
-        reject(createNopeCmd(`${this.funcName}.Cancelled`)());
-      } else {
-        const actualFailCmd = failCmd && appendArgs(failCmd, [err])
-        if (!actualFailCmd) props.model.__proc.logExecutionError(err);
-        reject(actualFailCmd);
+  const done = new Promise((resolve, reject) =>
+    Task.delay(0).then(() => {
+      const handleResult = ({ result, error }) => {
+        this.opts.cleanupExec(procId, execId);
+        if (error) {
+          if (error.cancelled) {
+            reject(createNopeCmd(`${this.funcName}.Cancelled`)());
+          } else {
+            const actualFailCmd = failCmd && appendArgs(failCmd, [error])
+            if (!actualFailCmd) props.model.__proc.logExecutionError(error);
+            reject(actualFailCmd);
+          }
+        } else {
+          const actualSuccessCmd = successCmd && appendArgs(successCmd, [result]);
+          resolve(actualSuccessCmd);
+        }
+      };
+      const res = fastTry(() => {
+        proc = executor(task, props, ...(customArgs || this.args));
+        proc.then(handleResult, handleResult);
+      })
+      if (res.error) {
+        handleResult(res);
       }
-    };
+    })
+  );
 
-    const handleSuccess = res => {
-      this.opts.cleanupExec(procId, execId);
-      const actualSuccessCmd = successCmd && appendArgs(successCmd, [res]);
-      resolve(actualSuccessCmd);
-    };
-
-    try {
-      proc = Task.call(task, props, ...this.args);
-      return proc.then(handleSuccess, handleFail);
-    } catch (err) {
-      handleFail(err);
-    }
-  });
-
+  // Track task execution for cancellation
   this.opts.trackExec(procId, execId, done, cancel);
   return done;
 }
 export function createTaskCmd(name, func, opts = {}) {
-  const executors = {};
-  const cmdOpts = {
-    ...opts,
-    cancelAll({ model }) {
-      const procId = model.__proc.id;
-      const execs = executors[procId];
+  const helpers = {
+    executors: {},
+    options: opts,
+    cancelProcess(pid) {
+      const execs = this.executors[pid];
       if (execs) {
-        Object.keys(execs).forEach(k => execs[k].cancel());
-        delete executors[procId];
+        for (const eid in this.executors[pid]) {
+          execs[eid].cancel();
+        }
+        delete this.executors[pid];
       }
     },
     trackExec(procId, execId, done, cancel) {
-      executors[procId] = executors[procId] || {};
-      executors[procId][execId] = { done, cancel };
+      this.executors[procId] = this.executors[procId] || {};
+      this.executors[procId][execId] = { done, cancel };
     },
     cleanupExec(procId, execId) {
-      if (executors[procId] && executors[procId][execId]) {
-        delete executors[procId][execId];
+      if (this.executors[procId] && this.executors[procId][execId]) {
+        delete this.executors[procId][execId];
       }
     }
   };
-
-  const cmdCreator = createCommand(name, func, execTask, cmdOpts);
-  cmdCreator.Cancel = createCommand(`${name}.Cancel`, null, cmdOpts.cancelAll);
-  return cmdCreator;
+  function cancelTaskCommand(opts) {
+    if (opts && opts.all) {
+      for (const pid in helpers.executors) {
+        helpers.cancelProcess(pid);
+      }
+    } else {
+      const pid = this.model.__proc.id;
+      helpers.cancelProcess(pid);
+    }
+  };
+  const cmd = createCommand(name, func, execTask, helpers);
+  cmd.Cancel = createCommand(`${name}.Cancel`, cancelTaskCommand, execDefault);
+  return cmd;
 }
-export function execEvery(obj, name, descr) {
-  return getCommandDescriptor(obj, name, descr, createTaskCmd);
-}
-export function execLatest(obj, name, descr) {
-  return getCommandDescriptor(obj, name, descr, createTaskCmd, {
-    debounce: true
-  });
-}
+export function task(...args) {
+  if (args.length === 1) {
+    const [ options ] = args;
+    return (obj, name, descr) => {
+      return getCommandDescriptor(obj, name, descr, createTaskCmd, options);
+    };
+  } else {
+    const [ obj, name, descr ] = args;
+    return getCommandDescriptor(obj, name, descr, createTaskCmd);
+  }
+};
 
 // Throttle helper cmd
-export function createThrottleCmd(name, func, { throttleTime, debounceTime }) {
+function createThrottleCmd(name, func, { throttleTime, debounceTime }) {
   // Helper object for storing internal throttling state
   const helpers = {
     counts: {},
@@ -222,12 +244,12 @@ export function createThrottleCmd(name, func, { throttleTime, debounceTime }) {
     const args = helpers.extractExecContext(procId);
     return func(...args);
   });
+  function thDelay() {
+    return this.call(Task.delay, throttleTime || debounceTime);
+  }
   const throttleDelayCmd = createTaskCmd(
     `${name}.Throttle.Delay`,
     function() {
-      function thDelay() {
-        return this.call(Task.delay, throttleTime || debounceTime);
-      }
       return Task.create(thDelay).success(throttleExecCmd());
     },
     { debounce: debounceTime > 0 }

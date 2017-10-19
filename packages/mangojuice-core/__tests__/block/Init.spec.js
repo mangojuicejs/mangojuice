@@ -16,7 +16,7 @@ describe("Init commands execution", () => {
       port() {
         return this.exec(this.FromPortAsync);
       },
-      @Cmd.execLatest
+      @Cmd.task
       FromPortAsync() {
         return Task.create(AsyncTaskDelayed).success(
           this.FromPortAsync_Success
@@ -70,7 +70,7 @@ describe("Init commands execution", () => {
       FromPortCmd() {
         return [this.FromPortCmd_1, this.FromPortCmd_2()];
       },
-      @Cmd.execLatest
+      @Cmd.task
       FromPortAsync() {
         return Task.create(AsyncTaskDelayed).success(
           this.FromPortAsync_Success

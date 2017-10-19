@@ -53,7 +53,7 @@ export const Logic = {
     ];
   },
 
-  @Cmd.execLatest
+  @Cmd.task
   RetreiveStart() {
     return Task.create(Tasks.retreiverWithSearching)
       .success(this.RetreiveSuccess())
@@ -109,7 +109,7 @@ export const Logic = {
     return Utils.isSearching(this.model) && this.TrackError(error);
   },
 
-  @Cmd.execLatest
+  @Cmd.task
   SearchStart() {
     return Task.create(Tasks.searchWithResolving)
       .success(this.SearchSuccess())

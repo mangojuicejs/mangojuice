@@ -2,7 +2,8 @@
 
 type TaskObject = {
   success: (cmd: any) => TaskObject,
-  fail: (cmd: any) => TaskObject
+  fail: (cmd: any) => TaskObject,
+  engine: (exec: any) => TaskObject
 };
 type NestType<A, T, Y, U> = {
   +logic: A,
@@ -25,8 +26,7 @@ declare module "mangojuice-core" {
   declare export var Cmd: {
     update: any,
     batch: any,
-    execLatest: any,
-    execEvery: any,
+    task: any,
     debounce: any,
     throttle: any
   };

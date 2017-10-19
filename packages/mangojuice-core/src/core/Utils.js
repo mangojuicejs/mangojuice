@@ -48,6 +48,17 @@ export const fastMap = (subject, iterator) => {
   return result;
 };
 
+export const ensureError = (err) =>
+  !(err instanceof Error) ? new Error(err) : err;
+
+export const fastTry = (fn) => {
+  try {
+    return { result: fn(), error: null };
+  } catch (err) {
+    return { result: null, error: ensureError(err) };
+  }
+};
+
 export const runOnMixed = (mapper, val, fn) => {
   if (is.array(val)) {
     return mapper(val, x => x && fn(x));

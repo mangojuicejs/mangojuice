@@ -1,4 +1,4 @@
-import { sym, is } from "./Utils";
+import { sym, is, fastTry, ensureError } from "./Utils";
 
 /**
  * A symbol for setting custom promise cancel function.
@@ -14,19 +14,15 @@ export const CANCEL = sym("CANCEL_PROMISE");
  * Clss represents a token for cancelling the task
  * @param {CancellationToken} parentToken
  */
-export function CancellationToken(parentToken) {
+function CancellationToken(parentToken) {
   if (!(this instanceof CancellationToken)) {
     return new CancellationToken(parentToken);
   }
   const cancellationPromise = new Promise(resolve => {
-    this.cancel = e => {
-      if (e) {
-        resolve(e);
-      } else {
-        const err = new Error("cancelled");
-        err.cancelled = true;
-        resolve(err);
-      }
+    this.cancel = () => {
+      const err = new Error("Cancelled");
+      err.cancelled = true;
+      resolve(err);
     };
   });
   this.register = callback => {
@@ -44,7 +40,7 @@ export function CancellationToken(parentToken) {
  * @param  {Function} callback
  * @return {void}
  */
-export function registerCancelHandler(callback) {
+function registerCancelHandler(callback) {
   this[CANCEL] = callback;
 }
 
@@ -53,34 +49,15 @@ export function registerCancelHandler(callback) {
  * any active context.
  * @return {Object}
  */
-export function getInitContext(initContext) {
+function getInitContext(initContext) {
   const token = new CancellationToken();
   return {
     ...initContext,
     cancelTask: token.cancel,
     onCancel: registerCancelHandler,
+    subtasks: [],
     token,
     call
-  };
-}
-
-/**
- * Creates a Task object that could be returned from
- * async task command.
- * @param  {Function} task
- * @return {Object}
- */
-export function create(task) {
-  return {
-    task,
-    success(cmd) {
-      this.successCmd = cmd;
-      return this;
-    },
-    fail(cmd) {
-      this.failCmd = cmd;
-      return this;
-    }
   };
 }
 
@@ -98,31 +75,74 @@ export function create(task) {
  * @return {Promise}
  */
 export function call(fn, ...args) {
+  const parentSubtasks = this && this.subtasks || [];
   const context =
     this && this.token
-      ? { ...this, token: this.token.createDependentToken() }
+      ? { ...this, subtasks: [], token: this.token.createDependentToken() }
       : getInitContext(this);
+  context.call = context.call.bind(context);
 
   const res = new Promise((resolve, reject) => {
-    try {
-      const fnRes = fn.apply(context, args);
-      if (is.promise(fnRes)) {
-        fnRes.then(resolve, reject);
-        context.token.register(e => {
-          if (fnRes[CANCEL]) fnRes[CANCEL]();
-          if (context[CANCEL]) context[CANCEL]();
-          reject(e);
-        });
-      } else {
-        resolve(fnRes);
-      }
-    } catch (e) {
-      reject(e);
+    // Run func and check for sync code errors
+    const execRes = fastTry(() => fn.apply(context, args));
+    if (execRes.error) {
+      return resolve(execRes);
     }
+
+    // Normalize response to be always a promise
+    if (!is.promise(execRes.result)) {
+      execRes.result = Promise.resolve(execRes.result);
+    }
+
+    // Register for token cancellations
+    context.token.register(cancelError => {
+      const { error } = fastTry(() => {
+        if (execRes.result[CANCEL]) execRes.result[CANCEL]();
+        if (context[CANCEL]) context[CANCEL]();
+      });
+      reject({ result: null, error: error || cancelError });
+    });
+    execRes.result.then(
+      result => {
+        const successHandler = () => resolve({ result, error: null });
+        return Promise.all(context.subtasks).then(successHandler, successHandler);
+      },
+      error => resolve({ result: null, error: ensureError(error) })
+    );
   });
 
+  parentSubtasks.push(res);
   res.cancel = context.token.cancel;
   return res;
+}
+
+/**
+ * Creates a Task object that could be returned from
+ * async task command.
+ * @param  {Function} task
+ * @return {Object}
+ */
+export function create(task) {
+  return {
+    task,
+    executor: call,
+    success(cmd) {
+      this.successCmd = cmd;
+      return this;
+    },
+    fail(cmd) {
+      this.failCmd = cmd;
+      return this;
+    },
+    engine(engine) {
+      this.executor = engine;
+      return this;
+    },
+    args(...args) {
+      this.customArgs = args;
+      return this;
+    }
+  };
 }
 
 /**
@@ -133,10 +153,9 @@ export function call(fn, ...args) {
  */
 export function delay(ms, val = true) {
   let timeoutId;
-  if (this.onCancel) {
-    this.onCancel(() => clearTimeout(timeoutId));
-  }
-  return new Promise(resolve => {
+  const res = new Promise(resolve => {
     timeoutId = setTimeout(() => resolve(val), ms);
   });
+  res[CANCEL] = () => clearTimeout(timeoutId);
+  return res;
 }
