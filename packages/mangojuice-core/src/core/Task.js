@@ -96,6 +96,7 @@ export function call(fn, ...args) {
 
     // Register for token cancellations
     context.token.register(cancelError => {
+      if (res.done) return;
       const { error } = fastTry(() => {
         if (execRes.result[CANCEL]) execRes.result[CANCEL]();
         if (context[CANCEL]) context[CANCEL]();

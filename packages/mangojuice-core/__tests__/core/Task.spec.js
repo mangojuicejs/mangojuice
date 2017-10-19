@@ -285,4 +285,29 @@ describe('Task', () => {
     expect(res).toEqual({ result: { test: 3 }, error: null });
     expect(someLogic).toHaveBeenCalledTimes(1);
   });
+
+  it('should not cancel handler of forked task if it is finished', async () => {
+    const someLogic = jest.fn();
+    let childTask;
+    async function simpleTask_1() {
+      await this.call(Task.delay, 100);
+      this.onCancel(someLogic);
+      return { test: 1 };
+    }
+    async function simpleTask_3() {
+      childTask = this.call(simpleTask_1);
+      await this.call(Task.delay, 300);
+      someLogic();
+      return { test: 3 };
+    }
+
+    const parentTask = Task.call(simpleTask_3);
+    await childTask;
+    expect(childTask.done).toEqual(true);
+
+    parentTask.cancel();
+    await expect(parentTask).rejects.toHaveProperty('error.cancelled', true);
+    expect(parentTask.cancelled).toEqual(true);
+    expect(someLogic).toHaveBeenCalledTimes(0);
+  });
 });
