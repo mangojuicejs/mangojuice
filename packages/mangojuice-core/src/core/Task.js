@@ -100,11 +100,15 @@ export function call(fn, ...args) {
         if (execRes.result[CANCEL]) execRes.result[CANCEL]();
         if (context[CANCEL]) context[CANCEL]();
       });
+      res.cancelled = true;
       reject({ result: null, error: error || cancelError });
     });
     execRes.result.then(
       result => {
-        const successHandler = () => resolve({ result, error: null });
+        const successHandler = () => {
+          res.done = true;
+          resolve({ result, error: null });
+        };
         return Promise.all(context.subtasks).then(successHandler, successHandler);
       },
       error => resolve({ result: null, error: ensureError(error) })

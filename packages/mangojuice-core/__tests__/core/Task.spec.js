@@ -3,12 +3,20 @@ import { Task } from 'mangojuice-core'
 
 describe('Task', () => {
   it('should resolve an object with result and emoty error on success', async () => {
+    let childTask;
     async function simpleTask() {
-      await this.call(Task.delay, 10);
+      childTask = this.call(Task.delay, 10);
+      await childTask;
       return { test: 1 };
     }
-    const res = await Task.call(simpleTask);
 
+    const exec = Task.call(simpleTask);
+    expect(exec.done).not.toBeDefined();
+    expect(childTask.done).not.toBeDefined();
+
+    const res = await exec;
+    expect(childTask.done).toEqual(true);
+    expect(exec.done).toEqual(true);
     expect(res).toEqual({ result: { test: 1 }, error: null });
   });
 
@@ -24,7 +32,7 @@ describe('Task', () => {
     expect(res).toEqual({ result: null, error });
   });
 
-  it('should resolve an object with empty result and error on exception', async () => {
+  it('should cancel the task', async () => {
     async function simpleTask() {
       await this.call(Task.delay, 10);
       return { test: 1 };
@@ -258,20 +266,22 @@ describe('Task', () => {
 
   it('should cancel forked tasks inside another task', async () => {
     const someLogic = jest.fn();
+    let childTask;
     async function simpleTask_1() {
       await this.call(Task.delay, 100);
       someLogic();
       return { test: 1 };
     }
     async function simpleTask_3() {
-      const res = this.call(simpleTask_1);
-      res.cancel();
+      childTask = this.call(simpleTask_1);
+      childTask.cancel();
       someLogic();
       return { test: 3 };
     }
 
     const res = await Task.call(simpleTask_3);
 
+    expect(childTask.cancelled).toEqual(true);
     expect(res).toEqual({ result: { test: 3 }, error: null });
     expect(someLogic).toHaveBeenCalledTimes(1);
   });

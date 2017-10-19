@@ -3,6 +3,7 @@
 type TaskObject = {
   success: (cmd: any) => TaskObject,
   fail: (cmd: any) => TaskObject,
+  args: (...args: Array<any>) => TaskObject,
   engine: (exec: any) => TaskObject
 };
 type NestType<A, T, Y, U> = {
