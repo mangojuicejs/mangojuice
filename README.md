@@ -22,7 +22,7 @@ MangoJuice relies on decorators, so you should add decorators transformer to you
 ## Quick start
 MangoJuice (MJS) consists of three main parts:
 * **Model** – plain function `const createModel = () => ({ ... })`, which defines the initial model state of your logical block.
-* **Logic** - plain object `const Logic = { ... };` with a set of commands inside.
+* **Logic** - `class MyLogic { ... };` with a set of commands and some configs inside
 * **View** – plain function `const View = ({ model }) => { ... }`, which should display something based on the current state of a model. If your favorite View library is React, then View is a plain-function component.
 
 All these three parts are together called a `Block`.

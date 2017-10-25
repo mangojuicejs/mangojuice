@@ -44,16 +44,12 @@ function createBlockResolver(asyncRequire, resolveState) {
       }
     });
 
-    if (block.Logic instanceof LogicBase) {
-      Object.keys(Object.getPrototypeOf(block.Logic)).forEach(k => {
-        const cmd = block.Logic[k];
-        if (Utils.is.command(cmd)) {
-          resolveState.lazyLogic[k] = cmd;
-        }
-      });
-    } else {
-      Object.assign(resolveState.lazyLogic, block.Logic);
-    }
+    Object.keys(Object.getPrototypeOf(block.Logic)).forEach(k => {
+      const cmd = block.Logic[k];
+      if (Utils.is.command(cmd)) {
+        resolveState.lazyLogic[k] = cmd;
+      }
+    });
 
     resolveState.lazyLogic.name = block.Logic.name || block.Logic.constructor.name;
     resolveRequirePromise(block);

@@ -86,18 +86,6 @@ export const createResultPromise = () => {
   };
 };
 
-export const ensureCmdObject = cmd => {
-  if (!cmd) return null;
-  if (!cmd.isCmd) {
-    if (cmd.id && is.func(cmd)) {
-      return cmd();
-    } else {
-      throw new Error("You passed something weird instead of cmd");
-    }
-  }
-  return cmd;
-};
-
 export const handleModelChanges = (model, destroy, handler, destroyHandler) => {
   if (model.__proc) {
     const proc = model.__proc;
@@ -116,6 +104,23 @@ export const handleModelChanges = (model, destroy, handler, destroyHandler) => {
 export const objectValues = (obj) => {
   return obj ? Object.keys(obj).map(k => obj[k]) : [];
 };
+
+/**
+ * Copy own-properties from `props` onto `obj`.
+ * @returns obj
+ */
+export function extend(obj, props) {
+  for (let i in props) obj[i] = props[i];
+  return obj;
+}
+
+/**
+ * Call a function asynchronously, as soon as possible.
+ * @param {Function} callback
+ */
+export const defer = typeof Promise == 'function'
+  ? Promise.resolve().then.bind(Promise.resolve())
+  : setTimeout;
 
 export const memoize = func => {
   let data;
