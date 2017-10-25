@@ -3,12 +3,15 @@ import Command from '../../classes/Command';
 import ensureCommand from './ensureCommand';
 
 
-function createCommandFactory(name, func, opts) {
-  const id = nextId();
-  func.$$cmdId = id;
+function createCommandFactory(name, func, ctx, opts) {
+  const id = func.$$cmdId || nextId();
   const creator = function(...args) {
-    return new Command(func, args, name, opts);
-  };
+    const cmd = new Command(func, args, name, opts);
+    cmd.model = ctx && ctx.model;
+    return cmd;
+  }
+
+  func.$$cmdId = id;
   creator.id = id;
   creator.func = func;
   return creator;
@@ -16,12 +19,12 @@ function createCommandFactory(name, func, opts) {
 
 export function cmd(obj, ...args) {
   if (is.func(obj)) {
-    return ensureCommand(obj, ...args);
+    return createCommandFactory(obj.name, obj);
   }
   return {
     configurable: true,
     enumerable: true,
-    value: createCommandFactory(name, descr.value, opts)
+    value: createCommandFactory(name, descr.value, ctx)
   };
 }
 
