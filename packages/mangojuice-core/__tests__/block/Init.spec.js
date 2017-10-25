@@ -20,7 +20,7 @@ describe("Init commands execution", () => {
           this.FromPortAsync_Success
         );
       }
-      @cmd FromInitOneCmd() {},
+      @cmd FromInitOneCmd() {}
       @cmd FromPortAsync_Success() {}
     }
   };
@@ -68,14 +68,14 @@ describe("Init commands execution", () => {
         return task(AsyncTaskDelayed).success(
           this.FromPortAsync_Success
         );
-      },
-      @cmd FromPortCmd_1() {},
-      @cmd FromPortCmd_2() {},
-      @cmd FromPortAsync_Success() {},
-      @cmd FromInitOneCmd() {},
-      @cmd FromInitTwoCmd() {},
-      @cmd FromSubCmd() {},
-      @cmd HandleB_1() {},
+      }
+      @cmd FromPortCmd_1() {}
+      @cmd FromPortCmd_2() {}
+      @cmd FromPortAsync_Success() {}
+      @cmd FromInitOneCmd() {}
+      @cmd FromInitTwoCmd() {}
+      @cmd FromSubCmd() {}
+      @cmd HandleB_1() {}
       @cmd HandleB_2() {}
     }
   };

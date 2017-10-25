@@ -1,12 +1,21 @@
-import { Process } from "./core/Process";
+// Classes
+import { Process } from "./classes/Process";
 import { DefaultViewMounter } from "./classes/DefaultViewMounter";
 import { DefaultLogger } from "./classes/DefaultLogger";
 import { SimpleStackLogger } from "./classes/SimpleStackLogger";
-import { LogicBase } from "./classes/LogicBase";
-import * as Cmd from "./core/Cmd";
-import * as Utils from "./core/Utils";
-import * as Task from "./core/Task";
-import * as Run from "./core/Run";
+
+import cmd from "./core/cmd/cmd";
+import debounce from "./core/cmd/debounce";
+import throttle from "./core/cmd/throttle";
+import child from "./core/logic/child";
+import depends from "./core/logic/depends";
+import handleLogicOf from "./core/logic/handleLogicOf";
+import logicOf from "./core/logic/logicOf";
+import callTask from "./core/task/callTask";
+import delay from "./core/task/delay";
+import task from "./core/task/task";
+import run from "./core/run/run";
+import * as utils from "./core/utils";
 
 export {
   // Classes
@@ -14,11 +23,18 @@ export {
   DefaultViewMounter,
   DefaultLogger,
   SimpleStackLogger,
-  LogicBase,
 
-  // Tools
-  Cmd,
-  Utils,
-  Task,
-  Run
+  // Core
+  cmd,
+  debounce,
+  throttle,
+  child,
+  depends,
+  handleLogicOf,
+  logicOf,
+  callTask,
+  delay,
+  task,
+  run,
+  utils
 };

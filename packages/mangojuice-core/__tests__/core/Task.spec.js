@@ -1,16 +1,16 @@
-import { Task } from 'mangojuice-core'
+import { delay, callTask } from 'mangojuice-core'
 
 
 describe('Task', () => {
   it('should resolve an object with result and emoty error on success', async () => {
     let childTask;
     async function simpleTask() {
-      childTask = this.call(Task.delay, 10);
+      childTask = this.call(delay, 10);
       await childTask;
       return { test: 1 };
     }
 
-    const exec = Task.call(simpleTask);
+    const exec = callTask(simpleTask);
     expect(exec.done).not.toBeDefined();
     expect(childTask.done).not.toBeDefined();
 
@@ -24,21 +24,21 @@ describe('Task', () => {
     const error = new Error('test');
     async function simpleTask() {
       throw error;
-      await this.call(Task.delay, 10);
+      await this.call(delay, 10);
       return { test: 1 };
     }
-    const res = await Task.call(simpleTask);
+    const res = await callTask(simpleTask);
 
     expect(res).toEqual({ result: null, error });
   });
 
   it('should cancel the task', async () => {
     async function simpleTask() {
-      await this.call(Task.delay, 10);
+      await this.call(delay, 10);
       return { test: 1 };
     }
 
-    const res = Task.call(simpleTask);
+    const res = callTask(simpleTask);
     res.cancel();
 
     await expect(res).rejects.toHaveProperty('error.cancelled', true);
@@ -48,11 +48,11 @@ describe('Task', () => {
     const cancleHandler = jest.fn();
     async function simpleTask() {
       this.onCancel(cancleHandler);
-      await this.call(Task.delay, 10);
+      await this.call(delay, 10);
       return { test: 1 };
     }
 
-    const res = Task.call(simpleTask);
+    const res = callTask(simpleTask);
     res.cancel();
 
     await expect(res).rejects.toHaveProperty('error.cancelled', true);
@@ -64,11 +64,11 @@ describe('Task', () => {
     const cancleHandler = jest.fn(() => { throw cancelError });
     async function simpleTask() {
       this.onCancel(cancleHandler);
-      await this.call(Task.delay, 10);
+      await this.call(delay, 10);
       return { test: 1 };
     }
 
-    const res = Task.call(simpleTask);
+    const res = callTask(simpleTask);
     res.cancel();
 
     await expect(res).rejects.toHaveProperty('error', cancelError);
@@ -87,7 +87,7 @@ describe('Task', () => {
       return { test: 1 };
     }
 
-    const res = Task.call(simpleTask);
+    const res = callTask(simpleTask);
     res.cancel();
 
     await expect(res).rejects.toHaveProperty('error.cancelled', true);
@@ -97,7 +97,7 @@ describe('Task', () => {
   it('should cancel tasks deeply', async () => {
     const someLogic = jest.fn();
     async function simpleTask_1() {
-      await this.call(Task.delay, 10);
+      await this.call(delay, 10);
       someLogic();
       return { test: 1 };
     }
@@ -112,7 +112,7 @@ describe('Task', () => {
       return { test: 3 };
     }
 
-    const res = Task.call(simpleTask_3);
+    const res = callTask(simpleTask_3);
     res.cancel();
 
     await expect(res).rejects.toHaveProperty('error.cancelled', true);
@@ -122,12 +122,12 @@ describe('Task', () => {
   it('should cancel more than one child tasks', async () => {
     const someLogic = jest.fn();
     async function simpleTask_1() {
-      await this.call(Task.delay, 10);
+      await this.call(delay, 10);
       someLogic();
       return { test: 1 };
     }
     async function simpleTask_2() {
-      await this.call(Task.delay, 30);
+      await this.call(delay, 30);
       someLogic();
       return { test: 2 };
     }
@@ -140,7 +140,7 @@ describe('Task', () => {
       return { test: 3 };
     }
 
-    const res = Task.call(simpleTask_3);
+    const res = callTask(simpleTask_3);
     res.cancel();
 
     await expect(res).rejects.toHaveProperty('error.cancelled', true);
@@ -150,12 +150,12 @@ describe('Task', () => {
   it('should cancel race correctly', async () => {
     const someLogic = jest.fn();
     async function simpleTask_1() {
-      await this.call(Task.delay, 10);
+      await this.call(delay, 10);
       someLogic();
       return { test: 1 };
     }
     async function simpleTask_2() {
-      await this.call(Task.delay, 3000);
+      await this.call(delay, 3000);
       someLogic();
       return { test: 2 };
     }
@@ -165,12 +165,12 @@ describe('Task', () => {
         this.call(simpleTask_1)
       ]);
       someLogic();
-      await this.call(Task.delay, 1000);
+      await this.call(delay, 1000);
       return { test: 3 };
     }
 
-    const res = Task.call(simpleTask_3);
-    await Task.delay(100);
+    const res = callTask(simpleTask_3);
+    await delay(100);
     res.cancel();
 
     await expect(res).rejects.toHaveProperty('error.cancelled', true);
@@ -180,7 +180,7 @@ describe('Task', () => {
   it('should resolve only when all children (forked) tasks resolved', async () => {
     const someLogic = jest.fn();
     async function simpleTask_1() {
-      await this.call(Task.delay, 100);
+      await this.call(delay, 100);
       someLogic();
       return { test: 1 };
     }
@@ -190,7 +190,7 @@ describe('Task', () => {
       return { test: 3 };
     }
 
-    const res = await Task.call(simpleTask_3);
+    const res = await callTask(simpleTask_3);
 
     expect(res).toEqual({ result: { test: 3 }, error: null });
     expect(someLogic).toHaveBeenCalledTimes(2);
@@ -199,7 +199,7 @@ describe('Task', () => {
   it('should cancel forked tasks', async () => {
     const someLogic = jest.fn();
     async function simpleTask_1() {
-      await this.call(Task.delay, 100);
+      await this.call(delay, 100);
       someLogic();
       return { test: 1 };
     }
@@ -209,7 +209,7 @@ describe('Task', () => {
       return { test: 3 };
     }
 
-    const res = Task.call(simpleTask_3);
+    const res = callTask(simpleTask_3);
     res.cancel();
 
     await expect(res).rejects.toHaveProperty('error.cancelled', true);
@@ -219,7 +219,7 @@ describe('Task', () => {
   it('should handle children cancellation with try/catch', async () => {
     const someLogic = jest.fn();
     async function simpleTask_1() {
-      await this.call(Task.delay, 100);
+      await this.call(delay, 100);
       someLogic();
       return { test: 1 };
     }
@@ -233,7 +233,7 @@ describe('Task', () => {
       return { test: 3 };
     }
 
-    const res = Task.call(simpleTask_3);
+    const res = callTask(simpleTask_3);
     res.cancel();
 
     await expect(res).rejects.toHaveProperty('error.cancelled', true);
@@ -243,7 +243,7 @@ describe('Task', () => {
   it('should not cactch any child task exceptions with try/catch', async () => {
     const someLogic = jest.fn();
     async function simpleTask_1() {
-      await this.call(Task.delay, 100);
+      await this.call(delay, 100);
       throw new Error('oops');
       someLogic();
       return { test: 1 };
@@ -258,7 +258,7 @@ describe('Task', () => {
       return { test: 3 };
     }
 
-    const res = await Task.call(simpleTask_3);
+    const res = await callTask(simpleTask_3);
 
     expect(res).toEqual({ result: { test: 3 }, error: null });
     expect(someLogic).toHaveBeenCalledTimes(0);
@@ -268,7 +268,7 @@ describe('Task', () => {
     const someLogic = jest.fn();
     let childTask;
     async function simpleTask_1() {
-      await this.call(Task.delay, 100);
+      await this.call(delay, 100);
       someLogic();
       return { test: 1 };
     }
@@ -279,7 +279,7 @@ describe('Task', () => {
       return { test: 3 };
     }
 
-    const res = await Task.call(simpleTask_3);
+    const res = await callTask(simpleTask_3);
 
     expect(childTask.cancelled).toEqual(true);
     expect(res).toEqual({ result: { test: 3 }, error: null });
@@ -290,18 +290,18 @@ describe('Task', () => {
     const someLogic = jest.fn();
     let childTask;
     async function simpleTask_1() {
-      await this.call(Task.delay, 100);
+      await this.call(delay, 100);
       this.onCancel(someLogic);
       return { test: 1 };
     }
     async function simpleTask_3() {
       childTask = this.call(simpleTask_1);
-      await this.call(Task.delay, 300);
+      await this.call(delay, 300);
       someLogic();
       return { test: 3 };
     }
 
-    const parentTask = Task.call(simpleTask_3);
+    const parentTask = callTask(simpleTask_3);
     await childTask;
     expect(childTask.done).toEqual(true);
 

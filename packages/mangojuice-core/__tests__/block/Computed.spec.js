@@ -123,7 +123,7 @@ describe("Computed", () => {
             c: depends(shared, model.child).compute(() => shared.f + shared.e + model.a + model.child.a),
             d: depends(shared).compute(() => shared.f + shared.g)
           };
-        },
+        }
         @cmd SetField(name, value) {
           return { [name]: value };
         }
