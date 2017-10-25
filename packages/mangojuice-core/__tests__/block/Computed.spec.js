@@ -1,4 +1,4 @@
-import { Cmd, Task, Run, Utils } from "mangojuice-core";
+import { cmd, logicOf, depends, child } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
@@ -7,33 +7,27 @@ describe("Computed", () => {
   describe("Simple computed", async () => {
     const SharedBlock = {
       createModel: () => ({ e: 0, f: 4, g: 6 }),
-      Logic: {
-        name: "SharedBlock",
+      Logic: class SharedBlock {
         computed() {
-          const { model } = this;
           return {
-            e: () => model.f + model.g
+            e: () => this.model.f + this.model.g
           };
-        },
-        @Cmd.update
-        SetField(name, value) {
+        }
+        @cmd SetField(name, value) {
           return { [name]: value };
         }
       }
     };
     const AppBlock = {
       createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
-      Logic: {
-        name: "AppBlock",
+      Logic: class AppBlock {
         computed() {
-          const { model, shared, depends } = this;
           return {
-            c: () => model.a + model.b,
-            d: depends(shared).compute(() => model.a + shared.e)
+            c: () => this.model.a + this.model.b,
+            d: depends(this.shared).compute(() => this.model.a + this.shared.e)
           };
-        },
-        @Cmd.update
-        SetField(name, value) {
+        }
+        @cmd SetField(name, value) {
           return { [name]: value };
         }
       }
@@ -58,7 +52,7 @@ describe("Computed", () => {
       expect(app.model.c).toEqual(3);
       expect(app.model.d).toEqual(11);
 
-      await app.proc.exec(AppBlock.Logic.SetField("a", 5));
+      await app.proc.exec(logicOf(app.model).SetField("a", 5));
 
       expect(app.model.c).toEqual(7);
       expect(app.model.d).toEqual(15);
@@ -72,7 +66,7 @@ describe("Computed", () => {
 
       expect(app.model.d).toEqual(11);
 
-      await shared.proc.exec(SharedBlock.Logic.SetField("f", 6));
+      await shared.proc.exec(logicOf(shared.model).SetField("f", 6));
 
       expect(app.model.d).toEqual(13);
     });
@@ -91,56 +85,46 @@ describe("Computed", () => {
   describe('Computed with dependencies', () => {
     const SharedBlock = {
       createModel: () => ({ e: 0, f: 4, g: 6 }),
-      Logic: {
-        name: "SharedBlock",
+      Logic: class SharedBlock {
         computed() {
-          const { model } = this;
           return {
-            e: () => model.f + model.g
+            e: () => this.model.f + this.model.g
           };
-        },
-        @Cmd.update
-        SetField(name, value) {
+        }
+        @cmd SetField(name, value) {
           return { [name]: value };
         }
       }
     };
     const AppBlock = {
       createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
-      Logic: {
-        name: "AppBlock",
+      Logic: class AppBlock {
         computed() {
-          const { model, shared, depends } = this;
+          const { model, shared } = this;
           return {
             c: depends(shared).compute(() => shared.f + shared.e + model.a),
             d: depends(shared).compute(() => shared.f + shared.g + model.b)
           };
-        },
-        @Cmd.update
-        SetField(name, value) {
+        }
+        @cmd SetField(name, value) {
           return { [name]: value };
         }
       }
     };
     const AppParent = {
       createModel: () => ({ a: 1, c: 0, d: 0, child: AppBlock.createModel() }),
-      Logic: {
-        name: "AppParent",
+      Logic: class AppParent {
         children() {
-          const { nest } = this;
-          return {
-            child: nest(AppBlock.Logic)
-          };
-        },
+          return { child: child(AppBlock.Logic) };
+        }
         computed() {
-          const { model, shared, depends } = this;
+          const { model, shared } = this;
           return {
             c: depends(shared, model.child).compute(() => shared.f + shared.e + model.a + model.child.a),
             d: depends(shared).compute(() => shared.f + shared.g)
           };
         },
-        @Cmd.update
-        SetField(name, value) {
+        @cmd SetField(name, value) {
           return { [name]: value };
         }
       }
@@ -155,12 +139,12 @@ describe("Computed", () => {
       expect(app.model.c).toEqual(15);
       expect(app.model.d).toEqual(12);
 
-      await app.proc.exec(AppBlock.Logic.SetField("a", 5));
+      await app.proc.exec(logicOf(app.model).SetField("a", 5));
 
       expect(app.model.c).toEqual(19);
       expect(app.model.d).toEqual(12);
 
-      await app.proc.exec(SharedBlock.Logic.SetField("f", 5));
+      await app.proc.exec(logicOf(shared.model).SetField("f", 5));
 
       expect(app.model.c).toEqual(21);
       expect(app.model.d).toEqual(13);
@@ -175,7 +159,7 @@ describe("Computed", () => {
       expect(app.model.c).toEqual(16);
       expect(app.model.d).toEqual(10);
 
-      await app.proc.exec(AppBlock.Logic.SetField("a", 5).model(app.model.child));
+      await app.proc.exec(logicOf(app.model.child).SetField("a", 5));
 
       expect(app.model.c).toEqual(20);
       expect(app.model.d).toEqual(10);

@@ -1,4 +1,8 @@
-import { Cmd, Task, Run, Utils } from "mangojuice-core";
+import {
+  cmd, logicOf, depends, child,
+  task, delay, handleLogicOf,
+  createRenderer
+} from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
@@ -8,40 +12,38 @@ describe('Independed runner by rendere', () => {
   };
   const SomeBlock = {
     createModel: () => ({ a: 0 }),
-    Logic: {
-      name: "ChildBlock",
+    Logic: class ChildBlock {
       config() {
         return { initCommands: this.UpdateModel() };
-      },
-      @Cmd.update UpdateModel() {
+      }
+      @cmd UpdateModel() {
         return { a: this.model.a + 2 };
-      },
+      }
     },
     View: {}
   };
   const AnotherBlock = {
     createModel: () => ({ a: 0 }),
-    Logic: {
-      name: "AnotherBlock",
+    Logic: class AnotherBlock {
       config() {
-        return { initCommands: this.UpdateModel() };
-      },
-      @Cmd.update UpdateModel() {
+        return { initCommands: this.UpdateModel };
+      }
+      @cmd UpdateModel() {
         return { a: this.model.a + 2 };
-      },
+      }
     },
     View: {}
   };
 
   it('should run and do not re-reun on re-render', async () => {
-    const renderer = Run.createRenderer({ mounter });
+    const renderer = createRenderer({ mounter });
     const model = SomeBlock.createModel();
     let res = null
 
     // First run – should run init
     res = renderer({ model, ...SomeBlock });
     await res.done;
-    await model.__proc.exec(SomeBlock.Logic.UpdateModel);
+    await model.__proc.exec(logicOf(model).UpdateModel);
     expect(model.a).toEqual(4);
 
     // Second run - shouldn't run init
@@ -51,7 +53,7 @@ describe('Independed runner by rendere', () => {
   });
 
   it('should be able to run multiple blocks in the same renderer', async () => {
-    const renderer = Run.createRenderer({ mounter });
+    const renderer = createRenderer({ mounter });
     const modelA = SomeBlock.createModel();
     const modelB = AnotherBlock.createModel();
     let res = null
@@ -59,7 +61,7 @@ describe('Independed runner by rendere', () => {
     // First block
     res = renderer({ model: modelA, ...SomeBlock });
     await res.done;
-    await modelA.__proc.exec(SomeBlock.Logic.UpdateModel);
+    await modelA.__proc.exec(logicOf(modelA).UpdateModel);
     expect(modelB.a).toEqual(0);
     expect(modelA.a).toEqual(4);
 

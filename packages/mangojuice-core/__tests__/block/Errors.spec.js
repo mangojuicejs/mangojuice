@@ -1,4 +1,4 @@
-import { Cmd, Task, Run, Utils } from "mangojuice-core";
+import { cmd, logicOf, depends, child, task, delay } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
@@ -7,24 +7,17 @@ describe('Errors handling', () => {
     const testError = new Error('Ooops!');
     const AppBlock = {
       createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
-      Logic: {
-        name: "AppBlock",
-
-        @Cmd.update
-        SetField(name, value) {
+      Logic: class AppBlock {
+        @cmd SetField(name, value) {
           throw testError;
           return { [name]: value };
-        },
-
-        @Cmd.update
-        SomeBatch(name, value) {
+        }
+        @cmd SomeBatch(name, value) {
           throw testError;
-        },
-
-        @Cmd.task
-        SomeTaskCreator(name, value) {
+        }
+        @cmd SomeTaskCreator(name, value) {
           throw testError;
-        },
+        }
       }
     };
 
@@ -35,7 +28,7 @@ describe('Errors handling', () => {
       });
 
       expect(errors).toHaveLength(0);
-      await app.proc.exec(AppBlock.Logic.SetField("a", 12));
+      await app.proc.exec(logicOf(app.model).SetField("a", 12));
       expect(errors).toHaveLength(1);
       expect(errors[0]).toEqual(testError);
     });
@@ -47,7 +40,7 @@ describe('Errors handling', () => {
       });
 
       expect(errors).toHaveLength(0);
-      await app.proc.exec(AppBlock.Logic.SomeBatch("a", 12));
+      await app.proc.exec(logicOf(app.model).SomeBatch("a", 12));
       expect(errors).toHaveLength(1);
       expect(errors[0]).toEqual(testError);
     });
@@ -59,7 +52,7 @@ describe('Errors handling', () => {
       });
 
       expect(errors).toHaveLength(0);
-      await app.proc.exec(AppBlock.Logic.SomeTaskCreator("a", 12));
+      await app.proc.exec(logicOf(app.model).SomeTaskCreator("a", 12));
       expect(errors).toHaveLength(1);
       expect(errors[0]).toEqual(testError);
     });
@@ -69,28 +62,20 @@ describe('Errors handling', () => {
     const testError = new Error('Ooops!');
     const AppBlock = {
       createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
-      Logic: {
-        name: "AppBlock",
-
-        @Cmd.task
-        SomeTaskCreator(name, value) {
-          return Task.create(async function() {
-            await this.call(Task.delay, 100);
+      Logic: class AppBlock {
+        @cmd SomeTaskCreator(name, value) {
+          return task(async function() {
+            await this.call(delay, 100);
             throw testError;
           });
-        },
-
-        @Cmd.task
-        HandledTaskCreator(name, value) {
-          return Task.create(async function() {
-            await this.call(Task.delay, 100);
+        }
+        @cmd HandledTaskCreator(name, value) {
+          return task(async function() {
+            await this.call(delay, 100);
             throw testError;
           }).fail(this.SomeFailHandler);
-        },
-
-        @Cmd.batch
-        SomeFailHandler() {
         }
+        @cmd SomeFailHandler() {}
       }
     };
 
@@ -101,7 +86,7 @@ describe('Errors handling', () => {
       });
 
       expect(errors).toHaveLength(0);
-      await app.proc.exec(AppBlock.Logic.SomeTaskCreator("a", 12));
+      await app.proc.exec(logicOf(app.model).SomeTaskCreator("a", 12));
       expect(errors).toHaveLength(1);
       expect(errors[0]).toEqual(testError);
     });
@@ -113,7 +98,7 @@ describe('Errors handling', () => {
       });
 
       expect(errors).toHaveLength(0);
-      await app.proc.exec(AppBlock.Logic.HandledTaskCreator("a", 12));
+      await app.proc.exec(logicOf(app.model).HandledTaskCreator("a", 12));
       expect(errors).toHaveLength(0);
       expect(commandNames).toEqual([
         'AppBlock.HandledTaskCreator',
@@ -128,7 +113,7 @@ describe('Errors handling', () => {
     it('should throw an error while running if config have error', async () => {
       const AppBlock = {
         createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
-        Logic: {
+        Logic: class TestLogic {
           config() {
             throw testError;
           }
