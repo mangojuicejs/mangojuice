@@ -105,6 +105,8 @@ function call(fn, ...args) {
       res.cancelled = true;
       reject({ result: null, error: error || cancelError });
     });
+
+    // Handle result
     execRes.result.then(
       result => {
         const successHandler = () => {
