@@ -1,4 +1,4 @@
-import { sym, is, fastTry, ensureError } from "./utils";
+import { sym, is, fastTry, ensureError } from "../utils";
 
 
 /**

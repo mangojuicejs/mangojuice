@@ -1,13 +1,12 @@
-import { DefaultViewMounter } from "mangojuice-core";
 import ViewWrapperCreator from "./ViewWrapper";
+
 
 export default reactImpl => {
   const ViewWrapper = ViewWrapperCreator(reactImpl);
   const { createElement, unmountComponentAtNode, render } = reactImpl;
 
-  class ReactMounter extends DefaultViewMounter {
+  class ReactMounter {
     constructor(containerSelector) {
-      super();
       if (containerSelector) {
         this.container = document.querySelector(containerSelector);
       }

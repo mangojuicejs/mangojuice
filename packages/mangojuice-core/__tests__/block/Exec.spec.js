@@ -1,4 +1,4 @@
-import { cmd, logicOf, depends, child, task, delay } from "mangojuice-core";
+import { cmd, cancel, logicOf, depends, child, task, delay } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
@@ -72,53 +72,13 @@ describe('Exec tasks', () => {
     const { app, commandNames } = await runWithTracking({ app: Block });
     app.proc.exec(logicOf(app.model).SuccessTask);
     await delay(100);
-    await app.proc.exec(logicOf(app.model).SuccessTask.Cancel);
+    await app.proc.exec(cancel(logicOf(app.model).SuccessTask));
+    await delay(10);
 
     expect(commandNames).toEqual([
       'Block.SuccessTask',
-      'Block.SuccessTask.Cancel'
-    ]);
-  });
-
-  it('should manually cancel all tasks across all models', async () => {
-    const Block = {
-      createModel: () => ({}),
-      Logic: class Block {
-        @cmd SuccessTask() {
-          return task(async function() {
-              await this.call(delay, 1000);
-              return { test: 123 };
-            })
-            .success(this.SuccessHandler)
-            .fail(this.FailHandler)
-        }
-        @cmd SuccessHandler() {}
-        @cmd FailHandler() {}
-      }
-    };
-    const runOne = await runWithTracking({ app: Block });
-    const runTwo = await runWithTracking({ app: Block });
-    const runThree = await runWithTracking({ app: Block });
-
-    runOne.app.proc.exec(logicOf(runOne.app.model).SuccessTask);
-    runTwo.app.proc.exec(logicOf(runTwo.app.model).SuccessTask);
-    runThree.app.proc.exec(logicOf(runThree.app.model).SuccessTask);
-    await delay(100);
-    await runThree.app.proc.exec(logicOf(runThree.app.model).SuccessTask.Cancel({ all: true }));
-    await delay(10);
-
-    expect(runOne.commandNames).toEqual([
-      'Block.SuccessTask',
-      'Block.SuccessTask.Cancelled'
-    ]);
-    expect(runTwo.commandNames).toEqual([
-      'Block.SuccessTask',
-      'Block.SuccessTask.Cancelled'
-    ]);
-    expect(runThree.commandNames).toEqual([
-      'Block.SuccessTask',
       'Block.SuccessTask.Cancel',
-      'Block.SuccessTask.Cancelled'
+      'Block.SuccessTask.Cancelled',
     ]);
   });
 
@@ -211,7 +171,7 @@ describe('Exec tasks', () => {
               await this.call(delay, 100);
               return { test: 123 };
             })
-            .execEvery()
+            .multithread()
             .success(this.SuccessHandler)
             .fail(this.FailHandler)
         }
@@ -294,7 +254,7 @@ describe('Exec tasks', () => {
     const promTwo = runTwo.app.proc.exec(logicOf(runTwo.app.model).SuccessTask);
     const promThree = runThree.app.proc.exec(logicOf(runThree.app.model).SuccessTask);
     await delay(100);
-    await runThree.app.proc.exec(logicOf(runThree.app.model).SuccessTask.Cancel());
+    await runThree.app.proc.exec(cancel(logicOf(runThree.app.model).SuccessTask));
     await delay(10);
     await Promise.all([ promOne, promThree, promTwo ]);
 
@@ -322,7 +282,7 @@ describe('Exec tasks', () => {
               await this.call(delay, 500);
               return { test: 123 };
             })
-            .execEvery()
+            .multithread()
             .success(this.SuccessHandler)
             .fail(this.FailHandler)
         }
@@ -339,7 +299,7 @@ describe('Exec tasks', () => {
       runTwo.app.proc.exec(logicOf(runTwo.app.model).SuccessTask)
     ];
     await delay(10);
-    await runOne.app.proc.exec(logicOf(runOne.app.model).SuccessTask.Cancel);
+    await runOne.app.proc.exec(cancel(logicOf(runOne.app.model).SuccessTask));
     await Promise.all(proms);
 
     expect(runTwo.app.model).toEqual({ test: 123 });

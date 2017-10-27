@@ -1,3 +1,6 @@
+import DependsDef from '../../classes/DependsDef';
+
+
 /**
  * Returns an object which describes compute function
  * and its dependencies to track changes.
@@ -5,14 +8,7 @@
  * @return {object}
  */
 export function depends(...deps) {
-  return {
-    computeFn: noop,
-    deps: deps,
-    compute(func) {
-      this.computeFn = func;
-      return this;
-    }
-  };
+  return new DependsDef(deps)
 }
 
 export default depends;

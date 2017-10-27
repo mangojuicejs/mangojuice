@@ -8,8 +8,8 @@ import { extend, is, emptyArray, nextId } from '../core/utils';
  * @param {String} name [description]
  * @param {Object} opts
  */
-export function Command(func, args, name, opts) {
-  this.id = func.$$cmdId || nextId();
+function Command(func, args, name, opts) {
+  this.id = (func && func.__cmdId) || nextId();
   this.funcName = name;
   this.func = func;
   this.opts = opts;
@@ -20,15 +20,11 @@ export function Command(func, args, name, opts) {
 extend(Command.prototype, {
   /**
    * Execute function incapsulated to the command in scope
-   * of given logic object. Also append logic name to the name
-   * of the command.
-   * @param  {Object} logic
+   * of logic object.
    * @return {any}
    */
-  exec(logic) {
-    const ctxName = logic && logic.constructor.name;
-    this.name = ctxName ? `${ctxName}.${funcName}` : funcName;
-    return this.func && this.func.call(logic, ...this.args);
+  exec() {
+    return this.func && this.func.call(this.logic, ...this.args);
   },
 
   /**
@@ -36,7 +32,11 @@ extend(Command.prototype, {
    * @return {Command}
    */
   clone() {
-    return new Command(this.func, this.args, this.opts, this.funcName);
+    const cmd = new Command(this.func, this.args, this.funcName, this.opts);
+    cmd.name = this.name;
+    cmd.model = this.model;
+    cmd.logic = this.logic;
+    return cmd;
   },
 
   /**
@@ -48,11 +48,12 @@ extend(Command.prototype, {
    * @param  {Object}  model
    * @return {Boolean}
    */
-  is(cmd, model) {
+  is(cmd, childModel) {
+    const { func, name, model } = this;
     return (
       cmd &&
-      (this.func === cmd || this.func === cmd.func || this.name === cmd) &&
-      (!model || this.model === model)
+      (func === cmd || func === cmd.func || name === cmd) &&
+      (!childModel || childModel === model)
     );
   },
 
@@ -62,6 +63,19 @@ extend(Command.prototype, {
    */
   appendArgs(args) {
     this.args = [].concat(this.args, args);
+    return this;
+  },
+
+  /**
+   * Bind command to specified logic
+   * @param  {object} logic
+   */
+  bind(logic) {
+    const ctxName = logic && logic.constructor.name;
+    this.name = ctxName ? `${ctxName}.${this.funcName}` : this.funcName;
+    this.model = (logic && logic.model) || this.model;
+    this.logic = logic;
+    return this;
   }
 });
 

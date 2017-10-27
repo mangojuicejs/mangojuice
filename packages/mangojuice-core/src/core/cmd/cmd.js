@@ -3,28 +3,54 @@ import Command from '../../classes/Command';
 import ensureCommand from './ensureCommand';
 
 
+/**
+ * Creates a Command factory function, which makes a command
+ * binded to a model from given context.
+ * @param  {string} name
+ * @param  {function} func
+ * @param  {object} ctx
+ * @param  {?object} opts
+ * @return {function}
+ */
 function createCommandFactory(name, func, ctx, opts) {
-  const id = func.$$cmdId || nextId();
+  const id = func.__cmdId || nextId();
   const creator = function(...args) {
     const cmd = new Command(func, args, name, opts);
-    cmd.model = ctx && ctx.model;
+    cmd.bind(ctx);
     return cmd;
   }
 
-  func.$$cmdId = id;
+  func.__cmdId = id;
   creator.id = id;
   creator.func = func;
   return creator;
 }
 
-export function cmd(obj, ...args) {
+/**
+ * Function can be used as a decorator or as a regular function
+ * to create a Command factory function for makeing a command to
+ * execute decorated (or given as first argument) function.
+ * @param  {object|function}    obj
+ * @param  {string} name
+ * @param  {object} descr
+ * @return {object|function}
+ */
+export function cmd(obj, name, descr) {
   if (is.func(obj)) {
     return createCommandFactory(obj.name, obj);
   }
   return {
     configurable: true,
     enumerable: true,
-    value: createCommandFactory(name, descr.value, ctx)
+    get() {
+      const factory = createCommandFactory(name, descr.value, this);
+      Object.defineProperty(this, name, {
+        value: factory,
+        configurable: true,
+        enumerable: true
+      });
+      return factory;
+    }
   };
 }
 

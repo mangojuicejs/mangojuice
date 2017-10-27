@@ -1,4 +1,4 @@
-import { Cmd, Task } from "mangojuice-core";
+import { child, cmd, logicOf } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 import createMemoryHistory from "history/createMemoryHistory";
 import Router from "mangojuice-router";
@@ -9,19 +9,18 @@ const createSharedBlock = (rootRoutes, historyOpts = {}) => {
     createModel: () => ({
       router: Router.createModel()
     }),
-    Logic: {
-      name: "SharedBlock",
+    Logic: class SharedBlock {
       children() {
         return {
-          router: this.nest(Router.createLogic(rootRoutes))
+          router: child(Router.Logic)
             .handler(this.HandleRouter)
-            .args({ createHistory: createMemoryHistory.bind(null, historyOpts) })
-            .singleton()
+            .args({
+              route: rootRoutes,
+              createHistory: createMemoryHistory.bind(null, historyOpts)
+            })
         };
-      },
-      @Cmd.batch
-      HandleRouter() {
       }
+      @cmd HandleRouter() {}
     }
   };
   return SharedBlock;
@@ -88,7 +87,7 @@ describe("Router basic usage cases", () => {
     const SharedBlock = createSharedBlock(MainRoutes);
     const { app, commandNames } = await runWithTracking({ app: SharedBlock });
 
-    await app.proc.exec(NewsRoutes.Category({ category: '321' }));
+    await app.proc.exec(logicOf(app.model).Go(NewsRoutes.Category({ category: '321' })));
 
     expect(Router.isChanged(app.model.router, MainRoutes.News)).toBeTruthy();
     expect(Router.isChanged(app.model.router, NewsRoutes.Category)).toBeTruthy();
@@ -104,7 +103,7 @@ describe("Router basic usage cases", () => {
     const SharedBlock = createSharedBlock(MainRoutes);
     const { app, commandNames } = await runWithTracking({ app: SharedBlock });
 
-    const cmd = NewsRoutes.Category({ category: '321' });
+    const cmd = logicOf(app.model).Go(NewsRoutes.Category({ category: '321' }));
     const link = Router.link(app.model.router, cmd);
 
     expect(link).toEqual({ onClick: cmd, href: '/news/321/' });

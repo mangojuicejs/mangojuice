@@ -59,11 +59,9 @@ export default (reactImpl) => {
       // Convert commands to handler functions, which will
       // execute command in current context
       for (let k in props) {
-        if (
-          props[k] && props[k].id &&
-          ((props[k].Before && props[k].After) || props[k].isCmd)
-        ) {
-          props[k] = context.exec(props[k]);
+        const cmd = props[k];
+        if (cmd && cmd.id && cmd.func) {
+          props[k] = context.exec(cmd);
         }
       }
 

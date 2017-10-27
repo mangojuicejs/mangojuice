@@ -1,6 +1,6 @@
 import createBrowserHistory from "history/createBrowserHistory";
 import qs from "qs";
-import { Cmd, Utils } from "mangojuice-core";
+import { cmd, utils } from "mangojuice-core";
 import { createRouteMaps, findFirstPath } from './Utils';
 
 
@@ -14,7 +14,7 @@ const flattenRoutesTree = (routesTree, res = {}) => {
   for (const k in routesTree) {
     const cmd = routesTree[k];
     if (cmd && cmd.routeId) {
-      res[`Route_${Utils.nextId()}`] = cmd;
+      res[`Route_${utils.nextId()}`] = cmd;
       if (cmd.children) {
         flattenRoutesTree(cmd.children, res);
       }
@@ -28,43 +28,39 @@ const flattenRoutesTree = (routesTree, res = {}) => {
  * @param  {Object} routesTree
  * @return {Object}
  */
-export const createLogic = (routesTree) => ({
-  ...flattenRoutesTree(routesTree),
-  name: "Router",
-
-  config({ request, createHistory = createBrowserHistory } = {}) {
-    const routes = createRouteMaps(this);
+class Router {
+  config({ request, createHistory = createBrowserHistory, routes } = {}) {
+    const routesMap = createRouteMaps(routes);
     const history = request ? null : createHistory();
     return {
-      meta: { routes, history, request }
+      meta: { routes: routesMap, history, request }
     };
-  },
+  }
 
-  port() {
-    const { exec, meta, destroy } = this;
+  port({ exec, destroy }) {
+    const { meta: { history, routes, request } } = this;
     const handleHistoryChange = location =>
       exec(this.HandleLocationChange(location));
 
-    if (meta.history) {
-      const defaultRoute = meta.routes.roots.find(
+    if (history) {
+      const defaultRoute = routes.roots.find(
         x => x && x.routeId && x.options && x.options.default
       );
-      if (defaultRoute && meta.history.location.pathname === "/") {
-        meta.history.replace(defaultRoute.pattern + meta.history.location.search);
+      if (defaultRoute && history.location.pathname === "/") {
+        history.replace(defaultRoute.pattern + history.location.search);
       }
-      const unlisten = meta.history.listen(handleHistoryChange);
+      const unlisten = history.listen(handleHistoryChange);
       destroy.then(unlisten);
     }
 
-    const initLocation = meta.request
-      ? meta.request.location
-      : meta.history.location;
+    const initLocation = request
+      ? request.location
+      : history.location;
 
     return handleHistoryChange(initLocation);
-  },
+  }
 
-  @Cmd.batch
-  HandleLocationChange(location) {
+  @cmd HandleLocationChange(location) {
     const firstPath = findFirstPath(this.meta.routes, location.pathname);
     const active = {};
     const changedRoutes = {};
@@ -104,20 +100,17 @@ export const createLogic = (routesTree) => ({
       changedRoutes,
       appearedOnce
     });
-  },
+  }
 
-  @Cmd.batch
-  UpdateRouter(newValues) {
+  @cmd UpdateRouter(newValues) {
     return this.DoUpdateRouter(newValues);
-  },
+  }
 
-  @Cmd.update
-  DoUpdateRouter(newValues) {
+  @cmd DoUpdateRouter(newValues) {
     return newValues;
-  },
+  }
 
-  @Cmd.update
-  Query(query = {}, { replace, keep } = {}) {
+  @cmd Query(query = {}, { replace, keep } = {}) {
     const newQuery = keep ? { ...query, ...this.model.query } : query;
     const location = this.meta.history.location;
 
@@ -126,4 +119,6 @@ export const createLogic = (routesTree) => ({
       search: qs.stringify(newQuery)
     });
   }
-});
+}
+
+export default Router;

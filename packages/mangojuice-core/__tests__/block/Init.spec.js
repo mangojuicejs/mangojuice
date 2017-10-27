@@ -46,8 +46,8 @@ describe("Init commands execution", () => {
       }
       children() {
         return {
-          b_1: child(BlockB.Logic).handler(this.HandleB_1),
-          b_2: child(BlockB.Logic).handler(this.HandleB_2)
+          b_1: child(BlockB.Logic).beforeHandler(this.HandleB_1).afterHandler(this.HandleB_11),
+          b_2: child(BlockB.Logic).beforeHandler(this.HandleB_2).afterHandler(this.HandleB_22)
         }
       }
       port({ destroy, exec }) {
@@ -76,7 +76,9 @@ describe("Init commands execution", () => {
       @cmd FromInitTwoCmd() {}
       @cmd FromSubCmd() {}
       @cmd HandleB_1() {}
+      @cmd HandleB_11() {}
       @cmd HandleB_2() {}
+      @cmd HandleB_22() {}
     }
   };
 
@@ -92,10 +94,10 @@ describe("Init commands execution", () => {
       "SharedBlock.FromInitOneCmd",
       "BlockB.FromInitOneCmd",
       "BlockA.HandleB_1",
-      "BlockA.HandleB_1",
+      "BlockA.HandleB_11",
       "BlockB.FromInitOneCmd",
       "BlockA.HandleB_2",
-      "BlockA.HandleB_2",
+      "BlockA.HandleB_22",
       "BlockA.FromSubCmd",
       "BlockA.FromPortCmd",
       "BlockA.FromPortCmd_1",
@@ -104,6 +106,7 @@ describe("Init commands execution", () => {
       "BlockA.FromInitOneCmd",
       "BlockA.FromInitTwoCmd",
       "SharedBlock.FromPortAsync_Success",
+      "BlockA.FromSubCmd",
       "BlockA.FromPortAsync_Success"
     ]);
   });

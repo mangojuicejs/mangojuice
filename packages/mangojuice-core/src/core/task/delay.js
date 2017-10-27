@@ -1,4 +1,4 @@
-import { CANCEL } from './task';
+import { CANCEL } from './callTask';
 
 
 /**

@@ -4,6 +4,15 @@ import { Utils, Cmd } from "mangojuice-core";
 
 
 /**
+ * Returns list of values of given object or empty array
+ * @param  {?Object} obj
+ * @return {Array}
+ */
+export const objectValues = (obj) => {
+  return obj ? Object.keys(obj).map(k => obj[k]) : [];
+};
+
+/**
  * By given router model and command object creates
  * a href value that can be used to set in `href` of
  * a link or to push/replace in history
@@ -132,7 +141,7 @@ export const createRouteMaps = (commandsObj) => {
     map[r.routeId] = matcher;
 
     if (r.children) {
-      children[r.routeId] = Utils.objectValues(r.children);
+      children[r.routeId] = objectValues(r.children);
       for (let k in r.children) {
         if (r.children[k] && r.children[k].routeId) {
           parents[r.children[k].routeId] = r.routeId;

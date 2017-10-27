@@ -10,17 +10,17 @@ import { is } from '../utils';
  * @param  {...any} args
  * @return {Command}
  */
-export function ensureCommand(cmd, ...args) => {
+function ensureCommand(cmd, ...args) {
   if (!cmd) return null;
-  if (!cmd.isCmd) {
-    if (is.func(cmd)) {
-      if (cmd.func) {
-        return cmd(...args);
-      } else {
-        return new Command(cmd, args, cmd.name);
-      }
+  if (cmd instanceof Command) return cmd;
+  if (is.func(cmd)) {
+    if (cmd.func) {
+      return cmd(...args);
+    } else {
+      return new Command(cmd, args, cmd.name);
     }
-    throw new Error("You passed something weird instead of cmd");
   }
-  return cmd;
+  throw new Error("You passed something weird instead of cmd");
 };
+
+export default ensureCommand;

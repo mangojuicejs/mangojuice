@@ -1,13 +1,14 @@
-import { Run, DefaultLogger } from "mangojuice-core";
+import { bind, DefaultLogger } from "mangojuice-core";
 
 
-export const runWithTracking = async (props) => {
+export const runWithTracking = async ({ expectErrors, app, shared } = {}) => {
   const commands = [];
   const commandNames = [];
   const errors = [];
+
   class TrackerLogger extends DefaultLogger {
     onCatchError(e) {
-      if (!props.expectErrors) {
+      if (!expectErrors) {
         throw e;
       }
       errors.push(e);
@@ -17,16 +18,23 @@ export const runWithTracking = async (props) => {
       commandNames.push(cmd.name);
     }
   }
-  const res = Run.run({
-    ...props,
-    logger: TrackerLogger
+
+  const sharedBind = shared && bind(shared, { logger: new TrackerLogger() });
+  const appBind = app && bind(app, {
+    logger: new TrackerLogger(),
+    shared: sharedBind && sharedBind.model
   });
-  await Promise.all([res.app.run, res.shared.run]);
+
+  await Promise.all([
+    sharedBind && sharedBind.proc.run(),
+    appBind && appBind.proc.run()
+  ]);
 
   return {
     commandNames,
     commands,
     errors,
-    ...res
+    app: appBind,
+    shared: sharedBind
   };
 };

@@ -1,4 +1,4 @@
-import { cmd, logicOf, depends, child, task, delay, handleLogicOf } from "mangojuice-core";
+import { cmd, logicOf, depends, child, task, delay, handleLogicOf, procOf } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
@@ -99,8 +99,8 @@ import { runWithTracking } from "mangojuice-test";
     expect(app.model.child_2).toBeNull();
     expect(oldArr[0].deleted).toBeTruthy();
     expect(oldChild_2.deleted).toBeTruthy();
-    expect(oldArr[0].__proc).not.toBeDefined();
-    expect(oldChild_2.__proc).not.toBeDefined();
+    expect(procOf(oldArr[0], true)).not.toBeDefined();
+    expect(procOf(oldChild_2, true)).not.toBeDefined();
   });
 
   it("should handle removing a whole child array", async () => {
@@ -140,23 +140,37 @@ import { runWithTracking } from "mangojuice-test";
           return { [name]: this.model[name] + value };
         }
         @cmd HandleChange(cmd) {
-          if (cmd.is(this.Increment.Before, this.model.recursive)) {
+          if (cmd.is(this.Increment, this.model.recursive)) {
             return this.Increment('a', cmd.args[1]);
           }
         }
       }
     };
 
-    const { app } = await runWithTracking({ app: RecursiveBlock });
+    const { app, commandNames } = await runWithTracking({ app: RecursiveBlock });
 
-    await app.proc.exec(logicOf(app.model).SetField('recursive',
-      RecursiveBlock.createModel()));
-    await app.model.recursive.__proc.exec(logicOf(app.model.recursive).SetField('recursive',
-      RecursiveBlock.createModel()));
-    await app.model.recursive.recursive.__proc.exec(logicOf(app.model.recursive.recursive).Increment('a', 2));
-    await app.model.recursive.__proc.exec(logicOf(app.model.recursive).Increment('a', 3));
+    await app.proc.exec(logicOf(app.model).SetField('recursive', RecursiveBlock.createModel()));
+    await procOf(app.model.recursive).exec(logicOf(app.model.recursive).SetField('recursive', RecursiveBlock.createModel()));
+    await procOf(app.model.recursive.recursive).exec(logicOf(app.model.recursive.recursive).Increment('a', 2));
+    await procOf(app.model.recursive).exec(logicOf(app.model.recursive).Increment('a', 3));
     await app.proc.exec(logicOf(app.model).Increment('a', 4));
 
+    expect(commandNames).toEqual([
+      'AppBlock.SetField',
+      'AppBlock.SetField',
+      'AppBlock.HandleChange',
+      'AppBlock.Increment',
+      'AppBlock.HandleChange',
+      'AppBlock.HandleChange',
+      'AppBlock.Increment',
+      'AppBlock.HandleChange',
+      'AppBlock.Increment',
+      'AppBlock.HandleChange',
+      'AppBlock.Increment',
+      'AppBlock.HandleChange',
+      'AppBlock.Increment',
+      'AppBlock.Increment'
+    ]);
     expect(app.model.a).toEqual(9);
     expect(app.model.recursive.a).toEqual(5);
     expect(app.model.recursive.recursive.a).toEqual(2);

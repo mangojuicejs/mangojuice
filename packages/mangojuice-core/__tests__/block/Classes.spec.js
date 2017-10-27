@@ -6,10 +6,7 @@ describe('Loigc as a class', () => {
   class AppLogic {
     computed() {
       const { model, shared } = this;
-      return {
-        c: () => model.a + model.b,
-        d: depends(shared).compute(() => model.a + shared.e)
-      };
+      return { c: () => model.a + model.b };
     }
     @cmd SetField(name, value) {
       return { [name]: value };

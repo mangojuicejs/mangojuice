@@ -1,22 +1,21 @@
-import { Cmd, Task, Run, Utils } from "mangojuice-core";
+import { child, cmd, logicOf, procOf, delay } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 import MounterCore from 'mangojuice-react-core';
 
 
 export default (React, MounterClass, implName) => {
-  const AppBlock = {
+  const AppBlockObj = {
     createModel: (props) => ({
       a: 'test',
       nested: null,
       ...props
     }),
-    Logic: {
-      name: 'AppBlock',
+    Logic: class AppBlock {
       children() {
-        return { nested: this.nest(AppBlock.Logic) };
-      },
-      @Cmd.nope TestAction() {},
-      @Cmd.update UpdateModel(name, val) {
+        return { nested: child(AppBlockObj.Logic) };
+      }
+      @cmd TestAction() {}
+      @cmd UpdateModel(name, val) {
         return { [name]: val };
       }
     }
@@ -36,12 +35,12 @@ export default (React, MounterClass, implName) => {
     });
 
     it('shuold render a stateless view of a block', async () => {
-      const SimpleView = ({ model }) => (
-        <span id="button" onClick={AppBlock.Logic.TestAction}>
+      const SimpleView = ({ model }, { Logic }) => (
+        <span id="button" onClick={Logic.TestAction}>
           {model.a}
         </span>
       );
-      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
       const res = mounter.mount(app.proc, SimpleView);
 
       const buttonElem = document.getElementById('button');
@@ -56,13 +55,13 @@ export default (React, MounterClass, implName) => {
       class SimpleView extends React.Component {
         render() {
           return (
-            <span id="button" onClick={AppBlock.Logic.TestAction}>
+            <span id="button" onClick={this.context.Logic.TestAction}>
               {this.props.model.a}
             </span>
           );
         }
       }
-      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
       const res = mounter.mount(app.proc, SimpleView);
 
       const buttonElem = document.getElementById('button');
@@ -74,8 +73,8 @@ export default (React, MounterClass, implName) => {
     });
 
     it('should propagate context to children components of same model', async () => {
-      const ChildView = ({ model }) => (
-        <span id="button" onClick={AppBlock.Logic.TestAction}>
+      const ChildView = ({ model }, { Logic }) => (
+        <span id="button" onClick={Logic.TestAction}>
           {model.a}
         </span>
       );
@@ -84,7 +83,7 @@ export default (React, MounterClass, implName) => {
           <ChildView model={model} />
         </span>
       );
-      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
       const res = mounter.mount(app.proc, SimpleView);
 
       const buttonElem = document.getElementById('button');
@@ -96,8 +95,8 @@ export default (React, MounterClass, implName) => {
     });
 
     it('should pass other props with model', async () => {
-      const ChildView = ({ model, prop }) => (
-        <span id="button" onClick={AppBlock.Logic.TestAction}>
+      const ChildView = ({ model, prop }, { Logic }) => (
+        <span id="button" onClick={Logic.TestAction}>
           <span>{model.a}</span><span>{prop}</span>
         </span>
       );
@@ -106,7 +105,7 @@ export default (React, MounterClass, implName) => {
           <ChildView model={model} prop="test" />
         </span>
       );
-      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
       const res = mounter.mount(app.proc, SimpleView);
 
       const buttonElem = document.getElementById('button');
@@ -127,7 +126,7 @@ export default (React, MounterClass, implName) => {
           return (
             <span id="parent" onClick={this.changeState}>
               <span id="model">{this.props.model.a}</span>
-              <span id="button" onClick={AppBlock.Logic.TestAction}>
+              <span id="button" onClick={this.context.Logic.TestAction}>
                 {this.state.test}
               </span>
             </span>
@@ -139,7 +138,7 @@ export default (React, MounterClass, implName) => {
           <ChildView model={model} prop="test" />
         </span>
       );
-      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
       const res = mounter.mount(app.proc, SimpleView);
 
       const parentElem = document.getElementById('parent');
@@ -148,7 +147,7 @@ export default (React, MounterClass, implName) => {
       buttonElem.click();
 
       // For react implementations with async update queue
-      await Task.delay(10);
+      await delay(10);
 
       expect(buttonElem).toBeDefined();
       expect(document.getElementById('model').innerHTML).toEqual('test');
@@ -157,12 +156,12 @@ export default (React, MounterClass, implName) => {
     });
 
     it('shuold update view when model changed for stateless', async () => {
-      const SimpleView = ({ model }) => (
-        <span id="button" onClick={AppBlock.Logic.UpdateModel('a', 'updated')}>
+      const SimpleView = ({ model }, { Logic }) => (
+        <span id="button" onClick={Logic.UpdateModel('a', 'updated')}>
           {model.a}
         </span>
       );
-      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
       const res = mounter.mount(app.proc, SimpleView);
 
       let buttonElem = document.getElementById('button');
@@ -178,13 +177,13 @@ export default (React, MounterClass, implName) => {
       class SimpleView extends React.Component {
         render() {
           return (
-            <span id="button" onClick={AppBlock.Logic.UpdateModel('a', 'updated')}>
+            <span id="button" onClick={this.context.Logic.UpdateModel('a', 'updated')}>
               {this.props.model.a}
             </span>
           );
         }
       }
-      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
       const res = mounter.mount(app.proc, SimpleView);
 
       let buttonElem = document.getElementById('button');
@@ -197,12 +196,12 @@ export default (React, MounterClass, implName) => {
     });
 
     it('shuold provide exec in context for stateless', async () => {
-      const SimpleView = ({ model }, { exec }) => (
-        <span id="button" onClick={exec(AppBlock.Logic.TestAction)}>
+      const SimpleView = ({ model }, { exec, Logic }) => (
+        <span id="button" onClick={exec(Logic.TestAction)}>
           {model.a}
         </span>
       );
-      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
       const res = mounter.mount(app.proc, SimpleView);
 
       const buttonElem = document.getElementById('button');
@@ -216,15 +215,15 @@ export default (React, MounterClass, implName) => {
     it('shuold provide exec in context for statefull', async () => {
       class SimpleView extends React.Component {
         render() {
-          const { exec } = this.context;
+          const { exec, Logic } = this.context;
           return (
-            <span id="button" onClick={exec(AppBlock.Logic.TestAction)}>
+            <span id="button" onClick={exec(Logic.TestAction)}>
               {this.props.model.a}
             </span>
           );
         }
       }
-      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
       const res = mounter.mount(app.proc, SimpleView);
 
       const buttonElem = document.getElementById('button');
@@ -235,37 +234,18 @@ export default (React, MounterClass, implName) => {
       expect(commandNames).toEqual([ 'AppBlock.TestAction' ]);
     });
 
-    // Failed for preact for some reason
-    // it('shuold reset context even if error occured while rendering', async () => {
-    //   const SimpleView = ({ model }) => {
-    //     <>
-    //     throw new Error('Ooops')
-    //   };
-    //   const { app, commandNames } = await runWithTracking({ app: AppBlock });
-
-    //   const oldContext = { a: 'b' };
-    //   MounterCore.ViewRenderContext.setContext(oldContext);
-    //   try {
-    //     mounter.mount(app.proc, SimpleView);
-    //   } catch (e) {
-    //   }
-
-    //   await Task.delay(10);
-    //   expect(MounterCore.ViewRenderContext.getContext()).toEqual(oldContext);
-    // });
-
     it('shuold reset context even if error occured while re-rendering', async () => {
-      const SimpleView = ({ model }) => {
+      const SimpleView = ({ model }, { Logic }) => {
         if (model.a === 'updated') {
           throw new Error('Ooops');
         }
         return (
-          <span id="button" onClick={AppBlock.Logic.UpdateModel('a', 'updated')}>
+          <span id="button" onClick={Logic.UpdateModel('a', 'updated')}>
             {model.a}
           </span>
         );
       };
-      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
       const res = mounter.mount(app.proc, SimpleView);
 
       let buttonElem = document.getElementById('button');
@@ -281,8 +261,8 @@ export default (React, MounterClass, implName) => {
     });
 
     it('shuold render view for nested block', async () => {
-      const NestedView = jest.fn(({ model }) => (
-        <span id="nested" onClick={AppBlock.Logic.UpdateModel('c', 'block')}>
+      const NestedView = jest.fn(({ model }, { Logic }) => (
+        <span id="nested" onClick={Logic.UpdateModel('c', 'block')}>
           <span>{model.b}</span>
           <span>{model.c}</span>
         </span>
@@ -293,10 +273,10 @@ export default (React, MounterClass, implName) => {
           {model.nested && <NestedView model={model.nested} />}
         </span>
       ));
-      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
       const res = mounter.mount(app.proc, SimpleView);
 
-      await app.proc.exec(AppBlock.Logic.UpdateModel('nested', AppBlock.createModel({ b: 'nested' })));
+      await app.proc.exec(logicOf(app.model).UpdateModel('nested', AppBlockObj.createModel({ b: 'nested' })));
       const nestedElem = document.getElementById('nested');
       nestedElem.click();
 
@@ -309,8 +289,8 @@ export default (React, MounterClass, implName) => {
     });
 
     it('shuold updated views of different models independently', async () => {
-      const NestedView = jest.fn(({ model }) => (
-        <span id="nested" onClick={AppBlock.Logic.UpdateModel('c', 'block')}>
+      const NestedView = jest.fn(({ model }, { Logic }) => (
+        <span id="nested" onClick={Logic.UpdateModel('c', 'block')}>
           <span>{model.b}</span>
           <span>{model.c}</span>
         </span>
@@ -321,15 +301,15 @@ export default (React, MounterClass, implName) => {
           {model.nested && <NestedView model={model.nested} />}
         </span>
       ));
-      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
       const res = mounter.mount(app.proc, SimpleView);
 
-      await app.proc.exec(AppBlock.Logic.UpdateModel('nested', AppBlock.createModel({ b: 'nested' })));
+      await app.proc.exec(logicOf(app.model).UpdateModel('nested', AppBlockObj.createModel({ b: 'nested' })));
       const nestedElem = document.getElementById('nested');
       const parentElem = document.getElementById('parent');
       nestedElem.click();
 
-      await app.proc.exec(AppBlock.Logic.UpdateModel('a', 'test2'));
+      await app.proc.exec(logicOf(app.model).UpdateModel('a', 'test2'));
 
       expect(nestedElem).toBeDefined();
       expect(nestedElem.innerHTML).toEqual('<span>nested</span><span>block</span>');
@@ -357,20 +337,20 @@ export default (React, MounterClass, implName) => {
           return <span id="counter">{this.counter}</span>
         }
       }
-      const SimpleView = ({ model }) => (
+      const SimpleView = ({ model }, { Logic }) => (
         <span id="button">
           <span id="parent">{model.a}</span>
           <NestedView
-            onClick={AppBlock.Logic.TestAction}
-            onPing={AppBlock.Logic.TestAction('1', {})}
+            onClick={Logic.TestAction}
+            onPing={Logic.TestAction('1', {})}
           />
         </span>
       );
-      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
       const res = mounter.mount(app.proc, SimpleView);
 
-      await app.proc.exec(AppBlock.Logic.UpdateModel('a', 'test2'));
-      await app.proc.exec(AppBlock.Logic.UpdateModel('a', 'test3'));
+      await app.proc.exec(logicOf(app.model).UpdateModel('a', 'test2'));
+      await app.proc.exec(logicOf(app.model).UpdateModel('a', 'test3'));
       const parentElem = document.getElementById('parent');
       const counterElem = document.getElementById('counter');
 

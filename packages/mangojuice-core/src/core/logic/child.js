@@ -1,4 +1,4 @@
-import { ensureCmdObject } from './cmd';
+import ChildLogic from '../../classes/ChildLogic';
 
 
 /**
@@ -8,14 +8,7 @@ import { ensureCmdObject } from './cmd';
  * @return {Object}
  */
 export function child(logic, ...args) {
-  return {
-    logic,
-    configArgs: args,
-    handler(handler) {
-      this.execHandler = ensureCmdObject(handler);
-      return this;
-    }
-  };
+  return new ChildLogic(logic, args);
 }
 
 export default child;
