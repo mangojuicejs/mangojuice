@@ -413,14 +413,16 @@ function handleCommand(proc, cmd, isBefore) {
   const type = isBefore ? 'beforeCmd' : 'afterCmd';
   const resPromise = createResultPromise();
 
-  logger.onStartHandling(cmd, isBefore);
-  iterateHandlers(proc, type, (handlerProc, handler) => {
-    const handlerCmd = handler.clone().appendArgs([cmd]);
-    handlerCmd.isHandler = true;
-    const execRes = handlerProc.exec(handlerCmd);
-    resPromise.add(execRes);
-  })
-  logger.onEndHandling(cmd, isBefore);
+  if (cmd.handlable) {
+    logger.onStartHandling(cmd, isBefore);
+    iterateHandlers(proc, type, (handlerProc, handler) => {
+      const handlerCmd = handler.clone().appendArgs([cmd]);
+      handlerCmd.isHandler = true;
+      const execRes = handlerProc.exec(handlerCmd);
+      resPromise.add(execRes);
+    })
+    logger.onEndHandling(cmd, isBefore);
+  }
 
   return resPromise.get();
 }

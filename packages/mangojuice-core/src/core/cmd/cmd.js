@@ -16,6 +16,7 @@ function createCommandFactory(name, func, ctx, opts) {
   const id = func.__cmdId || nextId();
   const creator = function(...args) {
     const cmd = new Command(func, args, name, opts);
+    cmd.handlable = creator.handlable;
     cmd.bind(ctx);
     return cmd;
   }
@@ -23,6 +24,7 @@ function createCommandFactory(name, func, ctx, opts) {
   func.__cmdId = id;
   creator.id = id;
   creator.func = func;
+  creator.handlable = true;
   return creator;
 }
 
@@ -37,7 +39,7 @@ function createCommandFactory(name, func, ctx, opts) {
  */
 export function cmd(obj, name, descr) {
   if (is.func(obj)) {
-    return createCommandFactory(obj.name, obj);
+    return createCommandFactory(obj.name, obj, name, descr);
   }
   return {
     configurable: true,
@@ -45,9 +47,9 @@ export function cmd(obj, name, descr) {
     get() {
       const factory = createCommandFactory(name, descr.value, this);
       Object.defineProperty(this, name, {
-        value: factory,
         configurable: true,
-        enumerable: true
+        enumerable: true,
+        value: factory
       });
       return factory;
     }

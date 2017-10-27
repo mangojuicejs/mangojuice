@@ -36,6 +36,7 @@ extend(Command.prototype, {
     cmd.name = this.name;
     cmd.model = this.model;
     cmd.logic = this.logic;
+    cmd.handlable = this.handlable;
     return cmd;
   },
 
@@ -52,7 +53,7 @@ extend(Command.prototype, {
     const { func, name, model } = this;
     return (
       cmd &&
-      (func === cmd || func === cmd.func || name === cmd) &&
+      (func === cmd.func || func === cmd || name === cmd) &&
       (!childModel || childModel === model)
     );
   },

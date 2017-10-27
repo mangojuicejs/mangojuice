@@ -5,6 +5,7 @@ import cmd from "./core/cmd/cmd";
 import cancel from "./core/cmd/cancel";
 import debounce from "./core/cmd/debounce";
 import throttle from "./core/cmd/throttle";
+import nonhandlable from "./core/cmd/nonhandlable";
 import ensureCommand from "./core/cmd/ensureCommand";
 import child from "./core/logic/child";
 import depends from "./core/logic/depends";
@@ -33,9 +34,10 @@ export {
   // Core
   cmd,
   cancel,
-  ensureCommand,
+  nonhandlable,
   debounce,
   throttle,
+  ensureCommand,
   child,
   depends,
   handleLogicOf,
