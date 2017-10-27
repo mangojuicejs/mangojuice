@@ -1,27 +1,8 @@
 import createBrowserHistory from "history/createBrowserHistory";
 import qs from "qs";
 import { cmd, utils } from "mangojuice-core";
-import { createRouteMaps, findFirstPath } from './Utils';
+import { createRouteMaps, findFirstPath, createHref } from './Utils';
 
-
-/**
- * Flatten routes tree and returns an object where each
- * key is a unique path name
- * @param  {Object} routesTree
- * @return {Object}
- */
-const flattenRoutesTree = (routesTree, res = {}) => {
-  for (const k in routesTree) {
-    const cmd = routesTree[k];
-    if (cmd && cmd.routeId) {
-      res[`Route_${utils.nextId()}`] = cmd;
-      if (cmd.children) {
-        flattenRoutesTree(cmd.children, res);
-      }
-    }
-  }
-  return res;
-};
 
 /**
  * By given routes tree create a Router logic and returns it
@@ -44,7 +25,7 @@ class Router {
 
     if (history) {
       const defaultRoute = routes.roots.find(
-        x => x && x.routeId && x.options && x.options.default
+        x => x && x.routeId && x.config && x.config.default
       );
       if (defaultRoute && history.location.pathname === "/") {
         history.replace(defaultRoute.pattern + history.location.search);
@@ -110,14 +91,21 @@ class Router {
     return newValues;
   }
 
-  @cmd Query(query = {}, { replace, keep } = {}) {
-    const newQuery = keep ? { ...query, ...this.model.query } : query;
-    const location = this.meta.history.location;
+  @cmd Push(route, e) {
+    e && e.preventDefault();
+    return this.ChangeHistory(route, { replace: false });
+  }
 
-    this.meta.history[replace ? "replace" : "push"]({
-      ...location,
-      search: qs.stringify(newQuery)
-    });
+  @cmd Replace(route, e) {
+    e && e.preventDefault();
+    return this.ChangeHistory(route, { replace: true });
+  }
+
+  @cmd ChangeHistory(route, opts = {}) {
+    const changeType = opts.replace ? "replace" : "push";
+    const updateHistory = this.meta.history[changeType];
+    const nextUrl = createHref(this.model, this.meta, route);
+    updateHistory(nextUrl);
   }
 }
 

@@ -42,6 +42,16 @@ extend(ChildLogic.prototype, {
   afterHandler(handler) {
     this.afterCmd = ensureCommand(handler);
     return this;
+  },
+
+  /**
+   * Chain way to define config args list
+   * @param  {...any} args
+   * @return {ChildLogic}
+   */
+  args(...args) {
+    this.configArgs = args;
+    return this;
   }
 });
 
