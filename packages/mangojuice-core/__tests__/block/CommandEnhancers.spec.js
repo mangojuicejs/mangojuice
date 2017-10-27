@@ -1,11 +1,17 @@
 describe('Command enhancers', () => {
-  describe('Cmd.debounce', () => {
+  describe('nonhandlable', () => {
     it('should work', () => {
 
     });
   });
 
-  describe('Cmd.throttle', () => {
+  describe('debounce', () => {
+    it('should work', () => {
+
+    });
+  });
+
+  describe('throttle', () => {
     it('should work', () => {
 
     });
