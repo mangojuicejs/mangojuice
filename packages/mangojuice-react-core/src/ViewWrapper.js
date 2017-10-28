@@ -1,4 +1,4 @@
-import { procOf, logicOf, utils, ensureCommand, handleModelOf } from "mangojuice-core";
+import { procOf, logicOf, utils, ensureCommand, observe } from "mangojuice-core";
 import { setContext, getContext } from './ViewRenderContext';
 
 
@@ -36,7 +36,7 @@ export default reactImpl => {
     componentDidMount() {
       this.unmounted = false;
       const destroyPromise = new Promise(r => this.destroyResolve = r);
-      handleModelOf(this.props.proc.model, destroyPromise, this.updateView);
+      observe(this.props.proc.model, destroyPromise, this.updateView);
     }
 
     componentWillUnmount() {

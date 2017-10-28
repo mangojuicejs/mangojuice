@@ -166,30 +166,17 @@ function bindModel(proc, model) {
     configurable: true
   });
 
-  if (sharedModel && sharedModel !== model) {
-    injectRoot(sharedModel, proc.destroyPromise, proc);
-  }
+  injectRoot(sharedModel, proc.destroyPromise, proc);
 }
 
-/**
- * Starts `exec` tracking to be able to get a Promise
- * which will be resolved when all commands executed.
- * @param  {Process} proc
- */
-function startExecTracking(proc) {
-  proc.execPromise = createResultPromise();
-}
-
-/**
- * Ends `exec` tracking and returns a Promise which will
- * be resolved when all commands which started while tracking
- * period finished
- * @param  {Process} proc
- * @return {Promise}
- */
-function endExecTracking(proc) {
+function trackExecs(proc, func) {
+  const newTracker = !proc.execPromise;
+  proc.execPromise = proc.execPromise || createResultPromise();
+  proc.execPromise.add(safeExecFunction(proc.logger, null, func));
   const res = proc.execPromise.get();
-  proc.execPromise = null;
+  if (newTracker) {
+    proc.execPromise = null;
+  }
   return res;
 }
 
@@ -218,9 +205,7 @@ function runPorts(proc) {
   if (logic.port) {
     const portProps = { exec, destroy: destroyPromise };
     const portRunner = () => logic.port(portProps);
-    startExecTracking(proc);
-    proc.execPromise.add(safeExecFunction(logger, null, portRunner));
-    return endExecTracking(proc);
+    return trackExecs(proc, portRunner);
   }
 }
 
@@ -447,16 +432,15 @@ function handleCommand(proc, cmd, isAfter) {
   const hubProps = { exec: proc.exec, cmd };
 
   logger.onStartHandling(cmd, isAfter);
-  startExecTracking(proc);
-  iterateParents(proc, function maybeExecHub(parnetProc) {
-    if (parnetProc.logic[type]) {
-      safeExecFunction(logger, cmd, function safeExecHub() {
+  const res = trackExecs(proc, () => {
+    iterateParents(proc, function maybeExecHub(parnetProc) {
+      if (parnetProc.logic[type]) {
         proc.execPromise.add(parnetProc.logic[type](hubProps));
-      });
-    }
-  })
+      }
+    })
+  });
   logger.onEndHandling(cmd, isAfter);
-  return execExecTracking(proc);
+  return res;
 }
 
 /**
@@ -499,7 +483,7 @@ function doExecCmd(proc, cmd) {
 
   // Emit model update for view re-rendering
   if (modelUpdated) {
-    resPromise.add(runModelObservers(this));
+    resPromise.add(runModelObservers(proc));
   }
 
   return resPromise.get();

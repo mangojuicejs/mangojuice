@@ -1,3 +1,6 @@
+import procOf from './procOf';
+
+
 /**
  * Helper function to handle execution of commands which affects
  * the model. Aimed to be used inside `port` logic functions or
@@ -11,7 +14,7 @@ function observe(model, destroyPromise, handler, destroyHandler) {
   const modelProc = procOf(model);
   if (!modelProc.observers) return;
 
-  modelProc.observers.push(event, handler);
+  modelProc.observers.push(handler);
   modelProc.destroyPromise.then(destroyHandler);
 
   if (destroyPromise && destroyPromise.then) {

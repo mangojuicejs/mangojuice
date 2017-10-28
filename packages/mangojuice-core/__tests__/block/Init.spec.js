@@ -46,7 +46,7 @@ describe("Init commands execution", () => {
       }
       children() {
         return {
-          b_1: BlockB.Logic,
+          b_1: child(BlockB.Logic),
           b_2: child(BlockB.Logic)
         }
       }
@@ -102,6 +102,7 @@ describe("Init commands execution", () => {
     expect(commandNames).toEqual([
       "SharedBlock.FromPortAsync",
       "SharedBlock.FromInitOneCmd",
+      "BlockA.FromSubCmd",
       "BlockB.FromInitOneCmd",
       "BlockA.HandleB_1",
       "BlockA.HandleB_11",
@@ -116,7 +117,6 @@ describe("Init commands execution", () => {
       "BlockA.FromInitOneCmd",
       "BlockA.FromInitTwoCmd",
       "SharedBlock.FromPortAsync_Success",
-      "BlockA.FromSubCmd",
       "BlockA.FromPortAsync_Success"
     ]);
   });

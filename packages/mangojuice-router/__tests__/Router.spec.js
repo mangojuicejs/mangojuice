@@ -1,4 +1,4 @@
-import { child, cmd, logicOf, handleLogicOf } from "mangojuice-core";
+import { child, cmd, logicOf } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 import createMemoryHistory from "history/createMemoryHistory";
 import Router from "mangojuice-router";
@@ -18,10 +18,8 @@ const createSharedBlock = (rootRoutes, historyOpts = {}) => {
           })
         };
       }
-      port({ exec, destroy }) {
-        handleLogicOf(this.model.router, destroy, () => {
-          exec(this.HandleRouter);
-        });
+      hub({ exec }) {
+        exec(this.HandleRouter);
       }
       @cmd HandleRouter() {}
     }

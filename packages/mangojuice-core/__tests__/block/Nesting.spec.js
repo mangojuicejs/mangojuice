@@ -1,4 +1,4 @@
-import { cmd, logicOf, depends, child, task, delay, handleLogicOf, procOf } from "mangojuice-core";
+import { cmd, logicOf, depends, child, task, delay, procOf } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
@@ -133,21 +133,16 @@ import { runWithTracking } from "mangojuice-test";
             recursive: child(RecursiveBlock.Logic)
           };
         }
-        port({ exec, destroy }) {
-          handleLogicOf(this.model.recursive, destroy, () => {
-            exec(this.HandleChange);
-          });
+        hub({ exec, cmd }) {
+          if (cmd.is(this.Increment, this.model.recursive)) {
+            exec(this.Increment('a', cmd.args[1]));
+          }
         }
         @cmd SetField(name, value) {
           return { [name]: value };
         }
         @cmd Increment(name, value) {
           return { [name]: this.model[name] + value };
-        }
-        @cmd HandleChange(cmd) {
-          if (cmd.is(this.Increment, this.model.recursive)) {
-            return this.Increment('a', cmd.args[1]);
-          }
         }
       }
     };
@@ -156,23 +151,17 @@ import { runWithTracking } from "mangojuice-test";
 
     await app.proc.exec(logicOf(app.model).SetField('recursive', RecursiveBlock.createModel()));
     await procOf(app.model.recursive).exec(logicOf(app.model.recursive).SetField('recursive', RecursiveBlock.createModel()));
-    await procOf(app.model.recursive.recursive).exec(logicOf(app.model.recursive.recursive).Increment('a', 2));
+    await app.proc.exec(logicOf(app.model.recursive.recursive).Increment('a', 2));
     await procOf(app.model.recursive).exec(logicOf(app.model.recursive).Increment('a', 3));
     await app.proc.exec(logicOf(app.model).Increment('a', 4));
 
     expect(commandNames).toEqual([
       'AppBlock.SetField',
       'AppBlock.SetField',
-      'AppBlock.HandleChange',
       'AppBlock.Increment',
-      'AppBlock.HandleChange',
-      'AppBlock.HandleChange',
       'AppBlock.Increment',
-      'AppBlock.HandleChange',
       'AppBlock.Increment',
-      'AppBlock.HandleChange',
       'AppBlock.Increment',
-      'AppBlock.HandleChange',
       'AppBlock.Increment',
       'AppBlock.Increment'
     ]);

@@ -8,6 +8,7 @@ function findRootProc(proc) {
     if (!nextParent) {
       return currParent;
     }
+    currParent = nextParent;
   }
 }
 
@@ -20,10 +21,17 @@ function findRootProc(proc) {
  * @param  {Process} newRoot
  */
 function injectRoot(model, destroyPromise, proc) {
+  // Check that proc of model exists
   const modelProc = procOf(model, true);
   if (!modelProc) return;
 
+  // Check that proc of the model is from different tree
   const rootProc = findRootProc(modelProc);
+  const rootOfNewProc = findRootProc(proc);
+  if (rootProc === rootOfNewProc) return;
+
+  // Actually add a new root with only some parms
+  // to work with `handleCommand` function in Process
   const newRoot = {
     parent: null,
     logic: proc.logic,
