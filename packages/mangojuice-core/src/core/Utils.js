@@ -74,7 +74,9 @@ export const createResultPromise = () => {
       return res;
     },
     add(nextPromise) {
-      res = res.then(() => nextPromise);
+      if (nextPromise !== res) {
+        res = res.then(() => nextPromise);
+      }
       return this;
     }
   };

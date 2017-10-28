@@ -5,12 +5,10 @@ import cmd from "./core/cmd/cmd";
 import cancel from "./core/cmd/cancel";
 import debounce from "./core/cmd/debounce";
 import throttle from "./core/cmd/throttle";
-import nonhandlable from "./core/cmd/nonhandlable";
 import ensureCommand from "./core/cmd/ensureCommand";
 import child from "./core/logic/child";
 import depends from "./core/logic/depends";
-import handleLogicOf from "./core/logic/handleLogicOf";
-import handleModelOf from "./core/logic/handleModelOf";
+import observe from "./core/logic/observe";
 import logicOf from "./core/logic/logicOf";
 import procOf from "./core/logic/procOf";
 import delay from "./core/task/delay";
@@ -34,14 +32,12 @@ export {
   // Core
   cmd,
   cancel,
-  nonhandlable,
   debounce,
   throttle,
   ensureCommand,
   child,
   depends,
-  handleLogicOf,
-  handleModelOf,
+  observe,
   logicOf,
   procOf,
   delay,

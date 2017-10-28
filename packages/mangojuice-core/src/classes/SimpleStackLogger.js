@@ -16,9 +16,7 @@ function SimpleStackLogger(name, model) {
 extend(SimpleStackLogger.prototype, DefaultLogger.prototype);
 extend(SimpleStackLogger.prototype, {
   onStartExec(cmd) {
-    if (!cmd.isHandler) {
-      this.log(cmd.name, cmd.args);
-    }
+    this.log(cmd.name, cmd.args);
     this.stack.push(cmd);
     this.cmdMap[cmd.id] = cmd;
     this.levelText += "-";

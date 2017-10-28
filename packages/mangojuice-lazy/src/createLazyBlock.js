@@ -36,7 +36,6 @@ function createBlockResolver(asyncRequire, resolveState) {
       proc.logic = new resolveState.lazyLogic();
       proc.bind(model);
       proc.run();
-      proc.emitModelUpdate();
     }
   };
 
@@ -77,7 +76,8 @@ function createLazyLogic(resolveState) {
         resolveState.resolver(target.model);
       }
       Object.defineProperty(EmptyExecutor, "name", { value: `${name}.Lazy` });
-      target[name] = nonhandlable(cmd(EmptyExecutor, target));
+      target[name] = cmd(EmptyExecutor, target);
+      target[name].handlable = false;
       return target[name];
     }
   };

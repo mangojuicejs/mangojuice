@@ -1,15 +1,12 @@
 import Task from './Task';
 import Command from './Command';
 import DefaultLogger from './DefaultLogger';
-import EventEmitter from './EventEmitter';
 import ensureCommand from '../core/cmd/ensureCommand';
-import handleModelOf from '../core/logic/handleModelOf';
+import observe from '../core/logic/observe';
 import procOf from '../core/logic/procOf';
+import injectRoot from '../core/logic/injectRoot';
 import delay from '../core/task/delay';
 import { cancelTask } from '../core/cmd/cancel';
-import {
-  MODEL_UPDATED_EVENT, DESTROY_MODEL_EVENT, CMD_EXEC_EVENT
-} from '../core/logic/constants';
 import {
   nextId, createResultPromise, is, maybeMap,
   maybeForEach, emptyArray, memoize, noop, fastTry,
@@ -18,18 +15,13 @@ import {
 
 
 /**
- * Default command used for emiting model updated event
- * when command is not provided.
- * @type {Command}
- */
-const MODEL_UPD_CMD = new Command(null, null, 'ModelUpdated');
-
-/**
  * Run `children` and `config` methods of the logic object
  * and create `config` object in the Process based on the result.
  */
 function prepareConfig(proc) {
   const { logic, configArgs } = proc
+  logic.beforeHub = logic.hub;
+
   let config = { children: {}, childrenKeys: [], meta: {} };
   config = (logic.config && logic.config(...configArgs)) || {};
   config.meta = config.meta || {};
@@ -49,14 +41,10 @@ function prepareConfig(proc) {
  * @param  {string} type
  * @param  {function} iterator
  */
-function iterateHandlers(proc, type, iterator) {
+function iterateParents(proc, iterator) {
   let currParent = proc.parent;
-  let currHandler = proc[type];
   while (currParent) {
-    if (currHandler) {
-      iterator(currParent, currHandler);
-    }
-    currHandler = currParent[type];
+    iterator(currParent);
     currParent = currParent.parent;
   }
 }
@@ -73,8 +61,13 @@ function iterateHandlers(proc, type, iterator) {
  */
 function bindChild(proc, childModel, fieldName) {
   if (childModel && !procOf(childModel, true)) {
+    const childDef = proc.config.children[fieldName];
+    const logic = is.func(childDef) ? childDef : childDef.logic;
+    const configArgs = is.func(childDef) ? emptyArray : childDef.args;
+
     const subProc = new Process({
-      ...proc.config.children[fieldName],
+      logic,
+      configArgs,
       parent: proc,
       sharedModel: proc.sharedModel,
       logger: proc.logger,
@@ -136,10 +129,10 @@ function bindComputedField(proc, fieldName, computeVal) {
     const destroyHandler = () => bindComputed(proc);
     const updateHandler = () => {
       get.reset();
-      proc.emitModelUpdate();
+      runModelObservers(proc);
     };
     maybeForEach(computeVal.deps, m => {
-      handleModelOf(m, proc.destroyPromise, updateHandler, destroyHandler);
+      observe(m, proc.destroyPromise, updateHandler, destroyHandler);
     });
   }
 
@@ -172,6 +165,32 @@ function bindModel(proc, model) {
     enumerable: false,
     configurable: true
   });
+
+  if (sharedModel && sharedModel !== model) {
+    injectRoot(sharedModel, proc.destroyPromise, proc);
+  }
+}
+
+/**
+ * Starts `exec` tracking to be able to get a Promise
+ * which will be resolved when all commands executed.
+ * @param  {Process} proc
+ */
+function startExecTracking(proc) {
+  proc.execPromise = createResultPromise();
+}
+
+/**
+ * Ends `exec` tracking and returns a Promise which will
+ * be resolved when all commands which started while tracking
+ * period finished
+ * @param  {Process} proc
+ * @return {Promise}
+ */
+function endExecTracking(proc) {
+  const res = proc.execPromise.get();
+  proc.execPromise = null;
+  return res;
 }
 
 /**
@@ -199,8 +218,9 @@ function runPorts(proc) {
   if (logic.port) {
     const portProps = { exec, destroy: destroyPromise };
     const portRunner = () => logic.port(portProps);
-    const result = safeExecFunction(logger, null, portRunner);
-    return Promise.resolve(result);
+    startExecTracking(proc);
+    proc.execPromise.add(safeExecFunction(logger, null, portRunner));
+    return endExecTracking(proc);
   }
 }
 
@@ -219,6 +239,19 @@ function runInitCommands(proc) {
 }
 
 /**
+ * Ren all model observers and returns a Promise which will
+ * be resolved when all handlers executed and returned promises
+ * is also resolved
+ * @param  {Process} proc
+ * @return {Promise}
+ */
+function runModelObservers(proc) {
+  return Promise.all(maybeMap(proc.observers, function observersIterator(obs) {
+    return safeExecFunction(proc.logger, null, obs);
+  }));
+}
+
+/**
  * Resolve destroy promise which will notify `port` that it should
  * cleanup and stop execution.
  * @param  {Process} proc
@@ -230,7 +263,6 @@ function stopPorts(proc) {
     proc.destroyPromise = null;
   }
 }
-
 
 /**
  * Map children model fields which have associated
@@ -408,23 +440,23 @@ function updateModel(proc, updateObj) {
  * @param  {Object} cmd
  * @return {Promise}
  */
-function handleCommand(proc, cmd, isBefore) {
+function handleCommand(proc, cmd, isAfter) {
+  if (!cmd.handlable) return;
   const { logger } = proc;
-  const type = isBefore ? 'beforeCmd' : 'afterCmd';
-  const resPromise = createResultPromise();
+  const type = isAfter ? 'afterHub' : 'beforeHub';
+  const hubProps = { exec: proc.exec, cmd };
 
-  if (cmd.handlable) {
-    logger.onStartHandling(cmd, isBefore);
-    iterateHandlers(proc, type, (handlerProc, handler) => {
-      const handlerCmd = handler.clone().appendArgs([cmd]);
-      handlerCmd.isHandler = true;
-      const execRes = handlerProc.exec(handlerCmd);
-      resPromise.add(execRes);
-    })
-    logger.onEndHandling(cmd, isBefore);
-  }
-
-  return resPromise.get();
+  logger.onStartHandling(cmd, isAfter);
+  startExecTracking(proc);
+  iterateParents(proc, function maybeExecHub(parnetProc) {
+    if (parnetProc.logic[type]) {
+      safeExecFunction(logger, cmd, function safeExecHub() {
+        proc.execPromise.add(parnetProc.logic[type](hubProps));
+      });
+    }
+  })
+  logger.onEndHandling(cmd, isAfter);
+  return execExecTracking(proc);
 }
 
 /**
@@ -435,7 +467,6 @@ function handleCommand(proc, cmd, isBefore) {
  * will be fully executed (command + all handlers).
  *
  * @param  {Object} cmd
- * @return {Promise}
  */
 function doExecCmd(proc, cmd) {
   const { logger, exec } = proc;
@@ -445,7 +476,7 @@ function doExecCmd(proc, cmd) {
   // Prepare and run before handlers
   cmd.bind(proc.logic);
   logger.onStartExec(cmd);
-  resPromise.add(handleCommand(proc, cmd, true));
+  resPromise.add(handleCommand(proc, cmd, false));
 
   // Execute command
   const safeExecCmd = () => cmd.exec();
@@ -454,23 +485,23 @@ function doExecCmd(proc, cmd) {
     if (result instanceof Task) {
       const taskPromise = executeTask(proc, result, cmd);
       resPromise.add(taskPromise.then(exec, exec));
-    } else if (is.array(result) || result instanceof Command) {
-      const batchRes = maybeMap(result, x => exec(x));
-      resPromise.add(Promise.all(batchRes));
+    } else if (result && (is.array(result) || (result.func && result.id))) {
+      maybeForEach(result, x => exec(x));
     } else if (is.object(result)) {
       modelUpdated = updateModel(proc, result);
     }
   }
-  logger.onExecuted(cmd, result);
 
-  // Run after handler and notify handlers
-  resPromise.add(handleCommand(proc, cmd, false));
-  resPromise.add(proc.emit(CMD_EXEC_EVENT, cmd));
+  // Run after handlers
+  logger.onExecuted(cmd, result);
+  resPromise.add(handleCommand(proc, cmd, true));
+  logger.onEndExec(cmd, result);
+
+  // Emit model update for view re-rendering
   if (modelUpdated) {
-    resPromise.add(proc.emitModelUpdate(cmd));
+    resPromise.add(runModelObservers(this));
   }
 
-  logger.onEndExec(cmd, result);
   return resPromise.get();
 }
 
@@ -478,29 +509,20 @@ function doExecCmd(proc, cmd) {
 /**
  * Main logic execution class
  */
-export function Process({
-  parent,
-  sharedModel,
-  beforeCmd,
-  afterCmd,
-  logger,
-  logic,
-  configArgs
-}) {
+export function Process(opts) {
+  const { parent, sharedModel, logger, logic, configArgs } = opts;
   this.id = nextId();
   this.logic = new logic();
   this.parent = parent;
   this.sharedModel = sharedModel;
-  this.beforeCmd = ensureCommand(beforeCmd);
-  this.afterCmd = ensureCommand(afterCmd);
   this.logger = logger || new DefaultLogger();
   this.configArgs = configArgs || emptyArray;
   this.destroyPromise = new Promise(r => this.destroyResolve = r);
   this.tasks = {};
+  this.observers = [];
   this.exec = this.exec.bind(this);
 }
 
-extend(Process.prototype, EventEmitter.prototype);
 extend(Process.prototype, {
   /**
    * Bind given model to a process instance and appropreate
@@ -526,6 +548,7 @@ extend(Process.prototype, {
     resPromise.add(runChildren(this));
     resPromise.add(runPorts(this));
     resPromise.add(runInitCommands(this));
+    resPromise.add(runModelObservers(this));
     return resPromise.get();
   },
 
@@ -539,8 +562,7 @@ extend(Process.prototype, {
     delete this.model.__proc;
     stopPorts(this);
     cancelAllTasks(this);
-    this.emit(DESTROY_MODEL_EVENT);
-    this.events = null;
+    this.observers = null;
 
     if (deep !== false) {
       const childDestroyer = x => procOf(x).destroy(true);
@@ -564,29 +586,27 @@ extend(Process.prototype, {
   exec(cmd) {
     if (!cmd) return Promise.resolve();
 
+    // Create result promise and get active model
     const realCmd = ensureCommand(cmd);
     const cmdModel = realCmd.model || this.model;
     const modelProc = procOf(cmdModel, true);
 
+    // Execute in current proc or in binded different proc
+    let result;
     if (modelProc) {
       if (modelProc.model !== this.model) {
-        return modelProc.exec(realCmd);
+        result = modelProc.exec(realCmd);
+      } else {
+        result = doExecCmd(this, realCmd);
       }
-      return doExecCmd(this, realCmd);
     }
 
-    return Promise.resolve();
-  },
+    // Add result to active exec tracker if defined
+    if (this.execPromise && result) {
+      this.execPromise.add(result);
+    }
 
-  /**
-   * Emit an event that notify subscribers that the model attached
-   * to the process updated. It is usually re-denred appropreate View.
-   * @param  {?Command} cmd
-   * @return {Promise}
-   */
-  emitModelUpdate(cmd) {
-    const finalCmd = cmd || MODEL_UPD_CMD;
-    return this.emit(MODEL_UPDATED_EVENT, finalCmd)
+    return result;
   }
 });
 

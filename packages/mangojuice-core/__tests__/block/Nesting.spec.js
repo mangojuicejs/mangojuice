@@ -130,8 +130,13 @@ import { runWithTracking } from "mangojuice-test";
       Logic: class AppBlock {
         children() {
           return {
-            recursive: child(RecursiveBlock.Logic).handler(this.HandleChange)
+            recursive: child(RecursiveBlock.Logic)
           };
+        }
+        port({ exec, destroy }) {
+          handleLogicOf(this.model.recursive, destroy, () => {
+            exec(this.HandleChange);
+          });
         }
         @cmd SetField(name, value) {
           return { [name]: value };

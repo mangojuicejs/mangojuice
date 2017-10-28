@@ -1,3 +1,3 @@
 export const MODEL_UPDATED_EVENT = 'updated';
-export const DESTROY_MODEL_EVENT = 'destroy';
-export const CMD_EXEC_EVENT = 'exec';
+export const CMD_BEFORE_EXEC_EVENT = 'before';
+export const CMD_AFTER_EXEC_EVENT = 'after';

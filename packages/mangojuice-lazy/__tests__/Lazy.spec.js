@@ -1,7 +1,11 @@
-import { cmd, logicOf, child, delay } from "mangojuice-core";
+import { cmd, logicOf, child, delay, handleLogicOf } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 import lazyUtils from "mangojuice-lazy";
 
+process.on('unhandledRejection', error => {
+  // Will print "unhandledRejection err is not defined"
+  console.log(error);
+});
 
 const createMockBlockResolver = (Block) => {
   let resolve = null;
@@ -239,7 +243,10 @@ describe('Lazy block loading', () => {
       createModel: () => ({ child: null }),
       Logic: class BlockParent {
         children() {
-          return { child: child(LazyBlock.Logic).handler(this.HandleChild) };
+          return { child: child(LazyBlock.Logic) };
+        }
+        hub({ exec, cmd }) {
+          exec(this.HandleChild);
         }
         @cmd SetField(name, value) {
           return { [name]: value };
