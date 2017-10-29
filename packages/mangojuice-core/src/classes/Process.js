@@ -8,10 +8,14 @@ import delay from '../core/task/delay';
 import { cancelTask } from '../core/cmd/cancel';
 import {
   nextId, createResultPromise, is, maybeMap,
-  maybeForEach, emptyArray, memoize, noop, fastTry,
+  maybeForEach, memoize, noop, fastTry,
   extend
 } from "../core/utils";
 
+
+// Constants
+const EMPTY_ARRAY = [];
+const EMPTY_OBJECT = {};
 
 /**
  * Run `children` and `config` methods of the logic object
@@ -21,7 +25,7 @@ function prepareConfig(proc) {
   const { logic, configArgs } = proc
   logic.hubBefore = logic.hub;
 
-  let config = { children: {}, childrenKeys: [], meta: {} };
+  let config = { children: EMPTY_OBJECT, childrenKeys: EMPTY_ARRAY, meta: {} };
   config = (logic.config && logic.config(...configArgs)) || {};
   config.meta = config.meta || {};
   proc.config = config;
@@ -62,7 +66,7 @@ function bindChild(proc, childModel, fieldName) {
   if (childModel && !procOf(childModel, true)) {
     const childDef = proc.config.children[fieldName];
     const logic = is.func(childDef) ? childDef : childDef.logic;
-    const configArgs = is.func(childDef) ? emptyArray : childDef.args;
+    const configArgs = is.func(childDef) ? EMPTY_ARRAY : childDef.args;
 
     const subProc = new Process({
       logic,
@@ -97,7 +101,7 @@ function bindChildren(proc) {
  */
 function bindComputed(proc) {
   const { logic, logger } = proc;
-  let computedFields = emptyArray;
+  let computedFields = EMPTY_ARRAY;
 
   if (logic.computed) {
     const ownComputedFields = safeExecFunction(logger, null, () => logic.computed());
@@ -321,7 +325,7 @@ function mapChildren(proc, model, iterator, iterKeys) {
   }
 
   const resPromise = createResultPromise();
-  const childrenKeys = iterKeys || config.childrenKeys || emptyArray;
+  const childrenKeys = iterKeys || config.childrenKeys || EMPTY_ARRAY;
   const childRunner = (childModel, k) => {
     resPromise.add(iterator(childModel, k));
   };
@@ -553,7 +557,7 @@ export function Process(opts) {
   this.parent = parent;
   this.sharedModel = sharedModel;
   this.logger = logger || new DefaultLogger();
-  this.configArgs = configArgs || emptyArray;
+  this.configArgs = configArgs || EMPTY_ARRAY;
   this.destroyPromise = new Promise(r => this.destroyResolve = r);
   this.tasks = {};
   this.observers = [];

@@ -1,4 +1,4 @@
-import { cmd, logicOf, depends, child, task, delay } from "mangojuice-core";
+import { cmd, logicOf, depends, child, task, delay, observe } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
@@ -124,6 +124,84 @@ describe('Errors handling', () => {
         app: AppBlock,
         expectErrors: true
       })).rejects.toBe(testError);
+    })
+  });
+
+  describe('In special logic functions', () => {
+    const testError = new Error('Ooops!');
+
+    it('should log an error from model obaerver', async () => {
+      const ChildBlock = {
+        createModel: () => ({}),
+        Logic: class ChildBlock {
+          @cmd ModelUpdate() {
+            return { test: 'passed' };
+          }
+        }
+      };
+      const ErroredObsever = () => {
+        throw testError;
+      };
+
+      const { app, errors, commandNames } = await runWithTracking({
+        app: ChildBlock,
+        expectErrors: true
+      });
+
+      observe(app.model, null, ErroredObsever);
+      await app.proc.exec(ChildBlock.Logic.prototype.ModelUpdate);
+
+      expect(app.model).toEqual({ test: 'passed' });
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toEqual(testError);
+    });
+
+    it('should log an error from hub', async () => {
+      const ChildBlock = {
+        createModel: () => ({}),
+        Logic: class ChildBlock {
+          @cmd HubError() {}
+          @cmd HubNoError() {
+            return { test: 'passed' };
+          }
+        }
+      };
+      const AppBlock = {
+        createModel: () => ({ child: ChildBlock.createModel() }),
+        Logic: class TestLogic {
+          children() {
+            return { child: ChildBlock.Logic };
+          }
+          hub({ exec, cmd }) {
+            if (cmd.is(logicOf(this.model.child).HubError)) {
+              throw testError;
+            } else {
+              exec(this.HubHandler);
+            }
+          }
+          @cmd HubHandler() {}
+        }
+      };
+
+      const { app, errors, commandNames } = await runWithTracking({
+        app: AppBlock,
+        expectErrors: true
+      });
+
+      await app.proc.exec(logicOf(app.model.child).HubNoError);
+      await app.proc.exec(logicOf(app.model.child).HubError);
+      await app.proc.exec(logicOf(app.model.child).HubNoError);
+
+      expect(app.model).toEqual({ child: { test: 'passed' } });
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toEqual(testError);
+      expect(commandNames).toEqual([
+        'ChildBlock.HubNoError',
+        'TestLogic.HubHandler',
+        'ChildBlock.HubError',
+        'ChildBlock.HubNoError',
+        'TestLogic.HubHandler',
+      ]);
     })
   });
 });

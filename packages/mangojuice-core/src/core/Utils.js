@@ -24,8 +24,6 @@ export function autoInc(seed = 1) {
 
 export const nextId = autoInc();
 
-export const emptyArray = [];
-
 export const fastForEach = (subject, iterator) => {
   const length = subject.length;
   for (let i = 0; i < length; i++) {

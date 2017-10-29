@@ -1,5 +1,8 @@
-import { extend, is, emptyArray, nextId } from '../core/utils';
+import { extend, is, nextId } from '../core/utils';
 
+
+// Constants
+const EMPTY_ARRAY = [];
 
 /**
  * Class wihch represents a command to be execute by processor.
@@ -13,7 +16,7 @@ function Command(func, args, name, opts) {
   this.funcName = name;
   this.func = func;
   this.opts = opts;
-  this.args = args || emptyArray;
+  this.args = args || EMPTY_ARRAY;
   this.name = name;
   this.handlable = true;
 };
@@ -45,7 +48,11 @@ extend(Command.prototype, {
    * Check is the command associated with the same executor function.
    * You can pass command instance, command creator or executor function
    * as an argument.
-   * Second optional argument for checking is the command
+   *
+   * Second optional argument for checking is the command came from some
+   * exact model. It is not needed if you got a command to compare using
+   * `logicOf` function, because commands from `logicOf` binded to a model
+   * you passed to it.
    * @param  {Function|Command|string}  cmd
    * @param  {Object}  model
    * @return {Boolean}
