@@ -1,4 +1,4 @@
-import { cmd, logicOf, depends, child, task, delay, observe, throttle } from "mangojuice-core";
+import { cmd, logicOf, depends, child, task, delay, observe, throttle, debounce } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
@@ -26,7 +26,7 @@ describe('Command enhancers', () => {
       }
     };
 
-    it('should execute original command instantly if not throthled', async () => {
+    it('should execute original command instantly for a first time', async () => {
       const { app, commandNames } = await runWithTracking({ app: AppBlock });
 
       const res = app.proc.exec(logicOf(app.model).Increment(10));
@@ -130,8 +130,147 @@ describe('Command enhancers', () => {
   });
 
   describe('debounce', () => {
-    it('should work', () => {
+    const AppBlock = {
+      createModel: () => ({ a: 0 }),
+      Logic: class AppBlock {
+        @debounce(100)
+        @cmd Increment(inc) {
+          return { a: this.model.a + inc };
+        }
+      }
+    };
+    const ParentBlock = {
+      createModel: () => ({ child: AppBlock.createModel() }),
+      Logic: class ParentBlock {
+        children() {
+          return { child: AppBlock.Logic };
+        }
+        hub({ exec, cmd }) {
+          exec(this.Handler);
+        }
+        @cmd Handler() {}
+      }
+    };
 
+    it('should execute original command instantly for a first time', async () => {
+      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+
+      const res = app.proc.exec(logicOf(app.model).Increment(10));
+      await delay(10);
+      expect(commandNames).toEqual([
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment',
+        'AppBlock.Increment.Wait'
+      ]);
+
+      await res;
+      expect(app.model).toEqual({ a: 10 });
+      expect(commandNames).toEqual([
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Exec'
+      ]);
+    });
+
+    it('should make all suuport commands nonhandlable', async () => {
+      const { app, commandNames } = await runWithTracking({ app: ParentBlock });
+
+      await app.proc.exec(logicOf(app.model.child).Increment(11));
+
+      expect(app.model).toEqual({ child: { a: 11 } });
+      expect(commandNames).toEqual([
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment',
+        'ParentBlock.Handler',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Exec'
+      ]);
+    });
+
+    it('should call debounced func with latest args', async () => {
+      const { app, commandNames } = await runWithTracking({ app: ParentBlock });
+
+      app.proc.exec(logicOf(app.model.child).Increment(10));
+      await delay(70);
+      app.proc.exec(logicOf(app.model.child).Increment(11));
+      await delay(70);
+      app.proc.exec(logicOf(app.model.child).Increment(12));
+      await delay(70);
+      app.proc.exec(logicOf(app.model.child).Increment(13));
+      await delay(120);
+
+      expect(app.model).toEqual({ child: { a: 23 } });
+      expect(commandNames).toEqual([
+        "AppBlock.Increment.Throttle",
+        "AppBlock.Increment",
+        "ParentBlock.Handler",
+        "AppBlock.Increment.Wait",
+        "AppBlock.Increment.Throttle",
+        "AppBlock.Increment.Wait",
+        "AppBlock.Increment.Wait.Cancelled",
+        "AppBlock.Increment.Throttle",
+        "AppBlock.Increment.Wait",
+        "AppBlock.Increment.Wait.Cancelled",
+        "AppBlock.Increment.Throttle",
+        "AppBlock.Increment.Wait",
+        "AppBlock.Increment.Wait.Cancelled",
+        "AppBlock.Increment.Exec",
+        "AppBlock.Increment.Throttle",
+        "AppBlock.Increment",
+        "ParentBlock.Handler",
+        "AppBlock.Increment.Wait",
+      ]);
+    });
+
+    it('should wait another N debounce ms after first debounced exec', async () => {
+      const { app, commandNames } = await runWithTracking({ app: ParentBlock });
+
+      app.proc.exec(logicOf(app.model.child).Increment(100));
+      await delay(70);
+      app.proc.exec(logicOf(app.model.child).Increment(11));
+      await delay(70);
+      app.proc.exec(logicOf(app.model.child).Increment(210));
+      await delay(120);
+      app.proc.exec(logicOf(app.model.child).Increment(13));
+      await delay(70);
+      app.proc.exec(logicOf(app.model.child).Increment(14));
+      await delay(70);
+      app.proc.exec(logicOf(app.model.child).Increment(311));
+      await delay(120);
+
+      expect(app.model).toEqual({ child: { a: 621 } });
+      expect(commandNames).toEqual([
+        "AppBlock.Increment.Throttle",
+        "AppBlock.Increment",
+        "ParentBlock.Handler",
+        "AppBlock.Increment.Wait",
+        "AppBlock.Increment.Throttle",
+        "AppBlock.Increment.Wait",
+        "AppBlock.Increment.Wait.Cancelled",
+        "AppBlock.Increment.Throttle",
+        "AppBlock.Increment.Wait",
+        "AppBlock.Increment.Wait.Cancelled",
+        "AppBlock.Increment.Exec",
+        "AppBlock.Increment.Throttle",
+        "AppBlock.Increment",
+        "ParentBlock.Handler",
+        "AppBlock.Increment.Wait",
+        "AppBlock.Increment.Throttle",
+        "AppBlock.Increment.Wait",
+        "AppBlock.Increment.Wait.Cancelled",
+        "AppBlock.Increment.Throttle",
+        "AppBlock.Increment.Wait",
+        "AppBlock.Increment.Wait.Cancelled",
+        "AppBlock.Increment.Throttle",
+        "AppBlock.Increment.Wait",
+        "AppBlock.Increment.Wait.Cancelled",
+        "AppBlock.Increment.Exec",
+        "AppBlock.Increment.Throttle",
+        "AppBlock.Increment",
+        "ParentBlock.Handler",
+        "AppBlock.Increment.Wait"
+      ]);
     });
   });
 });

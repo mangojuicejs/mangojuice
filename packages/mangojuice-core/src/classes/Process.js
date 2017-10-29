@@ -391,7 +391,7 @@ function execTask(proc, taskObj, cmd) {
       }
       if (error) {
         if (error.cancelled) {
-          reject(new Command(null, null, `${cmd.funcName}.Cancelled`));
+          reject(new Command(null, null, `${cmd.funcName}.Cancelled`, true));
         } else {
           const actualFailCmd = failCmd && failCmd.appendArgs([error]);
           if (!actualFailCmd) logger.onCatchError(error);

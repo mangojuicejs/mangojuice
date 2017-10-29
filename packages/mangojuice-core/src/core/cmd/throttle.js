@@ -29,7 +29,7 @@ function getThrottleState(model, id) {
  * @param  {number} ms
  * @return {function}
  */
-function throttle(ms) {
+function throttle(ms, debounce) {
   return (obj, name, descr) => {
     const thId = nextId();
     const orgCmd = createCommandFactory(name, null, false, descr.__func);
@@ -60,13 +60,10 @@ function throttle(ms) {
       const state = getThrottleState(this.model, thId);
       if (state.throttled) {
         state.args = args;
-        return;
+        return debounce && throttleWaitCmd;
       }
       state.throttled = true;
-      return [
-        orgCmd(...args),
-        throttleWaitCmd
-      ];
+      return [ orgCmd(...args), throttleWaitCmd ];
     };
 
     descr.value = throttleWrapper;

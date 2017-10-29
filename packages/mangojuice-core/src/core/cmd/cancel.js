@@ -33,9 +33,8 @@ function cancel(cmd) {
     const proc = procOf(this.model);
     cancelTask(proc, realCmd.id);
   };
-  const cancelCmd = new Command(cancelFn, null, `${realCmd.funcName}.Cancel`);
-  cancelCmd.bind(realCmd.logic);
-  return cancelCmd;
+  const cancelCmd = new Command(cancelFn, null, `${realCmd.funcName}.Cancel`, true);
+  return cancelCmd.bind(realCmd.logic);
 }
 
 export default cancel;
