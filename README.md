@@ -1,13 +1,13 @@
 # MangoJuice
 
-> The missing `M.C` part for your favorite `V` library.
+> The missing `Model-Controller` part for your favorite `View` library.
 
 * **Highly scalable** because of strongly decoupled Model, View and Controller, and good definition of logical Block of your application
 * **Forces you to write good decomposed code**, which is easy to scale, test and debug.
 * **Fully-featured core**, no need to add any middlewares to do just regular things
 * **View library-agnostic**
 * **Support for server-rendering**(if your View library also supports it, of course)
-* **Lightweight** (zero dependencies, around **6kb minified gzipped**)
+* **Lightweight** (zero dependencies, around **5kb minified gzipped**)
 * **Easy to learn and fun to use**
 
 ## Installation
