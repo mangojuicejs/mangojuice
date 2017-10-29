@@ -1,4 +1,4 @@
-import { nextId, is } from "../utils";
+import { nextId } from "../utils";
 import Command from '../../classes/Command';
 import ensureCommand from './ensureCommand';
 
@@ -12,41 +12,37 @@ import ensureCommand from './ensureCommand';
  * @param  {?object} opts
  * @return {function}
  */
-function createCommandFactory(name, func, logic, opts) {
+export function createCommandFactory(name, logic, nonhandlable, func) {
   const id = func.__cmdId || nextId();
+
   const creator = function commandFactory(...args) {
-    const cmd = new Command(func, args, name, opts);
-    cmd.handlable = creator.handlable;
-    cmd.bind(logic);
-    return cmd;
+    const cmd = new Command(func, args, name, nonhandlable);
+    return logic ? cmd.bind(logic) : cmd;
   }
 
   func.__cmdId = id;
   creator.id = id;
   creator.func = func;
-  creator.handlable = true;
-  creator.logic = logic
+  creator.logic = logic;
   return creator;
 }
 
 /**
- * Function can be used as a decorator or as a regular function
- * to create a Command factory function for makeing a command to
- * execute decorated (or given as first argument) function.
+ * Function should be used as a decorator to create
+ * a Command factory function for makeing a command to
+ * execute decorated function by Process.
  * @param  {object|function}    obj
  * @param  {string} name
  * @param  {object} descr
  * @return {object|function}
  */
-export function cmd(obj, name, descr) {
-  if (is.func(obj)) {
-    return createCommandFactory(obj.name, obj, name, descr);
-  }
+export function cmd(obj, name, descr, nonhandlable) {
   return {
+    __func: descr.value,
     configurable: true,
     enumerable: true,
     get() {
-      const factory = createCommandFactory(name, descr.value, this);
+      const factory = createCommandFactory(name, this, nonhandlable, descr.value);
       if (this && this.model) {
         Object.defineProperty(this, name, {
           configurable: true,

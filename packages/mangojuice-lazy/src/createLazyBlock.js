@@ -75,9 +75,8 @@ function createLazyLogic(resolveState) {
         resolveState.cmds.push({ args, name });
         resolveState.resolver(target.model);
       }
-      Object.defineProperty(EmptyExecutor, "name", { value: `${name}.Lazy` });
-      target[name] = cmd(EmptyExecutor, target);
-      target[name].handlable = false;
+      const cmdDescr = cmd(null, `${name}.Lazy`, { value: EmptyExecutor }, true);
+      Object.defineProperty(target, name, cmdDescr);
       return target[name];
     }
   };

@@ -66,7 +66,7 @@ export default reactImpl => {
       const realCmd = ensureCommand(cmd);
       const cmdHash = getCmdHash(cmd);
       const execViewCmd = ((...args) => {
-        const callCmd = realCmd.clone().appendArgs(args);
+        const callCmd = realCmd.appendArgs(args);
         this.props.proc.exec(callCmd);
       });
 

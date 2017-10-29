@@ -123,7 +123,7 @@ import { runWithTracking } from "mangojuice-test";
     expect(oldArr[1].deleted).toBeTruthy();
   });
 
-  it("should be able to nest itself", async () => {
+  it.only("should be able to nest itself", async () => {
     let idCounter = 0;
     const RecursiveBlock = {
       createModel: () => ({ recursive: null, a: 0, id: idCounter++ }),

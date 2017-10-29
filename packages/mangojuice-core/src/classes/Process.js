@@ -17,6 +17,40 @@ import {
 const EMPTY_ARRAY = [];
 const EMPTY_OBJECT = {};
 
+
+/**
+ * Go from current proc to the root of the proc tree
+ * and run iterator function if handler of given type
+ * exists in the process instance.
+ * @param  {Process} proc
+ * @param  {string} type
+ * @param  {function} iterator
+ */
+function iterateParents(proc, iterator) {
+  let currParent = proc.parent;
+  while (currParent) {
+    iterator(currParent);
+    currParent = currParent.parent;
+  }
+}
+
+/**
+ * By given Process instance find some parent process
+ * in the tree without parents (tree root)
+ * @param  {Process} proc
+ * @return {Process}
+ */
+function findRootProc(proc) {
+  let currParent = proc;
+  while (currParent) {
+    const nextParent = currParent.parent;
+    if (!nextParent) {
+      return currParent;
+    }
+    currParent = nextParent;
+  }
+}
+
 /**
  * Run `children` and `config` methods of the logic object
  * and create `config` object in the Process based on the result.
@@ -33,22 +67,6 @@ function prepareConfig(proc) {
   if (logic.children) {
     config.children = logic.children() || {};
     config.childrenKeys = Object.keys(config.children);
-  }
-}
-
-/**
- * Go from current proc to the root of the proc tree
- * and run iterator function if handler of given type
- * exists in the process instance.
- * @param  {Process} proc
- * @param  {string} type
- * @param  {function} iterator
- */
-function iterateParents(proc, iterator) {
-  let currParent = proc.parent;
-  while (currParent) {
-    iterator(currParent);
-    currParent = currParent.parent;
   }
 }
 
@@ -147,23 +165,6 @@ function bindComputedField(proc, fieldName, computeVal) {
   });
 
   return get;
-}
-
-/**
- * By given Process instance find some parent process
- * in the tree without parents (tree root)
- * @param  {Process} proc
- * @return {Process}
- */
-function findRootProc(proc) {
-  let currParent = proc;
-  while (currParent) {
-    const nextParent = currParent.parent;
-    if (!nextParent) {
-      return currParent;
-    }
-    currParent = nextParent;
-  }
 }
 
 /**
@@ -392,12 +393,12 @@ function execTask(proc, taskObj, cmd) {
         if (error.cancelled) {
           reject(new Command(null, null, `${cmd.funcName}.Cancelled`));
         } else {
-          const actualFailCmd = failCmd && failCmd.clone().appendArgs([error]);
+          const actualFailCmd = failCmd && failCmd.appendArgs([error]);
           if (!actualFailCmd) logger.onCatchError(error);
           reject(actualFailCmd);
         }
       } else {
-        const actualSuccessCmd = successCmd && successCmd.clone().appendArgs([result]);
+        const actualSuccessCmd = successCmd && successCmd.appendArgs([result]);
         resolve(actualSuccessCmd);
       }
     };
@@ -509,13 +510,13 @@ function handleCommand(proc, cmd, isAfter) {
  *
  * @param  {Object} cmd
  */
-function doExecCmd(proc, cmd) {
+function doExecCmd(proc, rawCmd) {
   const { logger, exec } = proc;
   const resPromise = createResultPromise();
+  const cmd = !rawCmd.logic ? rawCmd.bind(proc.logic) : rawCmd;
   let modelUpdated = false;
 
   // Prepare and run before handlers
-  cmd.bind(proc.logic);
   logger.onStartExec(cmd);
   resPromise.add(handleCommand(proc, cmd, false));
 
@@ -527,7 +528,7 @@ function doExecCmd(proc, cmd) {
       const taskPromise = execTask(proc, result, cmd);
       resPromise.add(taskPromise.then(exec, exec));
     } else if (result && (is.array(result) || (result.func && result.id))) {
-      maybeForEach(result, x => exec(x));
+      resPromise.add(Promise.all(maybeMap(result, x => exec(x))));
     } else if (is.object(result)) {
       modelUpdated = updateModel(proc, result);
     }
@@ -604,6 +605,8 @@ extend(Process.prototype, {
     stopPorts(this);
     cancelAllTasks(this);
     this.observers = null;
+    this.throttles = null;
+    this.tasks = null;
 
     if (deep !== false) {
       const childDestroyer = x => procOf(x).destroy(true);

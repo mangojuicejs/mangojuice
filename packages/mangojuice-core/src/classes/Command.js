@@ -6,19 +6,20 @@ const EMPTY_ARRAY = [];
 
 /**
  * Class wihch represents a command to be execute by processor.
+ * The command instance is immutable, so any function that
+ * makes some change in the command will produce a new command
+ * instead of changing the original one.
  * @param {Function} func
  * @param {Array<any>} args
  * @param {String} name [description]
- * @param {Object} opts
  */
-function Command(func, args, name, opts) {
+function Command(func, args, name, nonhandlable) {
   this.id = (func && func.__cmdId) || nextId();
   this.funcName = name;
   this.func = func;
-  this.opts = opts;
   this.args = args || EMPTY_ARRAY;
   this.name = name;
-  this.handlable = true;
+  this.handlable = !nonhandlable;
 };
 
 extend(Command.prototype, {
@@ -36,12 +37,12 @@ extend(Command.prototype, {
    * @return {Command}
    */
   clone() {
-    const cmd = new Command(this.func, this.args, this.funcName, this.opts);
-    cmd.name = this.name;
-    cmd.model = this.model;
-    cmd.logic = this.logic;
-    cmd.handlable = this.handlable;
-    return cmd;
+    const newCmd = new Command(this.func, this.args, this.funcName, !this.handlable);
+    newCmd.id = this.id;
+    newCmd.name = this.name;
+    newCmd.model = this.model;
+    newCmd.logic = this.logic;
+    return newCmd;
   },
 
   /**
@@ -74,8 +75,9 @@ extend(Command.prototype, {
    * @param  {Array} args
    */
   appendArgs(args) {
-    this.args = [].concat(this.args, args);
-    return this;
+    const newCmd = this.clone();
+    newCmd.args = [].concat(this.args, args);
+    return newCmd;
   },
 
   /**
@@ -83,11 +85,14 @@ extend(Command.prototype, {
    * @param  {object} logic
    */
   bind(logic) {
-    const ctxName = logic && logic.constructor.name;
-    this.name = ctxName ? `${ctxName}.${this.funcName}` : this.funcName;
-    this.model = (logic && logic.model) || this.model;
-    this.logic = logic;
-    return this;
+    const newCmd = this.clone();
+    if (!logic) return newCmd;
+
+    const ctxName = logic.constructor.name;
+    newCmd.name = ctxName ? `${ctxName}.${this.funcName}` : this.funcName;
+    newCmd.model = logic.model;
+    newCmd.logic = logic;
+    return newCmd;
   }
 });
 
