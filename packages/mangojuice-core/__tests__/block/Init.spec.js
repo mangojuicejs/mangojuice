@@ -59,7 +59,7 @@ describe("Init commands execution", () => {
           exec(this.FromSubCmd);
         }
       }
-      afterHub({ exec, cmd }) {
+      hubAfter({ exec, cmd }) {
         if (cmd.is('BlockB.FromInitOneCmd', this.model.b_1)) {
           exec(this.HandleB_11);
         } else if (cmd.is('BlockB.FromInitOneCmd', this.model.b_2)) {

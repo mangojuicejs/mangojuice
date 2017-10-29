@@ -20,7 +20,7 @@ import {
  */
 function prepareConfig(proc) {
   const { logic, configArgs } = proc
-  logic.beforeHub = logic.hub;
+  logic.hubBefore = logic.hub;
 
   let config = { children: {}, childrenKeys: [], meta: {} };
   config = (logic.config && logic.config(...configArgs)) || {};
@@ -428,7 +428,7 @@ function updateModel(proc, updateObj) {
 function handleCommand(proc, cmd, isAfter) {
   if (!cmd.handlable) return;
   const { logger } = proc;
-  const type = isAfter ? 'afterHub' : 'beforeHub';
+  const type = isAfter ? 'hubAfter' : 'hubBefore';
   const hubProps = { exec: proc.exec, cmd };
 
   logger.onStartHandling(cmd, isAfter);
