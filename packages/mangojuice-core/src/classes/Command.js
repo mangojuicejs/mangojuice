@@ -15,6 +15,7 @@ function Command(func, args, name, opts) {
   this.opts = opts;
   this.args = args || emptyArray;
   this.name = name;
+  this.handlable = true;
 };
 
 extend(Command.prototype, {
@@ -50,12 +51,15 @@ extend(Command.prototype, {
    * @return {Boolean}
    */
   is(cmd, childModel) {
+    if (!cmd) return false;
     const { func, name, model } = this;
-    return (
-      cmd &&
-      (func === cmd.func || func === cmd || name === cmd) &&
-      (!childModel || childModel === model)
+    const isSameFunc = func === cmd.func || func === cmd || name === cmd;
+    const isSameModel = isSameFunc && (
+      (childModel && childModel === model) ||
+      (!childModel && cmd.logic && cmd.logic.model === model) ||
+      !cmd.logic
     );
+    return isSameFunc && isSameModel;
   },
 
   /**

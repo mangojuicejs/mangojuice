@@ -51,18 +51,18 @@ describe("Init commands execution", () => {
         }
       }
       hub({ exec, cmd }) {
-        if (cmd.is('BlockB.FromInitOneCmd', this.model.b_1)) {
+        if (cmd.is(logicOf(this.model.b_1).FromInitOneCmd)) {
           exec(this.HandleB_1);
-        } else if (cmd.is('BlockB.FromInitOneCmd', this.model.b_2)) {
+        } else if (cmd.is(logicOf(this.model.b_2).FromInitOneCmd)) {
           exec(this.HandleB_2);
         } else if (cmd.is('SharedBlock.FromInitOneCmd')) {
           exec(this.FromSubCmd);
         }
       }
       hubAfter({ exec, cmd }) {
-        if (cmd.is('BlockB.FromInitOneCmd', this.model.b_1)) {
+        if (cmd.is(BlockB.Logic.prototype.FromInitOneCmd, this.model.b_1)) {
           exec(this.HandleB_11);
-        } else if (cmd.is('BlockB.FromInitOneCmd', this.model.b_2)) {
+        } else if (cmd.is(BlockB.Logic.prototype.FromInitOneCmd, this.model.b_2)) {
           exec(this.HandleB_22);
         }
       }

@@ -4,7 +4,6 @@ import DefaultLogger from './DefaultLogger';
 import ensureCommand from '../core/cmd/ensureCommand';
 import observe from '../core/logic/observe';
 import procOf from '../core/logic/procOf';
-import injectRoot from '../core/logic/injectRoot';
 import delay from '../core/task/delay';
 import { cancelTask } from '../core/cmd/cancel';
 import {
@@ -147,6 +146,52 @@ function bindComputedField(proc, fieldName, computeVal) {
 }
 
 /**
+ * By given Process instance find some parent process
+ * in the tree without parents (tree root)
+ * @param  {Process} proc
+ * @return {Process}
+ */
+function findRootProc(proc) {
+  let currParent = proc;
+  while (currParent) {
+    const nextParent = currParent.parent;
+    if (!nextParent) {
+      return currParent;
+    }
+    currParent = nextParent;
+  }
+}
+
+/**
+ * Get proc attached to given model, find root proc
+ * in the tree and add new parent proc to the root,
+ * so given proc will become a new root in the tree
+ * @param  {Object} model
+ * @param  {Process} newRoot
+ */
+function bindShared(proc, sharedModel) {
+  // Check that proc of model exists
+  const modelProc = procOf(sharedModel, true);
+  if (!modelProc) return;
+
+  // Check that proc of the model is from different tree
+  const rootProc = findRootProc(modelProc);
+  const rootOfNewProc = findRootProc(proc);
+  if (rootProc === rootOfNewProc) return;
+
+  // Actually add a new root with only some parms
+  // to work with `handleCommand` function in Process
+  const newRoot = {
+    parent: null,
+    logic: proc.logic,
+    exec: proc.exec
+  };
+  rootProc.parent = newRoot;
+  const removeTreeNode = () => rootProc.parent = newRoot.parent;
+  proc.destroyPromise.then(removeTreeNode);
+}
+
+/**
  * Associate instance of the Process with given model by setting
  * hidden `__proc` field in the model. Also set model, shared model
  * and meta in the logic instance.
@@ -166,9 +211,17 @@ function bindModel(proc, model) {
     configurable: true
   });
 
-  injectRoot(sharedModel, proc.destroyPromise, proc);
+  bindShared(proc, sharedModel);
 }
 
+/**
+ * Run given func with tracking `exec` (sync) calls. Rerutns a
+ * Promise which will be resolved when all `exec` will be finished.
+ * If execs tracking is already activated just use already active tracker.
+ * @param  {Process} proc
+ * @param  {Function} func
+ * @return {Promise}
+ */
 function trackExecs(proc, func) {
   const newTracker = !proc.execPromise;
   proc.execPromise = proc.execPromise || createResultPromise();
@@ -315,7 +368,7 @@ function cancelAllTasks(proc) {
  * @param  {Task} taskObj
  * @return {Promise}
  */
-function executeTask(proc, taskObj, cmd) {
+function execTask(proc, taskObj, cmd) {
   const execId = nextId();
   const taskId = cmd.id;
   const { tasks, logger, model, shared } = proc;
@@ -467,7 +520,7 @@ function doExecCmd(proc, cmd) {
   const result = safeExecFunction(logger, cmd, safeExecCmd);
   if (result) {
     if (result instanceof Task) {
-      const taskPromise = executeTask(proc, result, cmd);
+      const taskPromise = execTask(proc, result, cmd);
       resPromise.add(taskPromise.then(exec, exec));
     } else if (result && (is.array(result) || (result.func && result.id))) {
       maybeForEach(result, x => exec(x));

@@ -12,12 +12,12 @@ import ensureCommand from './ensureCommand';
  * @param  {?object} opts
  * @return {function}
  */
-function createCommandFactory(name, func, ctx, opts) {
+function createCommandFactory(name, func, logic, opts) {
   const id = func.__cmdId || nextId();
-  const creator = function(...args) {
+  const creator = function commandFactory(...args) {
     const cmd = new Command(func, args, name, opts);
     cmd.handlable = creator.handlable;
-    cmd.bind(ctx);
+    cmd.bind(logic);
     return cmd;
   }
 
@@ -25,6 +25,7 @@ function createCommandFactory(name, func, ctx, opts) {
   creator.id = id;
   creator.func = func;
   creator.handlable = true;
+  creator.logic = logic
   return creator;
 }
 
@@ -46,11 +47,13 @@ export function cmd(obj, name, descr) {
     enumerable: true,
     get() {
       const factory = createCommandFactory(name, descr.value, this);
-      Object.defineProperty(this, name, {
-        configurable: true,
-        enumerable: true,
-        value: factory
-      });
+      if (this && this.model) {
+        Object.defineProperty(this, name, {
+          configurable: true,
+          enumerable: true,
+          value: factory
+        });
+      }
       return factory;
     }
   };
