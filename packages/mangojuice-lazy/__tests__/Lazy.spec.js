@@ -27,7 +27,7 @@ describe('Lazy block loading', () => {
           meta: 'test-meta'
         }
       }
-      port({ exec }) {
+      port(exec) {
         return exec(this.CmdFromPort);
       }
       computed() {
@@ -102,7 +102,7 @@ describe('Lazy block loading', () => {
             meta: 'test-meta'
           }
         }
-        port({ exec }) {
+        port(exec) {
           return exec(this.CmdFromPort);
         }
         @cmd CmdFromPort() {}

@@ -263,8 +263,7 @@ function runChildren(proc) {
 function runPorts(proc) {
   const { logic, logger, destroyPromise, exec } = proc;
   if (logic.port) {
-    const portProps = { exec, destroyed: destroyPromise };
-    const portRunner = () => logic.port(portProps);
+    const portRunner = () => logic.port(exec, destroyPromise);
     return trackExecs(proc, portRunner);
   }
 }

@@ -18,7 +18,7 @@ class Router {
     };
   }
 
-  port({ exec, destroyed }) {
+  port(exec, destroyed) {
     const { meta: { history, routes, request } } = this;
     const handleHistoryChange = location =>
       exec(this.HandleLocationChange(location));

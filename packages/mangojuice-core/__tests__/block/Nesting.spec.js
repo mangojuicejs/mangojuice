@@ -9,7 +9,7 @@ import { runWithTracking } from "mangojuice-test";
       config() {
         return { initCommands: this.InitChild };
       }
-      port({ exec, destroyed }) {
+      port(exec, destroyed) {
         destroy.then(() => this.model.deleted = true);
       }
       @cmd InitChild() {}

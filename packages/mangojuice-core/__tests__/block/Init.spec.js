@@ -12,7 +12,7 @@ describe("Init commands execution", () => {
       config() {
         return { initCommands: [this.FromInitOneCmd()] };
       }
-      port({ exec }) {
+      port(exec) {
         exec(this.FromPortAsync);
       }
       @cmd FromPortAsync() {
@@ -66,7 +66,7 @@ describe("Init commands execution", () => {
           return this.HandleB_22;
         }
       }
-      port({ exec, destroyed }) {
+      port(exec, destroyed) {
         exec(this.FromSubCmd)
         exec(this.FromPortCmd)
         exec(this.FromPortAsync())
