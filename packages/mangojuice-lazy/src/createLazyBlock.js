@@ -93,6 +93,9 @@ function createLazyLogic(resolveState) {
   utils.extend(LazyBlock.prototype, {
     config: utils.noop,
     children: utils.noop,
+    hub: utils.noop,
+    hubAfter: utils.noop,
+    hubBefore: utils.noop,
     port: utils.noop,
     computed: utils.noop
   });
@@ -102,10 +105,10 @@ function createLazyLogic(resolveState) {
 }
 
 function createLazyView(resolveState) {
-  return props => {
+  return (props, context) => {
     resolveState.resolver(props.model);
     const block = resolveState.block;
-    return block && block.View ? block.View(props) : null;
+    return block && block.View ? block.View(props, context) : null;
   }
 }
 
