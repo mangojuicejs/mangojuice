@@ -1,4 +1,5 @@
 import Process from "./classes/Process";
+import LogicBase from "./classes/LogicBase";
 import DefaultLogger from "./classes/DefaultLogger";
 import SimpleStackLogger from "./classes/SimpleStackLogger";
 import cmd from "./core/cmd/cmd";
@@ -26,6 +27,7 @@ export {
 
   // Classes
   Process,
+  LogicBase,
   DefaultLogger,
   SimpleStackLogger,
 

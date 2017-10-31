@@ -9,7 +9,7 @@ import { runWithTracking } from "mangojuice-test";
       config() {
         return { initCommands: this.InitChild };
       }
-      port({ exec, destroy }) {
+      port({ exec, destroyed }) {
         destroy.then(() => this.model.deleted = true);
       }
       @cmd InitChild() {}
@@ -133,9 +133,9 @@ import { runWithTracking } from "mangojuice-test";
             recursive: child(RecursiveBlock.Logic)
           };
         }
-        hub({ exec, cmd }) {
+        hub(cmd) {
           if (cmd.is(this.Increment, this.model.recursive)) {
-            exec(this.Increment('a', cmd.args[1]));
+            return this.Increment('a', cmd.args[1]);
           }
         }
         @cmd SetField(name, value) {

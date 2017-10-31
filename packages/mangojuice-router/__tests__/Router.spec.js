@@ -18,8 +18,8 @@ const createSharedBlock = (rootRoutes, historyOpts = {}) => {
           })
         };
       }
-      hub({ exec }) {
-        exec(this.HandleRouter);
+      hub(cmd) {
+        return this.HandleRouter;
       }
       @cmd HandleRouter() {}
     }

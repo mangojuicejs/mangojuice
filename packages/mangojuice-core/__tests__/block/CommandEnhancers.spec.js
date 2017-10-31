@@ -19,8 +19,8 @@ describe('Command enhancers', () => {
         children() {
           return { child: AppBlock.Logic };
         }
-        hub({ exec, cmd }) {
-          exec(this.Handler);
+        hub(cmd) {
+          return this.Handler;
         }
         @cmd Handler() {}
       }
@@ -145,8 +145,8 @@ describe('Command enhancers', () => {
         children() {
           return { child: AppBlock.Logic };
         }
-        hub({ exec, cmd }) {
-          exec(this.Handler);
+        hub(cmd) {
+          return this.Handler;
         }
         @cmd Handler() {}
       }

@@ -18,7 +18,7 @@ class Router {
     };
   }
 
-  port({ exec, destroy }) {
+  port({ exec, destroyed }) {
     const { meta: { history, routes, request } } = this;
     const handleHistoryChange = location =>
       exec(this.HandleLocationChange(location));
@@ -31,7 +31,7 @@ class Router {
         history.replace(defaultRoute.pattern + history.location.search);
       }
       const unlisten = history.listen(handleHistoryChange);
-      destroy.then(unlisten);
+      destroyed.then(unlisten);
     }
 
     const initLocation = request

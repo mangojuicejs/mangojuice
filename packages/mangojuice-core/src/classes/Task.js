@@ -39,7 +39,7 @@ extend(Task.prototype, {
   /**
    * Define the task to be "multi-thread", so every call
    * will run in parallel with other calls of the same task
-   * in scope of one process
+   * in scope of one process (model).
    * @param  {boolean} val
    * @return {Task}
    */

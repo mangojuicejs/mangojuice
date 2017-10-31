@@ -50,23 +50,23 @@ describe("Init commands execution", () => {
           b_2: child(BlockB.Logic)
         }
       }
-      hub({ exec, cmd }) {
+      hub(cmd) {
         if (cmd.is(logicOf(this.model.b_1).FromInitOneCmd)) {
-          exec(this.HandleB_1);
+          return this.HandleB_1;
         } else if (cmd.is(logicOf(this.model.b_2).FromInitOneCmd)) {
-          exec(this.HandleB_2);
+          return this.HandleB_2;
         } else if (cmd.is('SharedBlock.FromInitOneCmd')) {
-          exec(this.FromSubCmd);
+          return this.FromSubCmd;
         }
       }
-      hubAfter({ exec, cmd }) {
+      hubAfter(cmd) {
         if (cmd.is(BlockB.Logic.prototype.FromInitOneCmd, this.model.b_1)) {
-          exec(this.HandleB_11);
+          return this.HandleB_11;
         } else if (cmd.is(BlockB.Logic.prototype.FromInitOneCmd, this.model.b_2)) {
-          exec(this.HandleB_22);
+          return this.HandleB_22;
         }
       }
-      port({ exec, destroy }) {
+      port({ exec, destroyed }) {
         exec(this.FromSubCmd)
         exec(this.FromPortCmd)
         exec(this.FromPortAsync())

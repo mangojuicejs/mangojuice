@@ -9,7 +9,7 @@ import { cancelTask } from '../core/cmd/cancel';
 import {
   nextId, createResultPromise, is, maybeMap,
   maybeForEach, memoize, noop, fastTry,
-  extend
+  extend, deepMap
 } from "../core/utils";
 
 
@@ -26,12 +26,14 @@ const EMPTY_OBJECT = {};
  * @param  {string} type
  * @param  {function} iterator
  */
-function iterateParents(proc, iterator) {
+function mapParents(proc, iterator) {
   let currParent = proc.parent;
+  const res = [];
   while (currParent) {
-    iterator(currParent);
+    res.push(iterator(currParent));
     currParent = currParent.parent;
   }
+  return res;
 }
 
 /**
@@ -261,7 +263,7 @@ function runChildren(proc) {
 function runPorts(proc) {
   const { logic, logger, destroyPromise, exec } = proc;
   if (logic.port) {
-    const portProps = { exec, destroy: destroyPromise };
+    const portProps = { exec, destroyed: destroyPromise };
     const portRunner = () => logic.port(portProps);
     return trackExecs(proc, portRunner);
   }
@@ -487,18 +489,22 @@ function handleCommand(proc, cmd, isAfter) {
   if (!cmd.handlable) return;
   const { logger } = proc;
   const type = isAfter ? 'hubAfter' : 'hubBefore';
-  const hubProps = { exec: proc.exec, cmd };
-
   logger.onStartHandling(cmd, isAfter);
-  const res = trackExecs(proc, () => {
-    iterateParents(proc, function maybeExecHub(parnetProc) {
-      if (parnetProc.logic[type]) {
-        proc.execPromise.add(parnetProc.logic[type](hubProps));
-      }
-    })
+
+  // Get all commands from all defined hubs
+  const cmds = mapParents(proc, function maybeExecHub(parnetProc) {
+    if (parnetProc.logic[type]) {
+      return safeExecFunction(logger, null, function safeExecHub() {
+        return parnetProc.logic[type](cmd);
+      });
+    }
   });
+
+  // Exec all commands in defined order
+  const execs = deepMap(cmds, c => proc.exec(c));
+
   logger.onEndHandling(cmd, isAfter);
-  return res;
+  return Promise.all(execs);
 }
 
 /**
@@ -528,7 +534,7 @@ function doExecCmd(proc, rawCmd) {
       const taskPromise = execTask(proc, result, cmd);
       resPromise.add(taskPromise.then(exec, exec));
     } else if (result && (is.array(result) || (result.func && result.id))) {
-      resPromise.add(Promise.all(maybeMap(result, x => exec(x))));
+      resPromise.add(Promise.all(deepMap(result, x => exec(x))));
     } else if (is.object(result)) {
       modelUpdated = updateModel(proc, result);
     }

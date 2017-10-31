@@ -245,10 +245,10 @@ describe('Lazy block loading', () => {
         children() {
           return { child: child(LazyBlock.Logic) };
         }
-        hub({ exec, cmd }) {
+        hub(cmd) {
           if (cmd.is(logicOf(this.model.child).SetField)) {
-            exec(this.HandleChild);
             handled(cmd);
+            return this.HandleChild;
           }
         }
         @cmd SetField(name, value) {

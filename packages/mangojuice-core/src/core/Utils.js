@@ -65,6 +65,17 @@ export const maybeMap = runOnMixed.bind(null, fastMap);
 
 export const maybeForEach = runOnMixed.bind(null, fastForEach);
 
+export const deepMap = (vals, fn, res = []) => {
+  maybeForEach(vals, function deppMapIterator(v) {
+    if (is.array(v)) {
+      return deepMap(v, fn, res);
+    } else {
+      res.push(fn(v));
+    }
+  });
+  return res;
+};
+
 export const createResultPromise = () => {
   let res = Promise.resolve();
   return {
