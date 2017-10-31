@@ -10,7 +10,7 @@ import { runWithTracking } from "mangojuice-test";
         return { initCommands: this.InitChild };
       }
       port(exec, destroyed) {
-        destroy.then(() => this.model.deleted = true);
+        destroyed.then(() => this.model.deleted = true);
       }
       @cmd InitChild() {}
       @cmd ChildDestroy() {}
@@ -123,7 +123,7 @@ import { runWithTracking } from "mangojuice-test";
     expect(oldArr[1].deleted).toBeTruthy();
   });
 
-  it.only("should be able to nest itself", async () => {
+  it("should be able to nest itself", async () => {
     let idCounter = 0;
     const RecursiveBlock = {
       createModel: () => ({ recursive: null, a: 0, id: idCounter++ }),

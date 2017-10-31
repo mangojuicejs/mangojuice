@@ -3,8 +3,8 @@ import procOf from './procOf';
 
 /**
  * Helper function to handle execution of commands which affects
- * the model. Aimed to be used inside `port` logic functions or
- * on view mounters.
+ * the model. Aimed to be used in mounters to track model updates
+ * to re-render the view.
  * @param  {Object} model
  * @param  {Promise} destroyPromise
  * @param  {Function} handler
