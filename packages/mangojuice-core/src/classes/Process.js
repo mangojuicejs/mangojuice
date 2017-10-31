@@ -181,10 +181,11 @@ function bindShared(proc, sharedModel) {
   const modelProc = procOf(sharedModel, true);
   if (!modelProc) return;
 
-  // Check that proc of the model is from different tree
-  const rootProc = findRootProc(modelProc);
-  const rootOfNewProc = findRootProc(proc);
-  if (rootProc === rootOfNewProc) return;
+  // Update existing binding or create a new one
+  if (proc.sharedBinding) {
+    proc.sharedBinding.logic = proc.logic;
+    return;
+  }
 
   // Actually add a new root with only some parms
   // to work with `handleCommand` function in Process
@@ -193,9 +194,17 @@ function bindShared(proc, sharedModel) {
     logic: proc.logic,
     exec: proc.exec
   };
+
+  // Check that proc of the model is from different tree
+  const rootProc = findRootProc(modelProc);
+  const rootOfNewProc = findRootProc(proc);
+  if (rootProc === rootOfNewProc) return;
+
+  // Add new root to shared block
   rootProc.parent = newRoot;
   const removeTreeNode = () => rootProc.parent = newRoot.parent;
   proc.destroyPromise.then(removeTreeNode);
+  proc.sharedBinding = newRoot;
 }
 
 /**
