@@ -276,4 +276,13 @@ describe('Lazy block loading', () => {
     expect(handled.mock.calls[0][0].func).toBeDefined();
     expect(handled.mock.calls[0][0].func).toEqual(BlockChild.Logic.prototype.SetField.func);
   });
+
+  it('should maintain shared block binsing after module resolving', async () => {
+    // TODO
+    // 1. Add shared block to the app, lazy with hub with
+    // 2. Run lazy and shared
+    // 3. Resolve lazy
+    // 4. Run some command in shared
+    // 5. Hub should be called only once (no shared double-binding after resolution)
+  });
 });
