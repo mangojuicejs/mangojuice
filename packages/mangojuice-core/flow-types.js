@@ -1,4 +1,8 @@
 // @flow
+type CommandType<M> = {
+  is: (...args: any) => bool,
+  model: M,
+};
 
 type TaskObject = {
   success: (cmd: any) => TaskObject,
@@ -6,64 +10,89 @@ type TaskObject = {
   args: (...args: Array<any>) => TaskObject,
   engine: (exec: any) => TaskObject
 };
-type NestType<A, T, Y, U> = {
-  +logic: A,
-  args: (c1?: T, c2?: Y, c3?: U) => NestType<A, T, Y, U>,
-  handler: () => NestType<A, T, Y, U>,
-  singleton: (?Boolean) => NestType<A, T, Y, U>
-};
+
 type DependsType = {
   compute: (Function) => DependsType
 };
-interface ConfigFunction<MetaType, T, Y, U> {
-  +config?: (c1?: T, c2?: Y, c3?: U) => ConfigType<MetaType>;
-};
-type ConfigType<M> = {
+
+type LogicConfig<MetaType> = {
   initCommands?: any,
-  meta?: M
+  meta?: MetaType
+};
+
+type ConfiguredLogic = {
+};
+
+type BlockType = {
+  createModel: (...args: any) => Object,
+  Logic: Class<*>,
+  View?: any
 };
 
 declare module "mangojuice-core" {
-  declare export var Cmd: {
-    update: any,
-    batch: any,
-    task: any,
-    debounce: any,
-    throttle: any
-  };
+  declare export function cmd(): any;
 
-  declare export var Task: {
-    create: (Function) => TaskObject;
-  };
+  declare export function debounce(): any;
 
-  declare export var Run: any;
+  declare export function throttle(): any;
 
-  declare export var Utils: any;
+  declare export function task(fn: Function): TaskObject;
+
+  declare export function delay(ms: number): Promise<void>;
+
+  declare export function cancel(cmd: any): any;
+
+  declare export function logicOf<T>(model: Object, clazz?: Class<T>): T;
+
+  declare export function child<T>(logicClass: Class<{ +config?: (...args: T) => any }>, ...args: T): ConfiguredLogic;
+
+  declare export function depends(...args: any): DependsType;
+
+  declare export function observe(model: Object, destroyeded: Promise<any>, handler: Function): void;
+
+  declare export function run(block: BlockType, opts?: Object): any;
+
+  declare export function bind(block: BlockType, opts?: Object): any;
+
+  declare export function hydrate(block: BlockType, model: Object): any;
+
+  declare export var utils: any;
 
   declare export class LogicBase<ModelType = any, SharedType = any, MetaType = any> {
     +model: ModelType;
     +shared: SharedType;
     +meta: MetaType;
-    +destroy: Promise<any>;
 
-    port(): ?Promise<any>;
+    hub(cmd: CommandType<*>): ?Promise<any>;
 
-    children(): {[key: $Enum<ModelType>]: NestType<*, *, *, *>};
+    hubBefore(cmd: CommandType<*>): ?Promise<any>;
 
-    computed(): {[k: $Enum<ModelType>]: () => any | DependsType};
+    hubAfter(cmd: CommandType<*>): ?Promise<any>;
 
-    exec(): Promise<any>;
+    port(exec: (cmd: any) => Promise<any>, destroyed: Promise<any>): ?Promise<any>;
 
-    depends(...deps: Array<Object>): DependsType;
+    children(): {[k: $Enum<ModelType>]: Class<*> | ConfiguredLogic};
 
-    nest<T, Y, U, L: ConfigFunction<MetaType, T, Y, U>&LogicBase<>>(logic: L): NestType<L, T, Y, U>;
+    computed(): {[k: $Enum<ModelType>]: (() => any) | DependsType};
+
+    config(...args: any): LogicConfig<MetaType>;
   }
 
   declare export default {|
     +LogicBase: typeof LogicBase,
-    +Run: typeof Run,
-    +Task: typeof Task,
-    +Cmd: typeof Cmd,
-    +Utils: typeof Utils,
+    +cmd: typeof cmd,
+    +debounce: typeof debounce,
+    +throttle: typeof throttle,
+    +task: typeof task,
+    +delay: typeof delay,
+    +cancel: typeof cancel,
+    +logicOf: typeof logicOf,
+    +child: typeof child,
+    +depends: typeof depends,
+    +observe: typeof observe,
+    +run: typeof run,
+    +bind: typeof bind,
+    +hydrate: typeof hydrate,
+    +utils: typeof utils
   |};
 }
