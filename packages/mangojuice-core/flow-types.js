@@ -1,35 +1,60 @@
 // @flow
-type CommandType<M> = {
-  is: (...args: any) => bool,
-  model: M,
-};
-
-type TaskObject = {
-  success: (cmd: any) => TaskObject,
-  fail: (cmd: any) => TaskObject,
-  args: (...args: Array<any>) => TaskObject,
-  engine: (exec: any) => TaskObject
-};
-
-type DependsType = {
-  compute: (Function) => DependsType
-};
-
-type LogicConfig<MetaType> = {
-  initCommands?: any,
-  meta?: MetaType
-};
-
-type ConfiguredLogic = {
-};
-
-type BlockType = {
-  createModel: (...args: any) => Object,
-  Logic: Class<*>,
-  View?: any
-};
-
 declare module "mangojuice-core" {
+  declare type CommandType<M> = {
+    is: (...args: any) => bool,
+    model: M,
+  };
+
+  declare type TaskObject = {
+    success: (cmd: any) => TaskObject,
+    fail: (cmd: any) => TaskObject,
+    args: (...args: Array<any>) => TaskObject,
+    engine: (exec: any) => TaskObject
+  };
+
+  declare type DependsType = {
+    compute: (Function) => DependsType
+  };
+
+  declare type LogicConfig<MetaType> = {
+    initCommands?: any,
+    meta?: MetaType
+  };
+
+  declare type ConfiguredLogic = {
+  };
+
+  declare type BlockType = {
+    createModel: (...args: any) => Object,
+    Logic: Class<*>,
+    View?: any
+  };
+
+  declare export class Command {
+    is: (...args: any) => bool,
+    model: Object
+  }
+
+  declare export class LogicBase<ModelType = any, SharedType = any, MetaType = any> {
+    +model: ModelType;
+    +shared: SharedType;
+    +meta: MetaType;
+
+    hub(cmd: Command): any;
+
+    hubBefore(cmd: Command): any;
+
+    hubAfter(cmd: Command): any;
+
+    port(exec: (cmd: any) => Promise<any>, destroyed: Promise<any>): ?Promise<any>;
+
+    children(): {[k: $Enum<ModelType>]: Class<*> | ConfiguredLogic};
+
+    computed(): {[k: $Enum<ModelType>]: (() => any) | DependsType};
+
+    config(...args: any): LogicConfig<MetaType>;
+  }
+
   declare export function cmd(): any;
 
   declare export function debounce(): any;
@@ -58,28 +83,9 @@ declare module "mangojuice-core" {
 
   declare export var utils: any;
 
-  declare export class LogicBase<ModelType = any, SharedType = any, MetaType = any> {
-    +model: ModelType;
-    +shared: SharedType;
-    +meta: MetaType;
-
-    hub(cmd: CommandType<*>): ?Promise<any>;
-
-    hubBefore(cmd: CommandType<*>): ?Promise<any>;
-
-    hubAfter(cmd: CommandType<*>): ?Promise<any>;
-
-    port(exec: (cmd: any) => Promise<any>, destroyed: Promise<any>): ?Promise<any>;
-
-    children(): {[k: $Enum<ModelType>]: Class<*> | ConfiguredLogic};
-
-    computed(): {[k: $Enum<ModelType>]: (() => any) | DependsType};
-
-    config(...args: any): LogicConfig<MetaType>;
-  }
-
   declare export default {|
     +LogicBase: typeof LogicBase,
+    +Command: typeof Command,
     +cmd: typeof cmd,
     +debounce: typeof debounce,
     +throttle: typeof throttle,

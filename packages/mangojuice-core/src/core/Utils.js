@@ -66,7 +66,7 @@ export const maybeMap = runOnMixed.bind(null, fastMap);
 export const maybeForEach = runOnMixed.bind(null, fastForEach);
 
 export const deepMap = (vals, fn, res = []) => {
-  maybeForEach(vals, function deppMapIterator(v) {
+  maybeForEach(vals, function deepMapIterator(v) {
     if (is.array(v)) {
       return deepMap(v, fn, res);
     } else {
