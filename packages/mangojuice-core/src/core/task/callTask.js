@@ -1,4 +1,5 @@
-import { sym, is, fastTry, ensureError } from "./Utils";
+import { sym, is, fastTry, ensureError } from "../utils";
+
 
 /**
  * A symbol for setting custom promise cancel function.
@@ -74,7 +75,7 @@ function getInitContext(initContext) {
  * @param  {Function}  fn
  * @return {Promise}
  */
-export function call(fn, ...args) {
+function call(fn, ...args) {
   const parentSubtasks = this && this.subtasks || [];
   const context =
     this && this.token
@@ -104,6 +105,8 @@ export function call(fn, ...args) {
       res.cancelled = true;
       reject({ result: null, error: error || cancelError });
     });
+
+    // Handle result
     execRes.result.then(
       result => {
         const successHandler = () => {
@@ -121,46 +124,5 @@ export function call(fn, ...args) {
   return res;
 }
 
-/**
- * Creates a Task object that could be returned from
- * async task command.
- * @param  {Function} task
- * @return {Object}
- */
-export function create(task) {
-  return {
-    task,
-    executor: call,
-    success(cmd) {
-      this.successCmd = cmd;
-      return this;
-    },
-    fail(cmd) {
-      this.failCmd = cmd;
-      return this;
-    },
-    engine(engine) {
-      this.executor = engine;
-      return this;
-    },
-    args(...args) {
-      this.customArgs = args;
-      return this;
-    }
-  };
-}
-
-/**
- * Wait some time. Support cancellation in the `call`.
- * @param  {number}  ms
- * @param  {any} val
- * @return {Promise}
- */
-export function delay(ms, val = true) {
-  let timeoutId;
-  const res = new Promise(resolve => {
-    timeoutId = setTimeout(() => resolve(val), ms);
-  });
-  res[CANCEL] = () => clearTimeout(timeoutId);
-  return res;
-}
+export const callTask = call;
+export default callTask;

@@ -1,10 +1,20 @@
-import { Cmd, Utils } from "mangojuice-core";
+import { procOf, logicOf, utils, ensureCommand, observe } from "mangojuice-core";
 import { setContext, getContext } from './ViewRenderContext';
+
+
+export function getCmdHash(cmd) {
+  if (utils.is.func(cmd)) {
+    return `${cmd.id}`;
+  } else {
+    return `${cmd.id}${cmd.args.join('.')}`;
+  }
+}
 
 export const childContextTypes = {
   model: () => null,
   nest: () => null,
-  exec: () => null
+  exec: () => null,
+  Logic: () => null
 };
 
 export default reactImpl => {
@@ -18,18 +28,22 @@ export default reactImpl => {
       return {
         nest: this.props.nest,
         model: this.props.proc.model,
-        exec: this.execCommand
+        exec: this.execCommand,
+        Logic: logicOf(this.props.proc.model),
       };
     }
 
     componentDidMount() {
       this.unmounted = false;
-      this.props.proc.addListener(Utils.MODEL_UPDATED_EVENT, this.updateView);
+      const destroyPromise = new Promise(r => this.destroyResolve = r);
+      observe(this.props.proc.model, destroyPromise, this.updateView);
     }
 
     componentWillUnmount() {
       this.unmounted = true;
-      this.props.proc.removeListener(Utils.MODEL_UPDATED_EVENT, this.updateView);
+      if (this.destroyResolve) {
+        this.destroyResolve();
+      }
     }
 
     componentDidUpdate() {
@@ -48,21 +62,20 @@ export default reactImpl => {
       }
     }
 
-    execCommand = cmd => {
-      const cmdHash = Cmd.hash(cmd);
-      this.execsMap[cmdHash] =
-        this.prevExecsMap[cmdHash] ||
-        ((...args) => {
-          const callCmd = !Utils.is.func(cmd)
-            ? Cmd.appendArgs(Utils.ensureCmdObject(cmd).clone(), args)
-            : cmd(...args);
-          this.props.proc.exec(callCmd);
-        });
+    execCommand = (cmd) => {
+      const realCmd = ensureCommand(cmd);
+      const cmdHash = getCmdHash(cmd);
+      const execViewCmd = ((...args) => {
+        const callCmd = realCmd.appendArgs(args);
+        this.props.proc.exec(callCmd);
+      });
+
+      this.execsMap[cmdHash] = this.prevExecsMap[cmdHash] || execViewCmd;
       return this.execsMap[cmdHash];
     }
 
     render() {
-      if (!this.props.proc.model.__proc) {
+      if (!procOf(this.props.proc.model, true)) {
         return wrappedCreateElement("div");
       }
       const { View, children, props } = this.props;

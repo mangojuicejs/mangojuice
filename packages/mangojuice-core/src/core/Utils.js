@@ -1,9 +1,3 @@
-// Constants
-export const MODEL_UPDATED_EVENT = "updated";
-export const CHILD_MODEL_UPDATED_EVENT = "childUpdated";
-export const DESTROY_MODEL_EVENT = "destroy";
-
-// Utils
 export const is = {
   undef: v => v === null || v === undefined,
   notUndef: v => v !== null && v !== undefined,
@@ -29,8 +23,6 @@ export function autoInc(seed = 1) {
 }
 
 export const nextId = autoInc();
-
-export const emptyArray = [];
 
 export const fastForEach = (subject, iterator) => {
   const length = subject.length;
@@ -73,6 +65,17 @@ export const maybeMap = runOnMixed.bind(null, fastMap);
 
 export const maybeForEach = runOnMixed.bind(null, fastForEach);
 
+export const deepMap = (vals, fn, res = []) => {
+  maybeForEach(vals, function deepMapIterator(v) {
+    if (is.array(v)) {
+      return deepMap(v, fn, res);
+    } else {
+      res.push(fn(v));
+    }
+  });
+  return res;
+};
+
 export const createResultPromise = () => {
   let res = Promise.resolve();
   return {
@@ -80,42 +83,19 @@ export const createResultPromise = () => {
       return res;
     },
     add(nextPromise) {
-      res = res.then(() => nextPromise);
+      if (nextPromise !== res) {
+        res = res.then(() => nextPromise);
+      }
       return this;
     }
   };
 };
 
-export const ensureCmdObject = cmd => {
-  if (!cmd) return null;
-  if (!cmd.isCmd) {
-    if (cmd.id && is.func(cmd)) {
-      return cmd();
-    } else {
-      throw new Error("You passed something weird instead of cmd");
-    }
-  }
-  return cmd;
-};
 
-export const handleModelChanges = (model, destroy, handler, destroyHandler) => {
-  if (model.__proc) {
-    const proc = model.__proc;
-    proc.addListener(MODEL_UPDATED_EVENT, handler);
-    proc.addListener(DESTROY_MODEL_EVENT, destroyHandler);
-    if (destroy && destroy.then) {
-      destroy.then(() => {
-        proc.removeListener(MODEL_UPDATED_EVENT, handler)
-        proc.removeListener(DESTROY_MODEL_EVENT, destroyHandler);
-      });
-    }
-  }
-  return Promise.resolve();
-};
-
-export const objectValues = (obj) => {
-  return obj ? Object.keys(obj).map(k => obj[k]) : [];
-};
+export function extend(obj, props) {
+  for (let i in props) obj[i] = props[i];
+  return obj;
+}
 
 export const memoize = func => {
   let data;

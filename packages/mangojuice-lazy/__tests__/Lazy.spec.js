@@ -1,7 +1,11 @@
-import { Cmd, Task, LogicBase } from "mangojuice-core";
+import { cmd, logicOf, child, delay, handleLogicOf } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 import lazyUtils from "mangojuice-lazy";
 
+process.on('unhandledRejection', error => {
+  // Will print "unhandledRejection err is not defined"
+  console.log(error);
+});
 
 const createMockBlockResolver = (Block) => {
   let resolve = null;
@@ -16,28 +20,26 @@ const createMockBlockResolver = (Block) => {
 describe('Lazy block loading', () => {
   const AppBlock = {
     createModel: () => ({ e: 0, f: 4, g: 6, c: null }),
-    Logic: {
-      name: "AppBlock",
+    Logic: class AppBlock {
       config() {
         return {
           initCommands: this.CmdFromInit,
           meta: 'test-meta'
         }
-      },
-      port() {
-        return this.exec(this.CmdFromPort);
-      },
+      }
+      port(exec) {
+        return exec(this.CmdFromPort);
+      }
       computed() {
         return {
           e: () => this.model.f + this.model.g
         };
-      },
-      @Cmd.update
-      SetField(name, value) {
+      }
+      @cmd SetField(name, value) {
         return { [name]: value };
-      },
-      @Cmd.batch CmdFromPort() {},
-      @Cmd.update CmdFromInit() {
+      }
+      @cmd CmdFromPort() {}
+      @cmd CmdFromInit() {
         return { c: this.meta }
       }
     }
@@ -63,6 +65,7 @@ describe('Lazy block loading', () => {
 
     LazyBlock.View({ model: app.model });
     await resolved;
+    await delay(10);
 
     expect(commandNames).toEqual([
       'AppBlock.CmdFromPort',
@@ -77,14 +80,13 @@ describe('Lazy block loading', () => {
       app: LazyBlock
     });
 
-    await app.proc.exec(LazyBlock.Logic.SetField('f', 6));
+    await app.proc.exec(logicOf(app.model).SetField('f', 6));
     await resolved;
 
     expect(commandNames).toEqual([
-      'LazyBlock.Lazy.SetField.Resolver',
+      'LazyBlock.SetField.Lazy',
       'AppBlock.CmdFromPort',
       'AppBlock.CmdFromInit',
-      'AppBlock.Lazy.SetField.Wrapper',
       'AppBlock.SetField'
     ]);
     expect(app.model).toEqual({ e: 12, f: 6, g: 6, c: 'test-meta' });
@@ -93,36 +95,34 @@ describe('Lazy block loading', () => {
   it('should works on re-render after resolve', async () => {
     const BlockChild = {
       createModel: (props) => ({ ...props }),
-      Logic: new (class AppLogic extends LogicBase {
+      Logic: class AppLogic {
         config() {
           return {
             initCommands: this.CmdFromInit,
             meta: 'test-meta'
           }
         }
-        port() {
-          return this.exec(this.CmdFromPort);
+        port(exec) {
+          return exec(this.CmdFromPort);
         }
-        @Cmd.batch CmdFromPort() {}
-        @Cmd.update CmdFromInit() {
+        @cmd CmdFromPort() {}
+        @cmd CmdFromInit() {
           return { c: this.meta }
         }
-        @Cmd.update
-        SetField(name, value) {
+        @cmd SetField(name, value) {
           return { [name]: value };
         }
-      })
+      }
     };
     const { resolver, resolved } = createMockBlockResolver(BlockChild);
     const LazyBlock = lazyUtils.createLazyBlock(resolver);
     const BlockParent = {
       createModel: () => ({ child: null }),
-      Logic: {
-        name: "BlockParent",
+      Logic: class BlockParent {
         children() {
-          return { child: this.nest(LazyBlock.Logic) };
-        },
-        @Cmd.update SetField(name, value) {
+          return { child: child(LazyBlock.Logic) };
+        }
+        @cmd SetField(name, value) {
           return { [name]: value };
         }
       }
@@ -131,17 +131,16 @@ describe('Lazy block loading', () => {
       app: BlockParent
     });
 
-    await app.proc.exec(BlockParent.Logic.SetField('child', LazyBlock.createModel({'b': 321})));
-    await app.model.child.__proc.exec(LazyBlock.Logic.SetField('a', 123));
+    await app.proc.exec(logicOf(app.model).SetField('child', LazyBlock.createModel({'b': 321})));
+    await app.proc.exec(logicOf(app.model.child).SetField('a', 123));
     await resolved;
-    await app.proc.exec(BlockParent.Logic.SetField('child', LazyBlock.createModel()));
+    await app.proc.exec(logicOf(app.model).SetField('child', LazyBlock.createModel()));
 
     expect(commandNames).toEqual([
       'BlockParent.SetField',
-      'LazyBlock.Lazy.SetField.Resolver',
+      'LazyBlock.SetField.Lazy',
       'AppLogic.CmdFromPort',
       'AppLogic.CmdFromInit',
-      'AppLogic.Lazy.SetField.Wrapper',
       'AppLogic.SetField',
       'BlockParent.SetField',
       'AppLogic.CmdFromPort',
@@ -153,23 +152,21 @@ describe('Lazy block loading', () => {
   it('should update model after resolve', async () => {
     const BlockChild = {
       createModel: (props) => ({ ...props }),
-      Logic: new (class AppLogic extends LogicBase {
-        @Cmd.update
-        SetField(name, value) {
+      Logic: class AppLogic {
+        @cmd SetField(name, value) {
           return { [name]: value };
         }
-      })
+      }
     };
     const { resolver, resolved } = createMockBlockResolver(BlockChild);
     const LazyBlock = lazyUtils.createLazyBlock(resolver);
     const BlockParent = {
       createModel: () => ({ child: null }),
-      Logic: {
-        name: "BlockParent",
+      Logic: class BlockParent {
         children() {
-          return { child: this.nest(LazyBlock.Logic) };
-        },
-        @Cmd.update SetField(name, value) {
+          return { child: child(LazyBlock.Logic) };
+        }
+        @cmd SetField(name, value) {
           return { [name]: value };
         }
       }
@@ -181,38 +178,36 @@ describe('Lazy block loading', () => {
     const lazyModel = LazyBlock.createModel({'b': 321});
     expect(lazyModel).toEqual({ __args: [{'b': 321}] });
 
-    await app.proc.exec(BlockParent.Logic.SetField('child', lazyModel));
-    await app.model.child.__proc.exec(LazyBlock.Logic.SetField('a', 123));
+    await app.proc.exec(logicOf(app.model).SetField('child', lazyModel));
+    await app.proc.exec(logicOf(app.model.child).SetField('a', 123));
     await resolved;
     expect(app.model.child).toEqual({ a: 123, b: 321 });
 
     const realModel = LazyBlock.createModel({'b': 321});
     expect(realModel).toEqual({'b': 321});
 
-    await app.proc.exec(BlockParent.Logic.SetField('child', LazyBlock.createModel()));
+    await app.proc.exec(logicOf(app.model).SetField('child', LazyBlock.createModel()));
     expect(app.model.child).toEqual({});
   });
 
   it('should fill model with actual data even if the model was detached', async () => {
     const BlockChild = {
       createModel: (props) => ({ ...props }),
-      Logic: new (class AppLogic extends LogicBase {
-        @Cmd.update
-        SetField(name, value) {
+      Logic: class AppLogic {
+        @cmd SetField(name, value) {
           return { [name]: value };
         }
-      })
+      }
     };
     const { resolver, resolved } = createMockBlockResolver(BlockChild);
     const LazyBlock = lazyUtils.createLazyBlock(resolver);
     const BlockParent = {
       createModel: () => ({ child: null }),
-      Logic: {
-        name: "BlockParent",
+      Logic: class BlockParent {
         children() {
-          return { child: this.nest(LazyBlock.Logic) };
-        },
-        @Cmd.update SetField(name, value) {
+          return { child: child(LazyBlock.Logic) };
+        }
+        @cmd SetField(name, value) {
           return { [name]: value };
         }
       }
@@ -222,13 +217,72 @@ describe('Lazy block loading', () => {
     });
 
     const lazyModel = LazyBlock.createModel({'b': 321});
-    app.proc.exec(BlockParent.Logic.SetField('child', lazyModel));
-    const changeLazy = app.model.child.__proc.exec(LazyBlock.Logic.SetField('a', 123));
-    app.proc.exec(BlockParent.Logic.SetField('child', null));
+    app.proc.exec(logicOf(app.model).SetField('child', lazyModel));
+    const changeLazy = app.proc.exec(logicOf(app.model.child).SetField('a', 123));
+    app.proc.exec(logicOf(app.model).SetField('child', null));
     await resolved;
     await changeLazy;
 
     expect(lazyModel).toEqual({ b: 321 });
     expect(app.model.child).toEqual(null);
+  });
+
+  it('should make lazy command nonhandlable but original handled', async () => {
+    const BlockChild = {
+      createModel: (props) => ({ ...props }),
+      Logic: class AppLogic {
+        @cmd SetField(name, value) {
+          return { [name]: value };
+        }
+      }
+    };
+    const { resolver, resolved } = createMockBlockResolver(BlockChild);
+    const LazyBlock = lazyUtils.createLazyBlock(resolver);
+    const handled = jest.fn();
+    const BlockParent = {
+      createModel: () => ({ child: null }),
+      Logic: class BlockParent {
+        children() {
+          return { child: child(LazyBlock.Logic) };
+        }
+        hub(cmd) {
+          if (cmd.is(logicOf(this.model.child).SetField)) {
+            handled(cmd);
+            return this.HandleChild;
+          }
+        }
+        @cmd SetField(name, value) {
+          return { [name]: value };
+        }
+        @cmd HandleChild(cmd) {
+        }
+      }
+    };
+    const { app, shared, commandNames, errors } = await runWithTracking({
+      app: BlockParent
+    });
+
+    await app.proc.exec(logicOf(app.model).SetField('child', LazyBlock.createModel({'b': 321})));
+    await app.proc.exec(logicOf(app.model.child).SetField('a', 123));
+    await resolved;
+
+    expect(commandNames).toEqual([
+      'BlockParent.SetField',
+      'LazyBlock.SetField.Lazy',
+      'AppLogic.SetField',
+      'BlockParent.HandleChild'
+    ]);
+    expect(handled).toHaveBeenCalledTimes(1);
+    expect(handled.mock.calls[0][0].func).toBeDefined();
+    expect(handled.mock.calls[0][0].func).toEqual(BlockChild.Logic.prototype.SetField.func);
+  });
+
+  it('should maintain shared block binsing after module resolving', async () => {
+    // TODO
+    // 1. Add shared block to the app, lazy with hub with
+    // 2. Run lazy and shared
+    // 3. Resolve lazy
+    // 4. Run some command in shared
+    // 5. Hub should be called only once (no shared double-binding after resolution)
   });
 });

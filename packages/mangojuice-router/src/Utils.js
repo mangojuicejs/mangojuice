@@ -1,7 +1,16 @@
 import UrlPattern from "url-pattern";
 import qs from 'qs';
-import { Utils, Cmd } from "mangojuice-core";
+import { utils, logicOf } from "mangojuice-core";
 
+
+/**
+ * Returns list of values of given object or empty array
+ * @param  {?Object} obj
+ * @return {Array}
+ */
+export const objectValues = (obj) => {
+  return obj ? Object.keys(obj).map(k => obj[k]) : [];
+};
 
 /**
  * By given router model and command object creates
@@ -11,25 +20,36 @@ import { Utils, Cmd } from "mangojuice-core";
  * @param  {object} cmd
  * @return {string}
  */
-export function createHref(model, routes, routeId, args) {
-  const [ newParams, newQuery, opts = {} ] = args;
+export function createHref(model, meta, route) {
+  const { routes, history } = meta;
+  let { routeId, params, query, options = {} } = route;
 
   // Get routes chain
-  const routesChain = [routes.map[routeId]];
+  let routesChain = [];
   let currRouteId = routeId;
-  while (routes.parents[currRouteId]) {
-    currRouteId = routes.parents[currRouteId];
-    routesChain.unshift(routes.map[currRouteId]);
+  if (routeId >= 0) {
+    routesChain.push(routes.map[routeId]);
+    while (routes.parents[currRouteId]) {
+      currRouteId = routes.parents[currRouteId];
+      routesChain.unshift(routes.map[currRouteId]);
+    }
   }
 
-  // Calculate next URL
-  const nextQuery = opts.keep ? { ...newQuery, ...model.query } : newQuery;
-  const nextParams = { ...model.params, ...newParams };
-  const nextUrl = routesChain
-    .reduce((acc, matcher) => acc + matcher.stringify(nextParams), "")
-    .replace(/\/{2,}/g, "/") + qs.stringify(nextQuery);
+  // Calculate next pathname
+  let nextPathname = history.location.pathname;
+  if (routeId >= 0) {
+    const nextParams = { ...model.params, ...params };
+    nextPathname = routesChain
+      .reduce((acc, matcher) => acc + matcher.stringify(nextParams), "")
+      .replace(/\/{2,}/g, "/") || "/"
+  }
 
-  return nextUrl;
+  // Calculate next query str
+  const nextQuery = options.keep ? { ...model.query, ...query } : query;
+  const queryStr = qs.stringify(nextQuery);
+  const nextQueryStr = queryStr ? `?${queryStr}` : '';
+
+  return nextPathname + nextQueryStr;
 }
 
 /**
@@ -40,38 +60,12 @@ export function createHref(model, routes, routeId, args) {
  * @param  {object} cmd
  * @return {object}
  */
-export function link(model, cmd) {
-  const creator = cmd.isCmd ? cmd.creator : cmd;
-  const args = cmd.isCmd ? cmd.args : Utils.emptyArray;
+export function link(model, route) {
+  const logic = logicOf(model);
   return {
-    onClick: cmd,
-    href: createHref(model, creator.routes, creator.routeId, args)
+    onClick: logic.Push(route),
+    href: createHref(model, logic.meta, route)
   };
-}
-
-/**
- * Route command function, which change the browser's
- * history by binded routeId and provided arguments.
- * @param  {string} routeId
- * @param  {object} options.meta
- * @param  {object} options.model
- * @param  {object} newParams
- * @param  {object} query
- * @param  {object} options
- */
-export function routeUpdateCommand(routeId, ...args) {
-  // Stop handling a click to a link by the browser
-  const event = args[args.length - 1];
-  if (event && event.preventDefault) {
-    args.pop();
-    event.preventDefault();
-  }
-
-  // Calculate next url to push to history
-  const [ , , opts = {} ] = args;
-  const updateHistory = this.meta.history[opts.replace ? "replace" : "push"];
-  const nextUrl = createHref(this.model, this.meta.routes, routeId, args);
-  updateHistory(nextUrl);
 }
 
 /**
@@ -81,19 +75,49 @@ export function routeUpdateCommand(routeId, ...args) {
  * @param  {string} pattern
  * @param  {?object} children
  * @param  {?object} options
- * @return {CommandCreator}
+ * @return {RouteCreator}
  */
-export const route = (pattern, children, options = {}) => {
-  const routeId = Utils.nextId();
-  const routeCmd = Cmd.createUpdateCmd(pattern, function(...args) {
-    return routeUpdateCommand.call(this, routeId, ...args);
+export const route = (pattern, children, config) => {
+  const routeId = utils.nextId();
+  const routeFactory = (params, query, options) => ({
+    routeId,
+    query,
+    params,
+    pattern,
+    options,
+    config,
+    children
   });
-  routeCmd.routeId = routeId;
-  routeCmd.pattern = pattern;
-  routeCmd.options = options;
-  routeCmd.children = children;
-  return routeCmd;
+  routeFactory.routeId = routeId;
+  return routeFactory;
 };
+
+// Special route for changing only query params
+export const Query = (query, keep = true) => ({
+  routeId: -1,
+  query: query || {},
+  options: { keep }
+});
+
+/**
+ * Flatten routes tree and returns an array with all the
+ * routes from the tree
+ * @param  {Object} routesTree
+ * @return {Object}
+ */
+const flattenRoutesTree = (routesTree, res = []) => {
+  for (const k in routesTree) {
+    const cmd = routesTree[k];
+    if (cmd && cmd.routeId) {
+      const route = cmd();
+      res.push(route);
+      if (route.children) {
+        flattenRoutesTree(route.children, res);
+      }
+    }
+  }
+  return res;
+}
 
 /**
  * By given list of commands create a set of maps with only
@@ -102,7 +126,7 @@ export const route = (pattern, children, options = {}) => {
  * @param  {Array} commands
  * @return {Object}
  */
-export const createRouteMaps = (commandsObj) => {
+export const createRouteMaps = (routesTree) => {
   const map = {};
   const children = {};
   const parents = {};
@@ -120,8 +144,7 @@ export const createRouteMaps = (commandsObj) => {
   };
 
   // Create map, children and parents from routes
-  const routes = Object.keys(commandsObj)
-    .map(k => commandsObj[k])
+  const routes = flattenRoutesTree(routesTree)
     .filter(cmd => cmd && cmd.routeId);
 
   routes.forEach(r => {
@@ -132,7 +155,7 @@ export const createRouteMaps = (commandsObj) => {
     map[r.routeId] = matcher;
 
     if (r.children) {
-      children[r.routeId] = Utils.objectValues(r.children);
+      children[r.routeId] = objectValues(r.children);
       for (let k in r.children) {
         if (r.children[k] && r.children[k].routeId) {
           parents[r.children[k].routeId] = r.routeId;
@@ -143,9 +166,7 @@ export const createRouteMaps = (commandsObj) => {
 
   // Define routes tree and set it to each command
   const roots = routes.filter(r => !parents[r.routeId]);
-  const routesTree = { map, children, parents, roots };
-  routes.forEach(r => r.routes = routesTree);
-  return routesTree;
+  return { map, children, parents, roots };
 };
 
 /**
@@ -208,17 +229,17 @@ export const findFirstPath = (routesObj, path) => {
   }
 };
 
-export const isFirstAppear = (model, routeCmd) =>
-  model.appearedOnce[routeCmd.routeId];
+export const isFirstAppear = (model, route) =>
+  model.appearedOnce[route.routeId];
 
-export const isChanged = (model, routeCmd) =>
-  model.changedRoutes[routeCmd.routeId];
+export const isChanged = (model, route) =>
+  model.changedRoutes[route.routeId];
 
-export const isActive = (model, routeCmd) =>
-  model.active[routeCmd.routeId];
+export const isActive = (model, route) =>
+  model.active[route.routeId];
 
-export const isLeft = (model, routeCmd) =>
-  model.leftRoutes[routeCmd.routeId];
+export const isLeft = (model, route) =>
+  model.leftRoutes[route.routeId];
 
 export const isNotFound = (model, routesToCheck) => {
   if (!routesToCheck) {
@@ -226,8 +247,8 @@ export const isNotFound = (model, routesToCheck) => {
   }
 
   for (let k in routesToCheck) {
-    const cmd = routesToCheck[k];
-    if (cmd && cmd.routeId && model.active[cmd.routeId]) {
+    const route = routesToCheck[k];
+    if (route && route.routeId && model.active[route.routeId]) {
       return false;
     }
   }

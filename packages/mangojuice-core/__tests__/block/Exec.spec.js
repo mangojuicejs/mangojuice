@@ -1,4 +1,4 @@
-import { Cmd, Task, Run, Utils } from "mangojuice-core";
+import { cmd, cancel, logicOf, depends, child, task, delay } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
@@ -6,23 +6,18 @@ describe('Exec tasks', () => {
   it('should exec task and exec success cmd with result on success', async () => {
     const Block = {
       createModel: () => ({}),
-      Logic: {
-        name: 'Block',
-        @Cmd.task
-        SuccessTask() {
-          return Task
-            .create(function() { return { test: 123 }; })
+      Logic: class Block {
+        @cmd SuccessTask() {
+          return task(function() { return { test: 123 }; })
             .success(this.SuccessHandler)
             .fail(this.FailHandler)
-        },
-        @Cmd.update
-        SuccessHandler(res) { return res },
-        @Cmd.nope
-        FailHandler() {}
+        }
+        @cmd SuccessHandler(res) { return res }
+        @cmd FailHandler() {}
       }
     };
     const { app, commandNames } = await runWithTracking({ app: Block });
-    await app.proc.exec(Block.Logic.SuccessTask);
+    await app.proc.exec(logicOf(app.model).SuccessTask);
 
     expect(app.model).toEqual({ test: 123 });
     expect(commandNames).toEqual([
@@ -35,26 +30,21 @@ describe('Exec tasks', () => {
     const error = new Error('oops');
     const Block = {
       createModel: () => ({}),
-      Logic: {
-        name: 'Block',
-        @Cmd.task
-        FailTask() {
-          return Task
-            .create(function() {
+      Logic: class Block {
+        @cmd FailTask() {
+          return task(function() {
               throw error;
               return { test: 123 };
             })
             .success(this.SuccessHandler)
             .fail(this.FailHandler)
-        },
-        @Cmd.nope
-        SuccessHandler() {},
-        @Cmd.update
-        FailHandler(e) { return { error: e }; }
+        }
+        @cmd SuccessHandler() {}
+        @cmd FailHandler(e) { return { error: e }; }
       }
     };
     const { app, commandNames } = await runWithTracking({ app: Block });
-    await app.proc.exec(Block.Logic.FailTask);
+    await app.proc.exec(logicOf(app.model).FailTask);
 
     expect(app.model).toEqual({ error });
     expect(commandNames).toEqual([
@@ -66,102 +56,47 @@ describe('Exec tasks', () => {
   it('should provide a way to cancel a task', async () => {
     const Block = {
       createModel: () => ({}),
-      Logic: {
-        name: 'Block',
-        @Cmd.task
-        SuccessTask() {
-          return Task
-            .create(async function() {
-              await this.call(Task.delay, 1000);
+      Logic: class Block {
+        @cmd SuccessTask() {
+          return task(async function() {
+              await this.call(delay, 1000);
               return { test: 123 };
             })
             .success(this.SuccessHandler)
             .fail(this.FailHandler)
-        },
-        @Cmd.nope
-        SuccessHandler() {},
-        @Cmd.nope
-        FailHandler() {}
+        }
+        @cmd SuccessHandler() {}
+        @cmd FailHandler() {}
       }
     };
     const { app, commandNames } = await runWithTracking({ app: Block });
-    app.proc.exec(Block.Logic.SuccessTask);
-    await Task.delay(100);
-    await app.proc.exec(Block.Logic.SuccessTask.Cancel);
+    app.proc.exec(logicOf(app.model).SuccessTask);
+    await delay(100);
+    await app.proc.exec(cancel(logicOf(app.model).SuccessTask));
+    await delay(10);
 
     expect(commandNames).toEqual([
       'Block.SuccessTask',
-      'Block.SuccessTask.Cancel'
-    ]);
-  });
-
-  it('should manually cancel all tasks across all models', async () => {
-    const Block = {
-      createModel: () => ({}),
-      Logic: {
-        name: 'Block',
-        @Cmd.task
-        SuccessTask() {
-          return Task
-            .create(async function() {
-              await this.call(Task.delay, 1000);
-              return { test: 123 };
-            })
-            .success(this.SuccessHandler)
-            .fail(this.FailHandler)
-        },
-        @Cmd.nope
-        SuccessHandler() {},
-        @Cmd.nope
-        FailHandler() {}
-      }
-    };
-    const runOne = await runWithTracking({ app: Block });
-    const runTwo = await runWithTracking({ app: Block });
-    const runThree = await runWithTracking({ app: Block });
-
-    runOne.app.proc.exec(Block.Logic.SuccessTask);
-    runTwo.app.proc.exec(Block.Logic.SuccessTask);
-    runThree.app.proc.exec(Block.Logic.SuccessTask);
-    await Task.delay(100);
-    await runThree.app.proc.exec(Block.Logic.SuccessTask.Cancel({ all: true }));
-    await Task.delay(10);
-
-    expect(runOne.commandNames).toEqual([
-      'Block.SuccessTask',
-      'Block.SuccessTask.Cancelled'
-    ]);
-    expect(runTwo.commandNames).toEqual([
-      'Block.SuccessTask',
-      'Block.SuccessTask.Cancelled'
-    ]);
-    expect(runThree.commandNames).toEqual([
-      'Block.SuccessTask',
       'Block.SuccessTask.Cancel',
-      'Block.SuccessTask.Cancelled'
+      'Block.SuccessTask.Cancelled',
     ]);
   });
 
   it('should receive arguments from command by default', async () => {
     const Block = {
       createModel: () => ({}),
-      Logic: {
-        name: 'Block',
-        @Cmd.task
-        SuccessTask() {
-          return Task
-            .create(function(ctx, ...args) { return { test: args }; })
+      Logic: class Block {
+        @cmd SuccessTask() {
+          return task(function(ctx, ...args) { return { test: args }; })
             .success(this.SuccessHandler)
             .fail(this.FailHandler)
-        },
-        @Cmd.update
-        SuccessHandler(res) { return res },
-        @Cmd.nope
-        FailHandler() {}
+        }
+        @cmd SuccessHandler(res) { return res }
+        @cmd FailHandler() {}
       }
     };
     const { app, commandNames } = await runWithTracking({ app: Block });
-    await app.proc.exec(Block.Logic.SuccessTask(1,2,3));
+    await app.proc.exec(logicOf(app.model).SuccessTask(1,2,3));
 
     expect(app.model).toEqual({ test: [1,2,3] });
     expect(commandNames).toEqual([
@@ -173,24 +108,21 @@ describe('Exec tasks', () => {
   it('should receive overriden arguments if defined', async () => {
     const Block = {
       createModel: () => ({}),
-      Logic: {
-        name: 'Block',
-        @Cmd.task
-        SuccessTask() {
-          return Task
-            .create(function(ctx, ...args) { return { test: args }; })
+      Logic: class Block {
+        @cmd SuccessTask() {
+          return task(function(ctx, ...args) {
+              return { test: args };
+            })
             .args(3,2,1)
             .success(this.SuccessHandler)
             .fail(this.FailHandler)
-        },
-        @Cmd.update
-        SuccessHandler(res) { return res },
-        @Cmd.nope
-        FailHandler() {}
+        }
+        @cmd SuccessHandler(res) { return res }
+        @cmd FailHandler() {}
       }
     };
     const { app, commandNames } = await runWithTracking({ app: Block });
-    await app.proc.exec(Block.Logic.SuccessTask(1,2,3));
+    await app.proc.exec(logicOf(app.model).SuccessTask(1,2,3));
 
     expect(app.model).toEqual({ test: [3,2,1] });
     expect(commandNames).toEqual([
@@ -206,24 +138,21 @@ describe('Exec tasks', () => {
     });
     const Block = {
       createModel: () => ({}),
-      Logic: {
-        name: 'Block',
-        @Cmd.task
-        SuccessTask() {
-          return Task
-            .create(function(ctx, ...args) { return { test: args }; })
+      Logic: class Block {
+        @cmd SuccessTask() {
+          return task(function(ctx, ...args) {
+              return { test: args };
+            })
             .engine(customEngine)
             .success(this.SuccessHandler)
             .fail(this.FailHandler)
-        },
-        @Cmd.update
-        SuccessHandler(res) { return res },
-        @Cmd.nope
-        FailHandler() {}
+        }
+        @cmd SuccessHandler(res) { return res }
+        @cmd FailHandler() {}
       }
     };
     const { app, commandNames } = await runWithTracking({ app: Block });
-    await app.proc.exec(Block.Logic.SuccessTask(1,2,3));
+    await app.proc.exec(logicOf(app.model).SuccessTask(1,2,3));
 
     expect(customEngine).toHaveBeenCalledTimes(1);
     expect(app.model).toEqual({ test: [1,2,3] });
@@ -236,29 +165,25 @@ describe('Exec tasks', () => {
   it('should not cancel prev task if "every" option provided', async () => {
     const Block = {
       createModel: () => ({}),
-      Logic: {
-        name: 'Block',
-        @Cmd.task({ every: true })
-        SuccessTask() {
-          return Task
-            .create(async function() {
-              await this.call(Task.delay, 100);
+      Logic: class Block {
+        @cmd SuccessTask() {
+          return task(async function() {
+              await this.call(delay, 100);
               return { test: 123 };
             })
+            .multithread()
             .success(this.SuccessHandler)
             .fail(this.FailHandler)
-        },
-        @Cmd.update
-        SuccessHandler(res) { return res },
-        @Cmd.nope
-        FailHandler() {}
+        }
+        @cmd SuccessHandler(res) { return res }
+        @cmd FailHandler() {}
       }
     };
     const { app, commandNames } = await runWithTracking({ app: Block });
     const proms = [
-      app.proc.exec(Block.Logic.SuccessTask),
-      app.proc.exec(Block.Logic.SuccessTask),
-      app.proc.exec(Block.Logic.SuccessTask)
+      app.proc.exec(logicOf(app.model).SuccessTask),
+      app.proc.exec(logicOf(app.model).SuccessTask),
+      app.proc.exec(logicOf(app.model).SuccessTask)
     ];
     await Promise.all(proms);
 
@@ -277,29 +202,24 @@ describe('Exec tasks', () => {
     const handler = jest.fn();
     const Block = {
       createModel: () => ({}),
-      Logic: {
-        name: 'Block',
-        @Cmd.task
-        SuccessTask() {
-          return Task
-            .create(async function() {
-              await this.call(Task.delay, 100);
+      Logic: class Block {
+        @cmd SuccessTask() {
+          return task(async function() {
+              await this.call(delay, 100);
               handler();
               return { test: 123 };
             })
             .success(this.SuccessHandler)
             .fail(this.FailHandler)
-        },
-        @Cmd.update
-        SuccessHandler(res) { return res },
-        @Cmd.nope
-        FailHandler() {}
+        }
+        @cmd SuccessHandler(res) { return res }
+        @cmd FailHandler() {}
       }
     };
     const { app, commandNames } = await runWithTracking({ app: Block });
-    app.proc.exec(Block.Logic.SuccessTask);
-    await Task.delay(10);
-    await app.proc.exec(Block.Logic.SuccessTask);
+    app.proc.exec(logicOf(app.model).SuccessTask);
+    await delay(10);
+    await app.proc.exec(logicOf(app.model).SuccessTask);
 
     expect(app.model).toEqual({ test: 123 });
     expect(commandNames).toEqual([
@@ -313,34 +233,29 @@ describe('Exec tasks', () => {
   it('should not cancel all by default', async () => {
     const Block = {
       createModel: () => ({}),
-      Logic: {
-        name: 'Block',
-        @Cmd.task
-        SuccessTask() {
-          return Task
-            .create(async function() {
-              await this.call(Task.delay, 500);
+      Logic: class Block {
+        @cmd SuccessTask() {
+          return task(async function() {
+              await this.call(delay, 500);
               return { test: 123 };
             })
             .success(this.SuccessHandler)
             .fail(this.FailHandler)
-        },
-        @Cmd.nope
-        SuccessHandler() {},
-        @Cmd.nope
-        FailHandler() {}
+        }
+        @cmd SuccessHandler() {}
+        @cmd FailHandler() {}
       }
     };
     const runOne = await runWithTracking({ app: Block });
     const runTwo = await runWithTracking({ app: Block });
     const runThree = await runWithTracking({ app: Block });
 
-    const promOne = runOne.app.proc.exec(Block.Logic.SuccessTask);
-    const promTwo = runTwo.app.proc.exec(Block.Logic.SuccessTask);
-    const promThree = runThree.app.proc.exec(Block.Logic.SuccessTask);
-    await Task.delay(100);
-    await runThree.app.proc.exec(Block.Logic.SuccessTask.Cancel());
-    await Task.delay(10);
+    const promOne = runOne.app.proc.exec(logicOf(runOne.app.model).SuccessTask);
+    const promTwo = runTwo.app.proc.exec(logicOf(runTwo.app.model).SuccessTask);
+    const promThree = runThree.app.proc.exec(logicOf(runThree.app.model).SuccessTask);
+    await delay(100);
+    await runThree.app.proc.exec(cancel(logicOf(runThree.app.model).SuccessTask));
+    await delay(10);
     await Promise.all([ promOne, promThree, promTwo ]);
 
     expect(runOne.commandNames).toEqual([
@@ -361,34 +276,30 @@ describe('Exec tasks', () => {
   it('should cancel all executing tasks in a process in "every" mode', async () => {
     const Block = {
       createModel: () => ({}),
-      Logic: {
-        name: 'Block',
-        @Cmd.task({ every: true })
-        SuccessTask() {
-          return Task
-            .create(async function() {
-              await this.call(Task.delay, 500);
+      Logic: class Block {
+        @cmd SuccessTask() {
+          return task(async function() {
+              await this.call(delay, 500);
               return { test: 123 };
             })
+            .multithread()
             .success(this.SuccessHandler)
             .fail(this.FailHandler)
-        },
-        @Cmd.update
-        SuccessHandler(res) { return res },
-        @Cmd.nope
-        FailHandler() {}
+        }
+        @cmd SuccessHandler(res) { return res }
+        @cmd FailHandler() {}
       }
     };
     const runOne = await runWithTracking({ app: Block });
     const runTwo = await runWithTracking({ app: Block });
     const proms = [
-      runOne.app.proc.exec(Block.Logic.SuccessTask),
-      runOne.app.proc.exec(Block.Logic.SuccessTask),
-      runOne.app.proc.exec(Block.Logic.SuccessTask),
-      runTwo.app.proc.exec(Block.Logic.SuccessTask)
+      runOne.app.proc.exec(logicOf(runOne.app.model).SuccessTask),
+      runOne.app.proc.exec(logicOf(runOne.app.model).SuccessTask),
+      runOne.app.proc.exec(logicOf(runOne.app.model).SuccessTask),
+      runTwo.app.proc.exec(logicOf(runTwo.app.model).SuccessTask)
     ];
-    await Task.delay(10);
-    await runOne.app.proc.exec(Block.Logic.SuccessTask.Cancel);
+    await delay(10);
+    await runOne.app.proc.exec(cancel(logicOf(runOne.app.model).SuccessTask));
     await Promise.all(proms);
 
     expect(runTwo.app.model).toEqual({ test: 123 });
@@ -404,6 +315,38 @@ describe('Exec tasks', () => {
       'Block.SuccessTask.Cancelled',
       'Block.SuccessTask.Cancelled',
       'Block.SuccessTask.Cancelled',
+    ]);
+  });
+
+  it('should be able to access model and shared', async () => {
+    const Block = {
+      createModel: () => ({ another: 10 }),
+      Logic: class Block {
+        @cmd SuccessTask() {
+          return task(function({ model, shared }) {
+            return {
+              another: model.another + 1,
+              some: shared.some + 1
+            };
+          })
+          .success(this.SuccessHandler)
+          .fail(this.FailHandler)
+        }
+        @cmd SuccessHandler(res) { return res }
+        @cmd FailHandler() {}
+      }
+    };
+    const { app, commandNames } = await runWithTracking({
+      app: Block,
+      shared: { some: 20 }
+    });
+
+    await app.proc.exec(logicOf(app.model).SuccessTask);
+
+    expect(app.model).toEqual({ another: 11, some: 21 });
+    expect(commandNames).toEqual([
+      'Block.SuccessTask',
+      'Block.SuccessHandler'
     ]);
   });
 });

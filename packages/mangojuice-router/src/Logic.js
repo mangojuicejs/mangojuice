@@ -1,70 +1,47 @@
 import createBrowserHistory from "history/createBrowserHistory";
 import qs from "qs";
-import { Cmd, Utils } from "mangojuice-core";
-import { createRouteMaps, findFirstPath } from './Utils';
+import { cmd, utils } from "mangojuice-core";
+import { createRouteMaps, findFirstPath, createHref } from './Utils';
 
-
-/**
- * Flatten routes tree and returns an object where each
- * key is a unique path name
- * @param  {Object} routesTree
- * @return {Object}
- */
-const flattenRoutesTree = (routesTree, res = {}) => {
-  for (const k in routesTree) {
-    const cmd = routesTree[k];
-    if (cmd && cmd.routeId) {
-      res[`Route_${Utils.nextId()}`] = cmd;
-      if (cmd.children) {
-        flattenRoutesTree(cmd.children, res);
-      }
-    }
-  }
-  return res;
-};
 
 /**
  * By given routes tree create a Router logic and returns it
  * @param  {Object} routesTree
  * @return {Object}
  */
-export const createLogic = (routesTree) => ({
-  ...flattenRoutesTree(routesTree),
-  name: "Router",
-
-  config({ request, createHistory = createBrowserHistory } = {}) {
-    const routes = createRouteMaps(this);
+class Router {
+  config({ request, createHistory = createBrowserHistory, routes } = {}) {
+    const routesMap = createRouteMaps(routes);
     const history = request ? null : createHistory();
     return {
-      meta: { routes, history, request }
+      meta: { routes: routesMap, history, request }
     };
-  },
+  }
 
-  port() {
-    const { exec, meta, destroy } = this;
+  port(exec, destroyed) {
+    const { meta: { history, routes, request } } = this;
     const handleHistoryChange = location =>
       exec(this.HandleLocationChange(location));
 
-    if (meta.history) {
-      const defaultRoute = meta.routes.roots.find(
-        x => x && x.routeId && x.options && x.options.default
+    if (history) {
+      const defaultRoute = routes.roots.find(
+        x => x && x.routeId && x.config && x.config.default
       );
-      if (defaultRoute && meta.history.location.pathname === "/") {
-        meta.history.replace(defaultRoute.pattern + meta.history.location.search);
+      if (defaultRoute && history.location.pathname === "/") {
+        history.replace(defaultRoute.pattern + history.location.search);
       }
-      const unlisten = meta.history.listen(handleHistoryChange);
-      destroy.then(unlisten);
+      const unlisten = history.listen(handleHistoryChange);
+      destroyed.then(unlisten);
     }
 
-    const initLocation = meta.request
-      ? meta.request.location
-      : meta.history.location;
+    const initLocation = request
+      ? request.location
+      : history.location;
 
     return handleHistoryChange(initLocation);
-  },
+  }
 
-  @Cmd.batch
-  HandleLocationChange(location) {
+  @cmd HandleLocationChange(location) {
     const firstPath = findFirstPath(this.meta.routes, location.pathname);
     const active = {};
     const changedRoutes = {};
@@ -104,26 +81,32 @@ export const createLogic = (routesTree) => ({
       changedRoutes,
       appearedOnce
     });
-  },
-
-  @Cmd.batch
-  UpdateRouter(newValues) {
-    return this.DoUpdateRouter(newValues);
-  },
-
-  @Cmd.update
-  DoUpdateRouter(newValues) {
-    return newValues;
-  },
-
-  @Cmd.update
-  Query(query = {}, { replace, keep } = {}) {
-    const newQuery = keep ? { ...query, ...this.model.query } : query;
-    const location = this.meta.history.location;
-
-    this.meta.history[replace ? "replace" : "push"]({
-      ...location,
-      search: qs.stringify(newQuery)
-    });
   }
-});
+
+  @cmd UpdateRouter(newValues) {
+    return this.DoUpdateRouter(newValues);
+  }
+
+  @cmd DoUpdateRouter(newValues) {
+    return newValues;
+  }
+
+  @cmd Push(route, e) {
+    e && e.preventDefault();
+    return this.ChangeHistory(route, { replace: false });
+  }
+
+  @cmd Replace(route, e) {
+    e && e.preventDefault();
+    return this.ChangeHistory(route, { replace: true });
+  }
+
+  @cmd ChangeHistory(route, opts = {}) {
+    const changeType = opts.replace ? "replace" : "push";
+    const updateHistory = this.meta.history[changeType];
+    const nextUrl = createHref(this.model, this.meta, route);
+    updateHistory(nextUrl);
+  }
+}
+
+export default Router;

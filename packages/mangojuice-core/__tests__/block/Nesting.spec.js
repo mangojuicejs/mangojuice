@@ -1,21 +1,19 @@
-import { Cmd, Task, Run, Utils } from "mangojuice-core";
+import { cmd, logicOf, depends, child, task, delay, procOf } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
  describe("Nesting", () => {
   const ChildBlock = {
     createModel: () => ({}),
-    Logic: {
-      name: "ChildBlock",
+    Logic: class ChildBlock {
       config() {
         return { initCommands: this.InitChild };
-      },
-      port() {
-        const { destroy, exec, model } = this;
-        destroy.then(() => (model.deleted = true));
-      },
-      @Cmd.nope InitChild() {},
-      @Cmd.nope ChildDestroy() {}
+      }
+      port(exec, destroyed) {
+        destroyed.then(() => this.model.deleted = true);
+      }
+      @cmd InitChild() {}
+      @cmd ChildDestroy() {}
     }
   };
   const ParentBlock = {
@@ -25,27 +23,22 @@ import { runWithTracking } from "mangojuice-test";
       child_2: ChildBlock.createModel(),
       child_3: null
     }),
-    Logic: {
-      name: "ParentBlock",
+    Logic: class ParentBlock {
       children() {
-        const { nest } = this;
         return {
-          arr: nest(ChildBlock.Logic),
-          child_1: nest(ChildBlock.Logic),
-          child_2: nest(ChildBlock.Logic),
-          child_3: nest(ChildBlock.Logic)
+          arr: child(ChildBlock.Logic),
+          child_1: child(ChildBlock.Logic),
+          child_2: child(ChildBlock.Logic),
+          child_3: child(ChildBlock.Logic)
         };
-      },
-      @Cmd.update
-      AddChild() {
+      }
+      @cmd AddChild() {
         return { arr: [...this.model.arr, ChildBlock.createModel()] };
-      },
-      @Cmd.update
-      RemoveChild() {
+      }
+      @cmd RemoveChild() {
         return { arr: this.model.arr.slice(1) };
-      },
-      @Cmd.update
-      SetChild(name, value) {
+      }
+      @cmd SetChild(name, value) {
         return { [name]: value };
       }
     }
@@ -65,9 +58,9 @@ import { runWithTracking } from "mangojuice-test";
 
   it("should handle adding new child to array and to field", async () => {
     const { app, commands } = await runWithTracking({ app: ParentBlock });
-    await app.proc.exec(ParentBlock.Logic.AddChild);
+    await app.proc.exec(logicOf(app.model).AddChild);
     await app.proc.exec(
-      ParentBlock.Logic.SetChild("child_3", ChildBlock.createModel())
+      logicOf(app.model).SetChild("child_3", ChildBlock.createModel())
     );
 
     const cmdNames = commands.map(x => x.name);
@@ -88,8 +81,8 @@ import { runWithTracking } from "mangojuice-test";
     const { app, commands } = await runWithTracking({ app: ParentBlock });
     const oldArr = app.model.arr;
     const oldChild_2 = app.model.child_2;
-    await app.proc.exec(ParentBlock.Logic.RemoveChild);
-    await app.proc.exec(ParentBlock.Logic.SetChild("child_2", null));
+    await app.proc.exec(logicOf(app.model).RemoveChild);
+    await app.proc.exec(logicOf(app.model).SetChild("child_2", null));
 
     const cmdNames = commands.map(x => x.name);
 
@@ -106,14 +99,14 @@ import { runWithTracking } from "mangojuice-test";
     expect(app.model.child_2).toBeNull();
     expect(oldArr[0].deleted).toBeTruthy();
     expect(oldChild_2.deleted).toBeTruthy();
-    expect(oldArr[0].__proc).not.toBeDefined();
-    expect(oldChild_2.__proc).not.toBeDefined();
+    expect(procOf(oldArr[0], true)).not.toBeDefined();
+    expect(procOf(oldChild_2, true)).not.toBeDefined();
   });
 
   it("should handle removing a whole child array", async () => {
     const { app, commands } = await runWithTracking({ app: ParentBlock });
     const oldArr = app.model.arr;
-    await app.proc.exec(ParentBlock.Logic.SetChild("arr", null));
+    await app.proc.exec(logicOf(app.model).SetChild("arr", null));
 
     const cmdNames = commands.map(x => x.name);
 
@@ -134,41 +127,44 @@ import { runWithTracking } from "mangojuice-test";
     let idCounter = 0;
     const RecursiveBlock = {
       createModel: () => ({ recursive: null, a: 0, id: idCounter++ }),
-      Logic: {
-        name: "AppBlock",
+      Logic: class AppBlock {
         children() {
-          const { nest } = this;
           return {
-            recursive: nest(RecursiveBlock.Logic).handler(this.HandleChange)
+            recursive: child(RecursiveBlock.Logic)
           };
-        },
-        @Cmd.update
-        SetField(name, value) {
-          return { [name]: value };
-        },
-        @Cmd.update
-        Increment(name, value) {
-          return { [name]: this.model[name] + value };
-        },
-        @Cmd.batch
-        HandleChange(cmd) {
-          if (cmd.is(this.Increment.Before, this.model.recursive)) {
+        }
+        hub(cmd) {
+          if (cmd.is(this.Increment, this.model.recursive)) {
             return this.Increment('a', cmd.args[1]);
           }
+        }
+        @cmd SetField(name, value) {
+          return { [name]: value };
+        }
+        @cmd Increment(name, value) {
+          return { [name]: this.model[name] + value };
         }
       }
     };
 
-    const { app } = await runWithTracking({ app: RecursiveBlock });
+    const { app, commandNames } = await runWithTracking({ app: RecursiveBlock });
 
-    await app.proc.exec(RecursiveBlock.Logic.SetField('recursive',
-      RecursiveBlock.createModel()));
-    await app.model.recursive.__proc.exec(RecursiveBlock.Logic.SetField('recursive',
-      RecursiveBlock.createModel()));
-    await app.model.recursive.recursive.__proc.exec(RecursiveBlock.Logic.Increment('a', 2));
-    await app.model.recursive.__proc.exec(RecursiveBlock.Logic.Increment('a', 3));
-    await app.proc.exec(RecursiveBlock.Logic.Increment('a', 4));
+    await app.proc.exec(logicOf(app.model).SetField('recursive', RecursiveBlock.createModel()));
+    await procOf(app.model.recursive).exec(logicOf(app.model.recursive).SetField('recursive', RecursiveBlock.createModel()));
+    await app.proc.exec(logicOf(app.model.recursive.recursive).Increment('a', 2));
+    await procOf(app.model.recursive).exec(logicOf(app.model.recursive).Increment('a', 3));
+    await app.proc.exec(logicOf(app.model).Increment('a', 4));
 
+    expect(commandNames).toEqual([
+      'AppBlock.SetField',
+      'AppBlock.SetField',
+      'AppBlock.Increment',
+      'AppBlock.Increment',
+      'AppBlock.Increment',
+      'AppBlock.Increment',
+      'AppBlock.Increment',
+      'AppBlock.Increment'
+    ]);
     expect(app.model.a).toEqual(9);
     expect(app.model.recursive.a).toEqual(5);
     expect(app.model.recursive.recursive.a).toEqual(2);

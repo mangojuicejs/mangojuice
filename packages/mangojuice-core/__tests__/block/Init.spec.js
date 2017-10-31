@@ -1,39 +1,36 @@
-import { Cmd, Task, Run, Utils } from "mangojuice-core";
+import { cmd, logicOf, depends, child, task, delay } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
 describe("Init commands execution", () => {
   const AsyncTaskDelayed = function() {
-    return this.call(Task.delay, 50);
+    return this.call(delay, 50);
   };
   const SharedBlock = {
     createModel: () => ({}),
-    Logic: {
-      name: "SharedBlock",
+    Logic: class SharedBlock {
       config() {
         return { initCommands: [this.FromInitOneCmd()] };
-      },
-      port() {
-        return this.exec(this.FromPortAsync);
-      },
-      @Cmd.task
-      FromPortAsync() {
-        return Task.create(AsyncTaskDelayed).success(
+      }
+      port(exec) {
+        exec(this.FromPortAsync);
+      }
+      @cmd FromPortAsync() {
+        return task(AsyncTaskDelayed).success(
           this.FromPortAsync_Success
         );
-      },
-      @Cmd.nope FromInitOneCmd() {},
-      @Cmd.nope FromPortAsync_Success() {}
+      }
+      @cmd FromInitOneCmd() {}
+      @cmd FromPortAsync_Success() {}
     }
   };
   const BlockB = {
     createModel: () => ({}),
-    Logic: {
-      name: "BlockB",
+    Logic: class BlockB {
       config() {
         return { initCommands: [this.FromInitOneCmd] };
-      },
-      @Cmd.nope FromInitOneCmd() {}
+      }
+      @cmd FromInitOneCmd() {}
     }
   };
   const BlockA = {
@@ -41,49 +38,57 @@ describe("Init commands execution", () => {
       b_1: BlockB.createModel(),
       b_2: BlockB.createModel()
     }),
-    Logic: {
-      name: "BlockA",
+    Logic: class BlockA {
       config() {
         return {
           initCommands: [this.FromInitOneCmd, this.FromInitTwoCmd(1, 2, 3)],
         };
-      },
+      }
       children() {
         return {
-          b_1: this.nest(BlockB.Logic).handler(this.HandleB_1),
-          b_2: this.nest(BlockB.Logic).handler(this.HandleB_2)
+          b_1: child(BlockB.Logic),
+          b_2: child(BlockB.Logic)
         }
-      },
-      port() {
-        const { model, shared, destroy, exec } = this;
-        Utils.handleModelChanges(shared, destroy, cmd => {
-          exec(this.FromSubCmd);
-        });
-
-        return Promise.all([
-          exec(this.FromSubCmd),
-          exec(this.FromPortCmd),
-          exec(this.FromPortAsync())
-        ]);
-      },
-      @Cmd.batch
-      FromPortCmd() {
+      }
+      hub(cmd) {
+        if (cmd.is(logicOf(this.model.b_1).FromInitOneCmd)) {
+          return this.HandleB_1;
+        } else if (cmd.is(logicOf(this.model.b_2).FromInitOneCmd)) {
+          return this.HandleB_2;
+        } else if (cmd.is('SharedBlock.FromInitOneCmd')) {
+          return this.FromSubCmd;
+        }
+      }
+      hubAfter(cmd) {
+        if (cmd.is(BlockB.Logic.prototype.FromInitOneCmd, this.model.b_1)) {
+          return this.HandleB_11;
+        } else if (cmd.is(BlockB.Logic.prototype.FromInitOneCmd, this.model.b_2)) {
+          return this.HandleB_22;
+        }
+      }
+      port(exec, destroyed) {
+        exec(this.FromSubCmd)
+        exec(this.FromPortCmd)
+        exec(this.FromPortAsync())
+      }
+      @cmd FromPortCmd() {
         return [this.FromPortCmd_1, this.FromPortCmd_2()];
-      },
-      @Cmd.task
-      FromPortAsync() {
-        return Task.create(AsyncTaskDelayed).success(
+      }
+      @cmd FromPortAsync() {
+        return task(AsyncTaskDelayed).success(
           this.FromPortAsync_Success
         );
-      },
-      @Cmd.batch FromPortCmd_1() {},
-      @Cmd.batch FromPortCmd_2() {},
-      @Cmd.nope FromPortAsync_Success() {},
-      @Cmd.nope FromInitOneCmd() {},
-      @Cmd.nope FromInitTwoCmd() {},
-      @Cmd.nope FromSubCmd() {},
-      @Cmd.nope HandleB_1() {},
-      @Cmd.nope HandleB_2() {}
+      }
+      @cmd FromPortCmd_1() {}
+      @cmd FromPortCmd_2() {}
+      @cmd FromPortAsync_Success() {}
+      @cmd FromInitOneCmd() {}
+      @cmd FromInitTwoCmd() {}
+      @cmd FromSubCmd() {}
+      @cmd HandleB_1() {}
+      @cmd HandleB_11() {}
+      @cmd HandleB_2() {}
+      @cmd HandleB_22() {}
     }
   };
 
@@ -97,12 +102,13 @@ describe("Init commands execution", () => {
     expect(commandNames).toEqual([
       "SharedBlock.FromPortAsync",
       "SharedBlock.FromInitOneCmd",
+      "BlockA.FromSubCmd",
       "BlockB.FromInitOneCmd",
       "BlockA.HandleB_1",
-      "BlockA.HandleB_1",
+      "BlockA.HandleB_11",
       "BlockB.FromInitOneCmd",
       "BlockA.HandleB_2",
-      "BlockA.HandleB_2",
+      "BlockA.HandleB_22",
       "BlockA.FromSubCmd",
       "BlockA.FromPortCmd",
       "BlockA.FromPortCmd_1",
