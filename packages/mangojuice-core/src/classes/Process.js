@@ -612,6 +612,7 @@ extend(Process.prototype, {
     this.observers = null;
     this.throttles = null;
     this.tasks = null;
+    this.destroyed = true;
 
     if (deep !== false) {
       const childDestroyer = x => procOf(x).destroy(true);
@@ -633,7 +634,9 @@ extend(Process.prototype, {
    * @return {Promise}
    */
   exec(cmd) {
-    if (!cmd) return Promise.resolve();
+    if (!cmd || this.destroyed) {
+      return Promise.resolve();
+    }
 
     // Create result promise and get active model
     const realCmd = ensureCommand(cmd);
