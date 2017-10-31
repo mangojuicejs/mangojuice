@@ -1,6 +1,6 @@
 {
   "name": "mangojuice-lazy",
-  "version": "0.2.2-14",
+  "version": "0.2.2-15",
   "description": "",
   "author": {
     "name": "Artem Artemev",
@@ -21,7 +21,7 @@
     }
   },
   "dependencies": {
-    "mangojuice-core": "0.2.2-14"
+    "mangojuice-core": "0.2.2-15"
   },
   "devDependencies": {
     "bundle-loader": "^0.5.5",
