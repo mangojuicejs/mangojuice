@@ -377,7 +377,7 @@ function cancelAllTasks(proc) {
 function execTask(proc, taskObj, cmd) {
   const execId = nextId();
   const taskId = cmd.id;
-  const { tasks, logger, model, shared } = proc;
+  const { tasks, logger, model, sharedModel } = proc;
   const { task, executor, successCmd, failCmd,
     customArgs, execEvery } = taskObj;
 
@@ -405,7 +405,7 @@ function execTask(proc, taskObj, cmd) {
     };
 
     const res = fastTry(() => {
-      const props = { model, shared };
+      const props = { model, shared: sharedModel };
       const taskProc = executor(task, props, ...(customArgs || cmd.args));
       taskProc.then(handleResult, handleResult);
       return taskProc;

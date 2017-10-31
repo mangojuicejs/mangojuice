@@ -317,4 +317,36 @@ describe('Exec tasks', () => {
       'Block.SuccessTask.Cancelled',
     ]);
   });
+
+  it('should be able to access model and shared', async () => {
+    const Block = {
+      createModel: () => ({ another: 10 }),
+      Logic: class Block {
+        @cmd SuccessTask() {
+          return task(function({ model, shared }) {
+            return {
+              another: model.another + 1,
+              some: shared.some + 1
+            };
+          })
+          .success(this.SuccessHandler)
+          .fail(this.FailHandler)
+        }
+        @cmd SuccessHandler(res) { return res }
+        @cmd FailHandler() {}
+      }
+    };
+    const { app, commandNames } = await runWithTracking({
+      app: Block,
+      shared: { some: 20 }
+    });
+
+    await app.proc.exec(logicOf(app.model).SuccessTask);
+
+    expect(app.model).toEqual({ another: 11, some: 21 });
+    expect(commandNames).toEqual([
+      'Block.SuccessTask',
+      'Block.SuccessHandler'
+    ]);
+  });
 });
