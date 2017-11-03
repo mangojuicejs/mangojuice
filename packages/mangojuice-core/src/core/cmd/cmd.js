@@ -1,4 +1,5 @@
 import { nextId } from "../utils";
+import procOf from '../logic/procOf';
 import Command from '../../classes/Command';
 import ensureCommand from './ensureCommand';
 
@@ -42,14 +43,17 @@ export function cmd(obj, name, descr, nonhandlable) {
     configurable: true,
     enumerable: true,
     get() {
+      const currDescr = this && Object.getOwnPropertyDescriptor(this, name);
       const factory = createCommandFactory(name, this, nonhandlable, descr.value);
-      if (this && this.model) {
+
+      if ((!currDescr || currDescr.configurable) && this && this.model) {
         Object.defineProperty(this, name, {
-          configurable: true,
+          configurable: false,
           enumerable: true,
           value: factory
         });
       }
+
       return factory;
     }
   };

@@ -40,6 +40,9 @@ const ParentBlock = {
     @cmd SetChild(name, value) {
       return { [name]: value };
     }
+    @cmd CallSetChild(name, value, logic) {
+      return this.SetChild(name, value);
+    }
   }
 };
 
@@ -66,8 +69,41 @@ describe('Extend logic and process', () => {
     expect(handler).toHaveBeenCalledTimes(10);
   });
 
-  it('should provide a way to extend logic class', () => {
+  it('should provide a way to override command in logic', async () => {
+    class CustomParentLogic extends ParentBlock.Logic {
+      @cmd NewCommand() {
+      }
+      @cmd SetChild(...args) {
+        return [
+          this.NewCommand,
+          super.SetChild(...args)
+        ];
+      }
+    }
 
+    const { app, commandNames } = await runWithTracking({
+      app: { ...ParentBlock, Logic: CustomParentLogic }
+    });
+
+
+    await app.proc.exec(logicOf(app.model).SetChild('test', 'passed'));
+    await app.proc.exec(logicOf(app.model).CallSetChild('child', 'passed', logicOf(app.model)));
+
+    expect(app.model.test).toEqual('passed');
+    expect(app.model.child).toEqual('passed');
+    expect(commandNames).toEqual([
+      'ChildBlock.InitChild',
+      'ChildBlock.InitChild',
+      'ChildBlock.InitChild',
+      'ChildBlock.InitChild',
+      'CustomParentLogic.SetChild',
+      'CustomParentLogic.NewCommand',
+      'CustomParentLogic.SetChild',
+      'CustomParentLogic.CallSetChild',
+      'CustomParentLogic.SetChild',
+      'CustomParentLogic.NewCommand',
+      'CustomParentLogic.SetChild'
+    ]);
   });
 
   it('should work correcly with "super" commands', () => {
