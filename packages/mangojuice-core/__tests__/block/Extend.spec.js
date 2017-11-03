@@ -142,7 +142,54 @@ describe('Extend logic and process', () => {
     ]);
   });
 
-  it('should work correcly with "super" commands', () => {
+  it('should three level prototypes chain', async () => {
+    class CustomParentLogic extends ParentBlock.Logic {
+      @cmd NewCommand() {
+      }
+      @cmd SetChild(...args) {
+        return [
+          this.NewCommand,
+          super.SetChild(...args)
+        ];
+      }
+    }
 
+    class CustomCustomParentLogic extends CustomParentLogic {
+      @cmd AnotherNewCommand() {
+      }
+      @cmd SetChild(...args) {
+        return [
+          this.AnotherNewCommand,
+          super.SetChild(...args)
+        ];
+      }
+    }
+
+    const { app, commandNames } = await runWithTracking({
+      app: { ...ParentBlock, Logic: CustomCustomParentLogic }
+    });
+
+    await app.proc.exec(logicOf(app.model).CallSetChild('child', 'passed', logicOf(app.model)));
+    await app.proc.exec(logicOf(app.model).SetChild('test', 'passed'));
+
+    expect(app.model.test).toEqual('passed');
+    expect(app.model.child).toEqual('passed');
+    expect(commandNames).toEqual([
+      'ChildBlock.InitChild',
+      'ChildBlock.InitChild',
+      'ChildBlock.InitChild',
+      'ChildBlock.InitChild',
+      "CustomCustomParentLogic.CallSetChild",
+      "CustomCustomParentLogic.SetChild",
+      "CustomCustomParentLogic.AnotherNewCommand",
+      "CustomCustomParentLogic.SetChild",
+      "CustomCustomParentLogic.NewCommand",
+      "CustomCustomParentLogic.SetChild",
+      "CustomCustomParentLogic.SetChild",
+      "CustomCustomParentLogic.AnotherNewCommand",
+      "CustomCustomParentLogic.SetChild",
+      "CustomCustomParentLogic.NewCommand",
+      "CustomCustomParentLogic.SetChild",
+    ]);
   });
 });
