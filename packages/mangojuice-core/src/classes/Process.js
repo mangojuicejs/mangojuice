@@ -88,7 +88,7 @@ function bindChild(proc, childModel, fieldName) {
     const logic = is.func(childDef) ? childDef : childDef.logic;
     const configArgs = is.func(childDef) ? EMPTY_ARRAY : childDef.args;
 
-    const subProc = new Process({
+    const subProc = new proc.constructor({
       logic,
       configArgs,
       parent: proc,

@@ -9,8 +9,9 @@ import Process from '../../classes/Process';
  * @return {Process}
  */
 function bind(block, opts = {}) {
+  const ProcessClass = opts.Process || Process;
   const model = block.createModel();
-  const proc = new Process({
+  const proc = new ProcessClass({
     logic: block.Logic,
     logger: opts.logger,
     sharedModel: opts.shared || model,
