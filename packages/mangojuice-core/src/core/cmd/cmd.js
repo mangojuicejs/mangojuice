@@ -33,27 +33,24 @@ export function createCommandFactory(name, logic, nonhandlable, func) {
  * a Command factory function for makeing a command to
  * execute decorated function by Process.
  * @param  {object|function}    obj
- * @param  {string} name
+ * @param  {string} methodName
  * @param  {object} descr
  * @return {object|function}
  */
-export function cmd(obj, name, descr, nonhandlable) {
+export function cmd(obj, methodName, descr, nonhandlable, cmdName) {
   return {
     __func: descr.value,
     configurable: true,
     enumerable: true,
     get() {
-      const currDescr = this && Object.getOwnPropertyDescriptor(this, name);
-      const factory = createCommandFactory(name, this, nonhandlable, descr.value);
-
-      if ((!currDescr || currDescr.configurable) && this && this.model) {
-        Object.defineProperty(this, name, {
+      const factory = createCommandFactory(cmdName || methodName, this, nonhandlable, descr.value);
+      if (this && this.model && Object.getPrototypeOf(this) === obj) {
+        Object.defineProperty(this, methodName, {
           configurable: false,
           enumerable: true,
           value: factory
         });
       }
-
       return factory;
     }
   };

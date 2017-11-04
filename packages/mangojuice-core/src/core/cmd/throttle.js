@@ -67,7 +67,7 @@ function throttle(ms, debounce) {
     };
 
     descr.value = throttleWrapper;
-    return cmd(obj, `${name}.Throttle`, descr, true);
+    return cmd(obj, name, descr, true, `${name}.Throttle`);
   };
 }
 

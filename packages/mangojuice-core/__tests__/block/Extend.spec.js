@@ -1,4 +1,7 @@
-import { Process, cmd, logicOf, depends, child, task, delay, procOf, run, bind } from "mangojuice-core";
+import {
+  Process, cmd, logicOf, depends, child,
+  task, delay, procOf, run, bind
+} from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
@@ -169,7 +172,7 @@ describe('Extend logic and process', () => {
       app: { ...ParentBlock, Logic: CustomCustomParentLogic }
     });
 
-    await app.proc.exec(logicOf(app.model).CallSetChild('child', 'passed', logicOf(app.model)));
+    await app.proc.exec(logicOf(app.model).CallSetChild('child', 'passed'));
     await app.proc.exec(logicOf(app.model).SetChild('test', 'passed'));
 
     expect(app.model.test).toEqual('passed');
