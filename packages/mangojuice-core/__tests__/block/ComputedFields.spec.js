@@ -2,7 +2,7 @@ import { cmd, logicOf, depends, child } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
 
 
-describe("Computed", () => {
+describe("Computed fields", () => {
 
   describe("Simple computed", async () => {
     const SharedBlock = {
