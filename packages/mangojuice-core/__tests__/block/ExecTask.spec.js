@@ -162,7 +162,7 @@ describe('Exec tasks', () => {
     ]);
   });
 
-  it('should not cancel prev task if "every" option provided', async () => {
+  it('should not cancel prev task if "multithread" option provided', async () => {
     const Block = {
       createModel: () => ({}),
       Logic: class Block {
@@ -273,7 +273,7 @@ describe('Exec tasks', () => {
     ]);
   });
 
-  it('should cancel all executing tasks in a process in "every" mode', async () => {
+  it('should cancel all executing tasks in a process in "multithread" mode', async () => {
     const Block = {
       createModel: () => ({}),
       Logic: class Block {
