@@ -575,9 +575,6 @@ function prepareLogic(LogicClass) {
   const proto = LogicClass.prototype || Object.getPrototypeOf(LogicClass);
   if (!proto || proto.hasOwnProperty('__prepared') || proto === Object.prototype) return;
 
-  // Prepare next prototype in the chain
-  prepareLogic(proto);
-
   // Decorate all commands in the logic prototype
   if (!proto.hasOwnProperty('__decorated')) {
     maybeForEach(Object.getOwnPropertyNames(proto), (k) => {
@@ -594,6 +591,9 @@ function prepareLogic(LogicClass) {
   // prepared and decorated
   proto.__decorated = true;
   proto.__prepared = true;
+
+  // Prepare next prototype in the chain
+  prepareLogic(proto);
 }
 
 /**
