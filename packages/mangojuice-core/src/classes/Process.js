@@ -555,13 +555,13 @@ function doExecCmd(proc, rawCmd) {
   // Run after handlers
   logger.onExecuted(cmd, result);
   resPromise.add(handleCommand(proc, cmd, true));
-  logger.onEndExec(cmd, result);
 
   // Emit model update for view re-rendering
   if (modelUpdated) {
     resPromise.add(runModelObservers(proc));
   }
 
+  logger.onEndExec(cmd, result);
   return resPromise.get();
 }
 
