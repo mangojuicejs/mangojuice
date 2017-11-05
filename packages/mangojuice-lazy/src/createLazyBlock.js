@@ -75,7 +75,7 @@ function createLazyLogic(resolveState) {
         resolveState.cmds.push({ args, name });
         resolveState.resolver(target.model);
       }
-      const cmdDescr = cmd(null, `${name}.Lazy`, { value: EmptyExecutor }, true);
+      const cmdDescr = cmd(LazyBlock.prototype, `${name}.Lazy`, { value: EmptyExecutor }, true);
       Object.defineProperty(target, name, cmdDescr);
       return target[name];
     }

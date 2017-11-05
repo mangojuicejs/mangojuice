@@ -32,12 +32,19 @@ export function createCommandFactory(name, logic, nonhandlable, func) {
  * Function should be used as a decorator to create
  * a Command factory function for makeing a command to
  * execute decorated function by Process.
- * @param  {object|function}    obj
+ * @param  {object}    obj
  * @param  {string} methodName
  * @param  {object} descr
- * @return {object|function}
+ * @return {object}
  */
 export function cmd(obj, methodName, descr, nonhandlable, cmdName) {
+  // Disable auto-decaration in Process
+  obj.__decorated = true;
+
+  // Creates a descriptor with lazy factory creation and autobinding
+  // to the instance of the logic, but only when some model exists
+  // and command executed in scope of top-level prototype in prototypes
+  // chaon (to support calling "super" commands in extended logic)
   return {
     __func: descr.value,
     configurable: true,

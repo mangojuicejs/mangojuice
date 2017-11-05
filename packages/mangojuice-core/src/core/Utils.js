@@ -7,11 +7,7 @@ export const is = {
   bool: s => s === true || s === false,
   array: Array.isArray,
   object: obj => obj && !is.array(obj) && typeof obj === "object",
-  promise: p => p && is.func(p.then),
-  iterator: it => it && is.func(it.next) && is.func(it.throw),
-  command: cmd => cmd && cmd.id && cmd.Before && cmd.After,
-  iterable: it =>
-    it && is.func(Symbol) ? is.func(it[Symbol.iterator]) : is.array(it)
+  promise: p => p && is.func(p.then)
 };
 
 export const noop = () => {};
@@ -93,7 +89,9 @@ export const createResultPromise = () => {
 
 
 export function extend(obj, props) {
-  for (let i in props) obj[i] = props[i];
+  for (let i in props) {
+    obj[i] = props[i];
+  }
   return obj;
 }
 

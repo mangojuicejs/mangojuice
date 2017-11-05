@@ -7,6 +7,7 @@ import cmd from "./core/cmd/cmd";
 import cancel from "./core/cmd/cancel";
 import debounce from "./core/cmd/debounce";
 import throttle from "./core/cmd/throttle";
+import defineCommand from "./core/cmd/defineCommand";
 import ensureCommand from "./core/cmd/ensureCommand";
 import child from "./core/logic/child";
 import depends from "./core/logic/depends";
@@ -38,6 +39,7 @@ export {
   cancel,
   debounce,
   throttle,
+  defineCommand,
   ensureCommand,
   child,
   depends,

@@ -32,7 +32,8 @@ function getThrottleState(model, id) {
 function throttle(ms, debounce) {
   return (obj, name, descr) => {
     const thId = nextId();
-    const orgCmd = createCommandFactory(name, null, false, descr.__func);
+    const orgFunc = descr.__func || descr.value;
+    const orgCmd = createCommandFactory(name, null, false, orgFunc);
 
     // Cancellable task for waiting given amount of ms
     const throttleWaitTask = function() {

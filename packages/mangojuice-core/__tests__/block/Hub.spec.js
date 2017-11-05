@@ -1,4 +1,4 @@
-describe('Hub usage cases', () => {
+describe('Hub in logic', () => {
   it('should work', () => {
 
   });

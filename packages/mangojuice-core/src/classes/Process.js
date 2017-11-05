@@ -2,6 +2,7 @@ import Task from './Task';
 import Command from './Command';
 import DefaultLogger from './DefaultLogger';
 import ensureCommand from '../core/cmd/ensureCommand';
+import createCmd from '../core/cmd/cmd';
 import observe from '../core/logic/observe';
 import procOf from '../core/logic/procOf';
 import delay from '../core/task/delay';
@@ -16,6 +17,7 @@ import {
 // Constants
 const EMPTY_ARRAY = [];
 const EMPTY_OBJECT = {};
+const UPPERCASE_REGEX = /[A-Z]/;
 
 
 /**
@@ -58,7 +60,9 @@ function findRootProc(proc) {
  * and create `config` object in the Process based on the result.
  */
 function prepareConfig(proc) {
-  const { logic, configArgs } = proc
+  const { logicClass, configArgs } = proc
+  const logic = new logicClass();
+  proc.logic = logic;
   logic.hubBefore = logic.hub;
 
   let config = { children: EMPTY_OBJECT, childrenKeys: EMPTY_ARRAY, meta: {} };
@@ -561,6 +565,36 @@ function doExecCmd(proc, rawCmd) {
   return resPromise.get();
 }
 
+/**
+ * By given logic class go through prototypes chain and
+ * decorate all cmd functions if "cmd" decorator is not used
+ * in the logic (non-decorators mode).
+ * @param  {Class} LogicClass
+ */
+function prepareLogic(LogicClass) {
+  const proto = LogicClass.prototype || Object.getPrototypeOf(LogicClass);
+  if (!proto || proto.hasOwnProperty('__prepared') || proto === Object.prototype) return;
+
+  // Prepare next prototype in the chain
+  prepareLogic(proto);
+
+  // Decorate all commands in the logic prototype
+  if (!proto.hasOwnProperty('__decorated')) {
+    maybeForEach(Object.getOwnPropertyNames(proto), (k) => {
+      if (UPPERCASE_REGEX.test(k.charAt(0))) {
+        const descr = Object.getOwnPropertyDescriptor(proto, k);
+        if (!descr.get && descr.configurable) {
+          Object.defineProperty(proto, k, createCmd(proto, k, descr));
+        }
+      }
+    });
+  }
+
+  // Set own fields – indicators that the logic class
+  // prepared and decorated
+  proto.__decorated = true;
+  proto.__prepared = true;
+}
 
 /**
  * Main logic execution class
@@ -568,7 +602,7 @@ function doExecCmd(proc, rawCmd) {
 export function Process(opts) {
   const { parent, sharedModel, logger, logic, configArgs } = opts;
   this.id = nextId();
-  this.logic = new logic();
+  this.logicClass = logic;
   this.parent = parent;
   this.sharedModel = sharedModel;
   this.logger = logger || new DefaultLogger();
@@ -586,6 +620,7 @@ extend(Process.prototype, {
    * @param  {Object} model
    */
   bind(model) {
+    prepareLogic(this.logicClass);
     prepareConfig(this);
     bindModel(this, model);
     bindChildren(this);
