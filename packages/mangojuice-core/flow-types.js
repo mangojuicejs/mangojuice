@@ -61,6 +61,8 @@ declare module "mangojuice-core" {
 
   declare export function throttle(): any;
 
+  declare export function defineCommand(): any;
+
   declare export function task(fn: Function): TaskObject;
 
   declare export function delay(ms: number): Promise<void>;
@@ -89,6 +91,7 @@ declare module "mangojuice-core" {
     +cmd: typeof cmd,
     +debounce: typeof debounce,
     +throttle: typeof throttle,
+    +defineCommand: typeof defineCommand,
     +task: typeof task,
     +delay: typeof delay,
     +cancel: typeof cancel,
