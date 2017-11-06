@@ -1,5 +1,13 @@
-import { utils, cmd, nonhandlable, procOf } from "mangojuice-core";
+import { utils, cmd, defineCommand, procOf } from "mangojuice-core";
 
+
+function appendUsedChunk(proc, chunkName) {
+  if (chunkName) {
+    const usedChunks = proc.context.chunks || {};
+    usedChunks[chunkName] = true;
+    proc.context.chunks = usedChunks;
+  }
+}
 
 function createBlockResolver(asyncRequire, resolveState) {
   let required = false;
@@ -57,7 +65,9 @@ function createBlockResolver(asyncRequire, resolveState) {
     }
     if (!required) {
       required = true;
-      asyncRequire(handleRequireResult);
+      const proc = procOf(newModel);
+      appendUsedChunk(proc, resolveState.chunkName);
+      asyncRequire(proc).then(handleRequireResult);
     }
     return requirePromise.then(resolveHandler);
   };
@@ -65,31 +75,9 @@ function createBlockResolver(asyncRequire, resolveState) {
   return resolver;
 }
 
-function createLazyLogic(resolveState) {
-  const commandsProxy = {
-    get: function(target, name) {
-      if (utils.is.notUndef(target[name])) {
-        return target[name];
-      }
-      const EmptyExecutor = function(...args) {
-        resolveState.cmds.push({ args, name });
-        resolveState.resolver(target.model);
-      }
-      const cmdDescr = cmd(LazyBlock.prototype, `${name}.Lazy`, { value: EmptyExecutor }, true);
-      Object.defineProperty(target, name, cmdDescr);
-      return target[name];
-    }
-  };
-
-  function LazyBlock() {
-    if (!resolveState.block) {
-      this.__get = commandsProxy.get;
-      if (typeof Proxy !== "undefined") {
-        return new Proxy(this, commandsProxy);
-      }
-    }
-  }
-
+function createLazyLogic(resolveState, lazyCommands) {
+  // Basic lazy block
+  function LazyBlock() {}
   utils.extend(LazyBlock.prototype, {
     config: utils.noop,
     children: utils.noop,
@@ -100,32 +88,50 @@ function createLazyLogic(resolveState) {
     computed: utils.noop
   });
 
+  // Define all exported lazy commands
+  const lazyProto = LazyBlock.prototype;
+  utils.maybeForEach(lazyCommands, (name) => {
+    lazyProto[name] = function(...args) {
+      resolveState.cmds.push({ args, name });
+      resolveState.resolver(this.model);
+    };
+    defineCommand(lazyProto, name, cmd, true, `${name}.Lazy`);
+  });
+
   resolveState.lazyLogic = LazyBlock;
   return LazyBlock;
 }
 
-function createLazyView(resolveState) {
+function createLazyView(resolveState, loadingView = utils.noop) {
   return (props, context) => {
     resolveState.resolver(props.model);
     const block = resolveState.block;
-    return block && block.View ? block.View(props, context) : null;
+    return block && block.View
+      ? block.View(props, context)
+      : loadingView(props, context);
   }
 }
 
-function createLazyModel(resolveState) {
+function createLazyModel(resolveState, initModel) {
   return (...args) => {
     return resolveState.block
       ? resolveState.block.createModel(...args)
-      : { __args: args };
+      : { ...initModel, __args: args };
   }
 }
 
-export function createLazyBlock(blockRequire) {
-  const resolveState = { resolver: null, block: null, cmds: [] };
-  resolveState.resolver = createBlockResolver(blockRequire, resolveState);
-  const lazyLogic = createLazyLogic(resolveState);
-  const lazyView = createLazyView(resolveState);
-  const lazyCreateModel = createLazyModel(resolveState);
+function createLazyBlock({
+  resolver,
+  chunkName,
+  initModel,
+  loadingView,
+  lazyCommands
+} = {}) {
+  const resolveState = { resolver: null, block: null, cmds: [], chunkName };
+  resolveState.resolver = createBlockResolver(resolver, resolveState);
+  const lazyLogic = createLazyLogic(resolveState, lazyCommands);
+  const lazyView = createLazyView(resolveState, loadingView);
+  const lazyCreateModel = createLazyModel(resolveState, initModel);
 
   return {
     resolver: resolveState.resolver,
@@ -134,3 +140,6 @@ export function createLazyBlock(blockRequire) {
     createModel: lazyCreateModel
   };
 }
+
+export default createLazyBlock;
+

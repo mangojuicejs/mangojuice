@@ -1,4 +1,4 @@
-import { createLazyBlock } from "./createLazyBlock";
-import { getLazyCommand } from "./getLazyCommand";
+import createLazyBlock from "./createLazyBlock";
+import getUsedChunks from "./getUsedChunks";
 
-export default { createLazyBlock, getLazyCommand };
+export { createLazyBlock, getUsedChunks };

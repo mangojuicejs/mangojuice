@@ -22,9 +22,5 @@
   },
   "dependencies": {
     "mangojuice-core": "0.2.2-16"
-  },
-  "devDependencies": {
-    "bundle-loader": "^0.5.5",
-    "loader-utils": "^1.1.0"
   }
 }

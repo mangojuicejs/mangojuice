@@ -96,6 +96,7 @@ function bindChild(proc, childModel, fieldName) {
       logic,
       configArgs,
       parent: proc,
+      context: proc.context,
       sharedModel: proc.sharedModel,
       logger: proc.logger,
     });
@@ -209,6 +210,9 @@ function bindShared(proc, sharedModel) {
   const removeTreeNode = () => rootProc.parent = newRoot.parent;
   proc.destroyPromise.then(removeTreeNode);
   proc.sharedBinding = newRoot;
+
+  // Resuse app context from shared block
+  proc.context = modelProc.context;
 }
 
 /**
@@ -569,11 +573,12 @@ function doExecCmd(proc, rawCmd) {
  * Main logic execution class
  */
 export function Process(opts) {
-  const { parent, sharedModel, logger, logic, configArgs } = opts;
+  const { parent, sharedModel, logger, logic, configArgs, context } = opts;
   this.id = nextId();
   this.logicClass = logic;
   this.parent = parent;
   this.sharedModel = sharedModel;
+  this.context = context || {};
   this.logger = logger || new DefaultLogger();
   this.configArgs = configArgs || EMPTY_ARRAY;
   this.destroyPromise = new Promise(r => this.destroyResolve = r);

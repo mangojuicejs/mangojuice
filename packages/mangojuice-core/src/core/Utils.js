@@ -10,7 +10,7 @@ export const is = {
   promise: p => p && is.func(p.then)
 };
 
-export const noop = () => {};
+export const noop = () => null;
 
 export const sym = id => `@@mangojuice/${id}`;
 

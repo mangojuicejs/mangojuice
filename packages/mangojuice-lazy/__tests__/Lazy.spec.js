@@ -1,19 +1,17 @@
 import { cmd, logicOf, child, delay, handleLogicOf } from "mangojuice-core";
 import { runWithTracking } from "mangojuice-test";
-import lazyUtils from "mangojuice-lazy";
+import { createLazyBlock, getUsedChunks } from "mangojuice-lazy";
 
-process.on('unhandledRejection', error => {
-  // Will print "unhandledRejection err is not defined"
-  console.log(error);
-});
 
 const createMockBlockResolver = (Block) => {
   let resolve = null;
   const resolvePromise = new Promise(r => resolve = r);
-  const resolver = (callback) => setTimeout(() => {
-    callback(Block);
-    resolve();
-  }, 100);
+  const resolver = () => new Promise(r => {
+    setTimeout(() => {
+      r(Block);
+      delay(10).then(resolve);
+    }, 100);
+  });
   return { resolved: resolvePromise, resolver };
 };
 
@@ -47,7 +45,7 @@ describe('Lazy block loading', () => {
 
   it('shuold do nothing if view is not triggered', async () => {
     const resolver = jest.fn();
-    const LazyBlock = lazyUtils.createLazyBlock(resolver);
+    const LazyBlock = createLazyBlock({ resolver });
     const { app, shared, commandNames, errors } = await runWithTracking({
       app: LazyBlock
     });
@@ -58,7 +56,7 @@ describe('Lazy block loading', () => {
 
   it('should resolve block when view reuqested', async () => {
     const { resolver, resolved } = createMockBlockResolver(AppBlock);
-    const LazyBlock = lazyUtils.createLazyBlock(resolver);
+    const LazyBlock = createLazyBlock({ resolver });
     const { app, shared, commandNames, errors } = await runWithTracking({
       app: LazyBlock
     });
@@ -73,9 +71,9 @@ describe('Lazy block loading', () => {
     ]);
   });
 
-  it('should resolve block when any command executed', async () => {
+  it('should resolve block when lazy command executed', async () => {
     const { resolver, resolved } = createMockBlockResolver(AppBlock);
-    const LazyBlock = lazyUtils.createLazyBlock(resolver);
+    const LazyBlock = createLazyBlock({ resolver, lazyCommands: ['SetField'] });
     const { app, shared, commandNames, errors } = await runWithTracking({
       app: LazyBlock
     });
@@ -115,7 +113,7 @@ describe('Lazy block loading', () => {
       }
     };
     const { resolver, resolved } = createMockBlockResolver(BlockChild);
-    const LazyBlock = lazyUtils.createLazyBlock(resolver);
+    const LazyBlock = createLazyBlock({ resolver, lazyCommands: ['SetField'] });
     const BlockParent = {
       createModel: () => ({ child: null }),
       Logic: class BlockParent {
@@ -159,7 +157,7 @@ describe('Lazy block loading', () => {
       }
     };
     const { resolver, resolved } = createMockBlockResolver(BlockChild);
-    const LazyBlock = lazyUtils.createLazyBlock(resolver);
+    const LazyBlock = createLazyBlock({ resolver, lazyCommands: ['SetField'] });
     const BlockParent = {
       createModel: () => ({ child: null }),
       Logic: class BlockParent {
@@ -200,7 +198,7 @@ describe('Lazy block loading', () => {
       }
     };
     const { resolver, resolved } = createMockBlockResolver(BlockChild);
-    const LazyBlock = lazyUtils.createLazyBlock(resolver);
+    const LazyBlock = createLazyBlock({ resolver, lazyCommands: ['SetField'] });
     const BlockParent = {
       createModel: () => ({ child: null }),
       Logic: class BlockParent {
@@ -237,7 +235,7 @@ describe('Lazy block loading', () => {
       }
     };
     const { resolver, resolved } = createMockBlockResolver(BlockChild);
-    const LazyBlock = lazyUtils.createLazyBlock(resolver);
+    const LazyBlock = createLazyBlock({ resolver, lazyCommands: ['SetField'] });
     const handled = jest.fn();
     const BlockParent = {
       createModel: () => ({ child: null }),
