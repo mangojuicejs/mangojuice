@@ -5,6 +5,7 @@ import ensureCommand from '../core/cmd/ensureCommand';
 import createCmd from '../core/cmd/cmd';
 import observe from '../core/logic/observe';
 import procOf from '../core/logic/procOf';
+import decorateLogicClass from '../core/logic/decorateLogicClass';
 import delay from '../core/task/delay';
 import { cancelTask } from '../core/cmd/cancel';
 import {
@@ -17,7 +18,6 @@ import {
 // Constants
 const EMPTY_ARRAY = [];
 const EMPTY_OBJECT = {};
-const UPPERCASE_REGEX = /[A-Z]/;
 
 
 /**
@@ -566,37 +566,6 @@ function doExecCmd(proc, rawCmd) {
 }
 
 /**
- * By given logic class go through prototypes chain and
- * decorate all cmd functions if "cmd" decorator is not used
- * in the logic (non-decorators mode).
- * @param  {Class} LogicClass
- */
-function prepareLogic(LogicClass) {
-  const proto = LogicClass.prototype || Object.getPrototypeOf(LogicClass);
-  if (!proto || proto.hasOwnProperty('__prepared') || proto === Object.prototype) return;
-
-  // Decorate all commands in the logic prototype
-  if (!proto.hasOwnProperty('__decorated')) {
-    maybeForEach(Object.getOwnPropertyNames(proto), (k) => {
-      if (UPPERCASE_REGEX.test(k.charAt(0))) {
-        const descr = Object.getOwnPropertyDescriptor(proto, k);
-        if (!descr.get && descr.configurable) {
-          Object.defineProperty(proto, k, createCmd(proto, k, descr));
-        }
-      }
-    });
-  }
-
-  // Set own fields – indicators that the logic class
-  // prepared and decorated
-  proto.__decorated = true;
-  proto.__prepared = true;
-
-  // Prepare next prototype in the chain
-  prepareLogic(proto);
-}
-
-/**
  * Main logic execution class
  */
 export function Process(opts) {
@@ -620,7 +589,7 @@ extend(Process.prototype, {
    * @param  {Object} model
    */
   bind(model) {
-    prepareLogic(this.logicClass);
+    decorateLogicClass(this.logicClass);
     prepareConfig(this);
     bindModel(this, model);
     bindChildren(this);

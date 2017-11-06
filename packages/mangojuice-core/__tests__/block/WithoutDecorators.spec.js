@@ -105,14 +105,14 @@ describe('Without decorators usage', () => {
     ]);
   });
 
-  it('should not auto-decorate if at least one func decorated using decorators syntax', async () => {
+  it('should decorate all functions with first-letter-uppercase even if decorators is in use', async () => {
     const { app, commandNames } = await runWithTracking({ app: BlockB });
 
-    const funcRes = logicOf(app.model).SomeFunction();
+    await app.proc.exec(logicOf(app.model).SomeFunction());
 
-    expect(funcRes).toEqual('hello!');
     expect(commandNames).toEqual([
       'BlockB.FromInitOneCmd',
+      'BlockB.SomeFunction',
     ]);
   });
 
