@@ -4,6 +4,7 @@ import { bind, DefaultLogger } from "mangojuice-core";
 export const runWithTracking = async ({ expectErrors, app, shared } = {}) => {
   const commands = [];
   const commandNames = [];
+  const execOrder = [];
   const errors = [];
 
   class TrackerLogger extends DefaultLogger {
@@ -12,6 +13,9 @@ export const runWithTracking = async ({ expectErrors, app, shared } = {}) => {
         throw e;
       }
       errors.push(e);
+    }
+    onExecuted(cmd) {
+      execOrder.push(cmd.name);
     }
     onStartExec(cmd) {
       commands.push(cmd);
@@ -35,6 +39,7 @@ export const runWithTracking = async ({ expectErrors, app, shared } = {}) => {
 
   return {
     commandNames,
+    execOrder,
     commands,
     errors,
     app: appBind,

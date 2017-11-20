@@ -67,7 +67,12 @@ function createBlockResolver(asyncRequire, resolveState) {
       required = true;
       const proc = procOf(newModel);
       appendUsedChunk(proc, resolveState.chunkName);
-      asyncRequire(proc).then(handleRequireResult);
+      const res = asyncRequire(proc);
+      if (utils.is.promise(res)) {
+        res.then(handleRequireResult);
+      } else {
+        handleRequireResult(res);
+      }
     }
     return requirePromise.then(resolveHandler);
   };
@@ -120,6 +125,18 @@ function createLazyModel(resolveState, initModel) {
   }
 }
 
+/**
+ * Creates a Block which works as a proxy for some other block,
+ * which will be returned by `resolver` function provided in the
+ * options object. `resolver` can also return a promise which should
+ * resolve and actual block.
+ * @param  {function} options.resolver
+ * @param  {string} options.chunkName
+ * @param  {string} options.initModel
+ * @param  {function} options.loadingView
+ * @param  {Object} options.lazyCommands
+ * @return {Object}
+ */
 function createLazyBlock({
   resolver,
   chunkName,

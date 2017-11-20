@@ -63,6 +63,8 @@ declare module "mangojuice-core" {
 
   declare export function defineCommand(): any;
 
+  declare export function decorateLogic<T>(clazz: Class<T>, deep?: bool): Class<T>;
+
   declare export function task(fn: Function): TaskObject;
 
   declare export function delay(ms: number): Promise<void>;

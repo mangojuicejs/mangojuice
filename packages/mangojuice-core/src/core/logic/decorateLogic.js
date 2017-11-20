@@ -2,27 +2,25 @@ import { noop, maybeForEach } from '../utils';
 import createCmd from '../cmd/cmd';
 
 
-// The map to store decorated prorotypes to not mess
-// the prototype object with anything
-const DECORATED_PROTOS = typeof WeakMap !== 'undefined'
-  ? new WeakMap() : { has: noop, set: noop };
+// Constants
 const UPPERCASE_REGEX = /[A-Z]/;
 
 
 /**
  * By given logic class go through prototypes chain and
- * decorate all cmd functions if "cmd" decorator is not used
- * in the logic (non-decorators mode).
+ * decorate all cmd functions (with first upper-case letter)
  * @param  {Class} LogicClass
  */
-function decorateLogicClass(LogicClass) {
+function decorateLogic(LogicClass, deep) {
   const proto = LogicClass.prototype || Object.getPrototypeOf(LogicClass);
-  if (!proto || DECORATED_PROTOS.has(proto) || proto === Object.prototype) {
+  if (!proto || proto === Object.prototype) {
     return;
   }
 
   // Prepare next prototype in the chain
-  decorateLogicClass(proto);
+  if (deep) {
+    decorateLogic(proto);
+  }
 
   // Decorate all commands in the logic prototype
   maybeForEach(Object.getOwnPropertyNames(proto), (k) => {
@@ -34,8 +32,7 @@ function decorateLogicClass(LogicClass) {
     }
   });
 
-  // Mark prototype as decorated
-  DECORATED_PROTOS.set(proto, 1);
+  return LogicClass;
 }
 
-export default decorateLogicClass;
+export default decorateLogic;

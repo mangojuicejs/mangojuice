@@ -14,6 +14,7 @@ import depends from "./core/logic/depends";
 import observe from "./core/logic/observe";
 import logicOf from "./core/logic/logicOf";
 import procOf from "./core/logic/procOf";
+import decorateLogic from './core/logic/decorateLogic';
 import delay from "./core/task/delay";
 import task from "./core/task/task";
 import callTask, { CANCEL } from "./core/task/callTask";
@@ -46,6 +47,7 @@ export {
   observe,
   logicOf,
   procOf,
+  decorateLogic,
   delay,
   task,
   callTask,

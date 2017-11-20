@@ -5,7 +5,6 @@ import ensureCommand from '../core/cmd/ensureCommand';
 import createCmd from '../core/cmd/cmd';
 import observe from '../core/logic/observe';
 import procOf from '../core/logic/procOf';
-import decorateLogicClass from '../core/logic/decorateLogicClass';
 import delay from '../core/task/delay';
 import { cancelTask } from '../core/cmd/cancel';
 import {
@@ -63,7 +62,10 @@ function prepareConfig(proc) {
   const { logicClass, configArgs } = proc
   const logic = new logicClass();
   proc.logic = logic;
-  logic.hubBefore = logic.hub;
+
+  if (!logic.hubBefore && logic.hub) {
+    logic.hubBefore = logic.hub;
+  }
 
   let config = { children: EMPTY_OBJECT, childrenKeys: EMPTY_ARRAY, meta: {} };
   config = (logic.config && logic.config(...configArgs)) || {};
@@ -594,7 +596,6 @@ extend(Process.prototype, {
    * @param  {Object} model
    */
   bind(model) {
-    decorateLogicClass(this.logicClass);
     prepareConfig(this);
     bindModel(this, model);
     bindChildren(this);

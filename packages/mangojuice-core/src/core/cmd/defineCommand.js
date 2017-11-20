@@ -10,14 +10,8 @@
  */
 export function defineCommand(proto, name, decorator, ...args) {
   const descr = Object.getOwnPropertyDescriptor(proto, name);
-  const alreadyDecorated = proto.hasOwnProperty('__decorated');
   const newDescr = decorator(proto, name, descr, ...args);
-
   Object.defineProperty(proto, name, newDescr);
-
-  if (!alreadyDecorated) {
-    delete proto.__decorated;
-  }
 }
 
 export default defineCommand;
