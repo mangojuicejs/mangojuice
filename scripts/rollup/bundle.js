@@ -19,9 +19,9 @@ const moduleGlobals = readdirSync(ROOT)
   }, {});
 
 module.exports = function(options) {
-  const filename = `${options.name}${options.env === 'production'
-    ? '.min'
-    : ''}.js`;
+  const filename = `${options.name}${
+    options.env === 'production' ? '.min' : ''
+  }.js`;
 
   const bundleOptions = {
     dest: `dist/${filename}`,

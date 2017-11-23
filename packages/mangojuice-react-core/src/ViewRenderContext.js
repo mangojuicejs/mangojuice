@@ -1,10 +1,8 @@
 let currContext = null;
 
-export const setContext = (nextContext) =>
-  currContext = nextContext;
+export const setContext = nextContext => (currContext = nextContext);
 
-export const getContext = () =>
-  currContext;
+export const getContext = () => currContext;
 
 export function contextInjector(context, orgRender, args) {
   const oldContext = getContext();

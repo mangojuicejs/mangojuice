@@ -1,6 +1,11 @@
-import { procOf, logicOf, utils, ensureCommand, observe } from "mangojuice-core";
+import {
+  procOf,
+  logicOf,
+  utils,
+  ensureCommand,
+  observe
+} from 'mangojuice-core';
 import { setContext, getContext } from './ViewRenderContext';
-
 
 export function getCmdHash(cmd) {
   if (utils.is.func(cmd)) {
@@ -29,13 +34,13 @@ export default reactImpl => {
         nest: this.props.nest,
         model: this.props.proc.model,
         exec: this.execCommand,
-        Logic: logicOf(this.props.proc.model),
+        Logic: logicOf(this.props.proc.model)
       };
     }
 
     componentDidMount() {
       this.unmounted = false;
-      const destroyPromise = new Promise(r => this.destroyResolve = r);
+      const destroyPromise = new Promise(r => (this.destroyResolve = r));
       observe(this.props.proc.model, destroyPromise, this.updateView);
     }
 
@@ -60,23 +65,23 @@ export default reactImpl => {
       if (!this.unmounted) {
         this.forceUpdate();
       }
-    }
+    };
 
-    execCommand = (cmd) => {
+    execCommand = cmd => {
       const realCmd = ensureCommand(cmd);
       const cmdHash = getCmdHash(cmd);
-      const execViewCmd = ((...args) => {
+      const execViewCmd = (...args) => {
         const callCmd = realCmd.appendArgs(args);
         this.props.proc.exec(callCmd);
-      });
+      };
 
       this.execsMap[cmdHash] = this.prevExecsMap[cmdHash] || execViewCmd;
       return this.execsMap[cmdHash];
-    }
+    };
 
     render() {
       if (!procOf(this.props.proc.model, true)) {
-        return wrappedCreateElement("div");
+        return wrappedCreateElement('div');
       }
       const { View, children, props } = this.props;
       const actualProps = { ...props, model: this.props.proc.model };

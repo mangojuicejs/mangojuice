@@ -1,8 +1,7 @@
-import { getContext, setContext, contextInjector } from "./ViewRenderContext";
+import { getContext, setContext, contextInjector } from './ViewRenderContext';
 import { childContextTypes } from './ViewWrapper';
 
-
-export default (reactImpl) => {
+export default reactImpl => {
   // Check if already wrapped
   if (reactImpl.createElement.__wrapped) {
     return reactImpl.createElement;
@@ -10,7 +9,7 @@ export default (reactImpl) => {
 
   // Extend statefull component by adding extra lifecycle
   // methods to track context while render function
-  const injectContextToStatefull = (View) => {
+  const injectContextToStatefull = View => {
     if (!View || typeof View === 'string') return View;
 
     // Inject to statefull compoent
@@ -34,7 +33,7 @@ export default (reactImpl) => {
       if (View.__wrapperFunc) return View.__wrapperFunc;
       if (View.__isWrapper) return View;
 
-      const WrapperViewFunc = function (props, context) {
+      const WrapperViewFunc = function(props, context) {
         return contextInjector.call(this, context, View, [props, context]);
       };
       WrapperViewFunc.__isWrapper = true;
@@ -67,7 +66,9 @@ export default (reactImpl) => {
 
       // Nest views for current or child models
       if (
-        props.model && props.model.__proc && context.model &&
+        props.model &&
+        props.model.__proc &&
+        context.model &&
         props.model.__proc.id !== context.model.__proc.id
       ) {
         return context.nest(props.model, View, props);

@@ -1,38 +1,42 @@
 const fs = require('fs');
 const path = require('path');
-const babelPlugin = require("rollup-plugin-babel");
-const commonjs = require("rollup-plugin-commonjs");
-const nodeResolve = require("rollup-plugin-node-resolve");
-const replacePlugin = require("rollup-plugin-replace");
-const uglify = require("rollup-plugin-uglify");
+const babelPlugin = require('rollup-plugin-babel');
+const commonjs = require('rollup-plugin-commonjs');
+const nodeResolve = require('rollup-plugin-node-resolve');
+const replacePlugin = require('rollup-plugin-replace');
+const uglify = require('rollup-plugin-uglify');
 
-const aliasPlugin = require("./alias");
-const optJSPlugin = require("./optimize");
-const babelrc = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', '..', '.babelrc')));
+const aliasPlugin = require('./alias');
+const optJSPlugin = require('./optimize');
+const babelrc = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '..', '..', '..', '.babelrc'))
+);
 
 module.exports = function(version, options) {
   const plugins = [
     aliasPlugin,
     nodeResolve({
-      extensions: [".ts", ".js", ".json"],
+      extensions: ['.ts', '.js', '.json'],
       jsnext: true
     }),
     commonjs({
-      include: "node_modules/**"
+      include: 'node_modules/**'
     }),
     babelPlugin({
       babelrc: false,
-      presets: [['es2015', {'modules': false}]].concat(babelrc.presets.slice(1)),
+      presets: [['es2015', { modules: false }]].concat(
+        babelrc.presets.slice(1)
+      ),
       plugins: ['external-helpers'].concat(babelrc.plugins)
     })
   ];
 
   const replaceValues = {
-    "process.env.MANGOJUICE_VERSION": JSON.stringify(options.version)
+    'process.env.MANGOJUICE_VERSION': JSON.stringify(options.version)
   };
 
   if (options.replace) {
-    replaceValues["process.env.NODE_ENV"] = JSON.stringify(options.env);
+    replaceValues['process.env.NODE_ENV'] = JSON.stringify(options.env);
   }
 
   if (options.uglify) {

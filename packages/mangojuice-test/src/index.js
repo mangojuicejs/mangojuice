@@ -1,5 +1,4 @@
-import { bind, DefaultLogger } from "mangojuice-core";
-
+import { bind, DefaultLogger } from 'mangojuice-core';
 
 export const runWithTracking = async ({ expectErrors, app, shared } = {}) => {
   const commands = [];
@@ -23,14 +22,18 @@ export const runWithTracking = async ({ expectErrors, app, shared } = {}) => {
     }
   }
 
-  const sharedBind = shared && (
-    (shared.Logic && bind(shared, { logger: new TrackerLogger() })) ||
-    { model: shared, proc: { run: () => {} } }
-  );
-  const appBind = app && bind(app, {
-    logger: new TrackerLogger(),
-    shared: sharedBind && sharedBind.model
-  });
+  const sharedBind =
+    shared &&
+    ((shared.Logic && bind(shared, { logger: new TrackerLogger() })) || {
+      model: shared,
+      proc: { run: () => {} }
+    });
+  const appBind =
+    app &&
+    bind(app, {
+      logger: new TrackerLogger(),
+      shared: sharedBind && sharedBind.model
+    });
 
   await Promise.all([
     sharedBind && sharedBind.proc.run(),

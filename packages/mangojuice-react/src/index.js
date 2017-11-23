@@ -1,7 +1,6 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import ReactBindCore from "mangojuice-react-core";
-
+import React from 'react';
+import ReactDOM from 'react-dom';
+import ReactBindCore from 'mangojuice-react-core';
 
 // React interface implementation
 const reactImpl = {
@@ -16,5 +15,5 @@ const Mounter = ReactBindCore.ReactMounter(reactImpl);
 
 // Export react with createElement overrided
 const toExport = { ...React, Mounter, createElement };
-module.exports = toExport
+module.exports = toExport;
 module.exports.default = toExport;

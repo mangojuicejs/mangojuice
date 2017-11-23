@@ -1,5 +1,4 @@
-import ViewWrapperCreator from "./ViewWrapper";
-
+import ViewWrapperCreator from './ViewWrapper';
 
 export default reactImpl => {
   const ViewWrapper = ViewWrapperCreator(reactImpl);
