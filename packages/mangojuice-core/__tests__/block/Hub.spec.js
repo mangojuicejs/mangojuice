@@ -192,12 +192,207 @@ describe('Hub in logic', () => {
     ]);
   });
 
-  it('should call hubBefore before every command from shared block', () => {
+  it('should call hubBefore before every command from shared block', async () => {
+    const handler = jest.fn();
+    const BlockA = {
+      createModel: () => ({
+        child: BlockB.createModel()
+      }),
+      Logic: class BlockA {
+        hubBefore(cmd) {
+          handler(cmd, 'a');
+          return this.SomeCmdA;
+        }
+        children() {
+          return {
+            child: BlockB.Logic
+          };
+        }
+        @cmd SomeCmdA() {}
+      }
+    };
+    const BlockB = {
+      createModel: () => ({
+        child: BlockC.createModel()
+      }),
+      Logic: class BlockB {
+        hubBefore(cmd) {
+          handler(cmd, 'b');
+          return this.SomeCmdB;
+        }
+        children() {
+          return {
+            child: BlockC.Logic
+          };
+        }
+        @cmd SomeCmdB() {}
+      }
+    };
+    const BlockC = {
+      createModel: () => ({}),
+      Logic: class BlockC {
+        hubBefore(cmd) {
+          handler(cmd, 'c');
+          return this.SomeCmdC;
+        }
+        @cmd SomeCmdC() {}
+      }
+    };
+    const SharedA = {
+      createModel: () => ({
+        child: SharedB.createModel()
+      }),
+      Logic: class SharedA {
+        hubBefore(cmd) {
+          handler(cmd, 'b');
+          return this.SomeCmdA;
+        }
+        children() {
+          return {
+            child: SharedB.Logic
+          };
+        }
+        @cmd SomeCmdA() {}
+      }
+    };
+    const SharedB = {
+      createModel: () => ({}),
+      Logic: class SharedB {
+        hubBefore(cmd) {
+          handler(cmd, 'c');
+          return this.SomeCmdB;
+        }
+        @cmd SomeCmdB() {}
+      }
+    };
 
+    const { app, shared, execOrder } = await runWithTracking({
+      app: BlockA,
+      shared: SharedA
+    });
+    await app.proc.exec(logicOf(app.model.child.child).SomeCmdC);
+    await shared.proc.exec(logicOf(shared.model).SomeCmdA);
+    await shared.proc.exec(logicOf(shared.model.child).SomeCmdB);
+
+    expect(handler).toHaveBeenCalledTimes(25);
+    expect(execOrder).toEqual([
+      "BlockA.SomeCmdA",
+      "BlockB.SomeCmdB",
+      "BlockA.SomeCmdA",
+      "BlockC.SomeCmdC",
+      "BlockA.SomeCmdA",
+      "BlockA.SomeCmdA",
+      "BlockB.SomeCmdB",
+      "BlockA.SomeCmdA",
+      "BlockB.SomeCmdB",
+      "BlockA.SomeCmdA",
+      "BlockC.SomeCmdC",
+      "SharedA.SomeCmdA",
+      "BlockA.SomeCmdA",
+      "BlockA.SomeCmdA",
+      "BlockB.SomeCmdB",
+      "BlockA.SomeCmdA",
+      "BlockB.SomeCmdB",
+      "BlockA.SomeCmdA",
+      "BlockC.SomeCmdC",
+      "SharedA.SomeCmdA",
+      "BlockA.SomeCmdA",
+      "BlockA.SomeCmdA",
+      "BlockB.SomeCmdB",
+      "BlockA.SomeCmdA",
+      "BlockB.SomeCmdB",
+      "BlockA.SomeCmdA",
+      "BlockC.SomeCmdC",
+      "SharedB.SomeCmdB",
+    ]);
   });
 
-  it('should call hubAfter after every command from shared block', () => {
+  it('should call hubAfter after every command from shared block', async () => {
+    const handler = jest.fn();
+    const BlockA = {
+      createModel: () => ({
+        child: BlockB.createModel()
+      }),
+      Logic: class BlockA {
+        hubBefore(cmd) {
+          handler(cmd, 'a');
+          return this.SomeCmdA;
+        }
+        children() {
+          return {
+            child: BlockB.Logic
+          };
+        }
+        @cmd SomeCmdA() {}
+      }
+    };
+    const BlockB = {
+      createModel: () => ({
+        child: BlockC.createModel()
+      }),
+      Logic: class BlockB {
+        hubBefore(cmd) {
+          handler(cmd, 'b');
+          return this.SomeCmdB;
+        }
+        children() {
+          return {
+            child: BlockC.Logic
+          };
+        }
+        @cmd SomeCmdB() {}
+      }
+    };
+    const BlockC = {
+      createModel: () => ({}),
+      Logic: class BlockC {
+        hubBefore(cmd) {
+          handler(cmd, 'c');
+          return this.SomeCmdC;
+        }
+        @cmd SomeCmdC() {}
+      }
+    };
+    const SharedA = {
+      createModel: () => ({
+        child: SharedB.createModel()
+      }),
+      Logic: class SharedA {
+        hubBefore(cmd) {
+          handler(cmd, 'b');
+          return this.SomeCmdA;
+        }
+        children() {
+          return {
+            child: SharedB.Logic
+          };
+        }
+        @cmd SomeCmdA() {}
+      }
+    };
+    const SharedB = {
+      createModel: () => ({}),
+      Logic: class SharedB {
+        hubAfter(cmd) {
+          handler(cmd, 'c');
+          return this.SomeCmdB;
+        }
+        @cmd SomeCmdB() {}
+      }
+    };
 
+    const { app, shared, execOrder } = await runWithTracking({
+      app: BlockA,
+      shared: SharedA
+    });
+    await app.proc.exec(logicOf(app.model.child.child).SomeCmdC);
+    await shared.proc.exec(logicOf(shared.model).SomeCmdA);
+    await shared.proc.exec(logicOf(shared.model.child).SomeCmdB);
+
+    expect(handler).toHaveBeenCalledTimes(18);
+    expect(execOrder).toEqual([
+
+    ]);
   });
 
   it('should NOT call hubBefore inside shared blocks tree for shared commands', () => {
