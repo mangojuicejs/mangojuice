@@ -1,6 +1,7 @@
 import { bind, DefaultLogger } from 'mangojuice-core';
 
-export const runWithTracking = async ({ expectErrors, app, shared } = {}) => {
+
+export function runWithTracking({ expectErrors, app, shared } = {}) {
   const commands = [];
   const commandNames = [];
   const execOrder = [];
@@ -22,30 +23,35 @@ export const runWithTracking = async ({ expectErrors, app, shared } = {}) => {
     }
   }
 
-  const sharedBind =
-    shared &&
-    ((shared.Logic && bind(shared, { logger: new TrackerLogger() })) || {
-      model: shared,
-      proc: { run: () => {} }
-    });
-  const appBind =
-    app &&
-    bind(app, {
-      logger: new TrackerLogger(),
-      shared: sharedBind && sharedBind.model
-    });
+  try {
+    const sharedBind =
+      shared &&
+      ((shared.Logic && bind(shared, { logger: new TrackerLogger() })) || {
+        model: shared,
+        proc: { run: () => {} }
+      });
 
-  await Promise.all([
-    sharedBind && sharedBind.proc.run(),
-    appBind && appBind.proc.run()
-  ]);
+    const appBind =
+      app &&
+      bind(app, {
+        logger: new TrackerLogger(),
+        shared: sharedBind && sharedBind.model
+      });
 
-  return {
-    commandNames,
-    execOrder,
-    commands,
-    errors,
-    app: appBind,
-    shared: sharedBind
-  };
+    return Promise.all([
+      sharedBind && sharedBind.proc.run(),
+      appBind && appBind.proc.run()
+    ]).then(() => {
+      return {
+        commandNames,
+        execOrder,
+        commands,
+        errors,
+        app: appBind,
+        shared: sharedBind
+      };
+    });
+  } catch (e) {
+    return Promise.reject(e);
+  }
 };
