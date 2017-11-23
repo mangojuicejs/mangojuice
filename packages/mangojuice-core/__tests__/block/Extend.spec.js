@@ -1,9 +1,16 @@
 import {
-  Process, cmd, logicOf, depends, child,
-  task, delay, procOf, run, bind
-} from "mangojuice-core";
-import { runWithTracking } from "mangojuice-test";
-
+  Process,
+  cmd,
+  logicOf,
+  depends,
+  child,
+  task,
+  delay,
+  procOf,
+  run,
+  bind
+} from 'mangojuice-core';
+import { runWithTracking } from 'mangojuice-test';
 
 const ChildBlock = {
   createModel: () => ({}),
@@ -12,10 +19,12 @@ const ChildBlock = {
       return { initCommands: this.InitChild };
     }
     port(exec, destroyed) {
-      destroyed.then(() => this.model.deleted = true);
+      destroyed.then(() => (this.model.deleted = true));
     }
-    @cmd InitChild() {}
-    @cmd ChildDestroy() {}
+    @cmd
+    InitChild() {}
+    @cmd
+    ChildDestroy() {}
   }
 };
 const ParentBlock = {
@@ -34,16 +43,20 @@ const ParentBlock = {
         child_3: child(ChildBlock.Logic)
       };
     }
-    @cmd AddChild() {
+    @cmd
+    AddChild() {
       return { arr: [...this.model.arr, ChildBlock.createModel()] };
     }
-    @cmd RemoveChild() {
+    @cmd
+    RemoveChild() {
       return { arr: this.model.arr.slice(1) };
     }
-    @cmd SetChild(name, value) {
+    @cmd
+    SetChild(name, value) {
       return { [name]: value };
     }
-    @cmd CallSetChild(name, value, logic) {
+    @cmd
+    CallSetChild(name, value, logic) {
       return this.SetChild(name, value);
     }
   }
@@ -74,13 +87,11 @@ describe('Extend logic and process', () => {
 
   it('should provide a way to override command in logic – straight', async () => {
     class CustomParentLogic extends ParentBlock.Logic {
-      @cmd NewCommand() {
-      }
-      @cmd SetChild(...args) {
-        return [
-          this.NewCommand,
-          super.SetChild(...args)
-        ];
+      @cmd
+      NewCommand() {}
+      @cmd
+      SetChild(...args) {
+        return [this.NewCommand, super.SetChild(...args)];
       }
     }
 
@@ -88,9 +99,10 @@ describe('Extend logic and process', () => {
       app: { ...ParentBlock, Logic: CustomParentLogic }
     });
 
-
     await app.proc.exec(logicOf(app.model).SetChild('test', 'passed'));
-    await app.proc.exec(logicOf(app.model).CallSetChild('child', 'passed', logicOf(app.model)));
+    await app.proc.exec(
+      logicOf(app.model).CallSetChild('child', 'passed', logicOf(app.model))
+    );
 
     expect(app.model.test).toEqual('passed');
     expect(app.model.child).toEqual('passed');
@@ -111,13 +123,11 @@ describe('Extend logic and process', () => {
 
   it('should provide a way to override command in logic – reversed', async () => {
     class CustomParentLogic extends ParentBlock.Logic {
-      @cmd NewCommand() {
-      }
-      @cmd SetChild(...args) {
-        return [
-          this.NewCommand,
-          super.SetChild(...args)
-        ];
+      @cmd
+      NewCommand() {}
+      @cmd
+      SetChild(...args) {
+        return [this.NewCommand, super.SetChild(...args)];
       }
     }
 
@@ -125,7 +135,9 @@ describe('Extend logic and process', () => {
       app: { ...ParentBlock, Logic: CustomParentLogic }
     });
 
-    await app.proc.exec(logicOf(app.model).CallSetChild('child', 'passed', logicOf(app.model)));
+    await app.proc.exec(
+      logicOf(app.model).CallSetChild('child', 'passed', logicOf(app.model))
+    );
     await app.proc.exec(logicOf(app.model).SetChild('test', 'passed'));
 
     expect(app.model.test).toEqual('passed');
@@ -147,24 +159,20 @@ describe('Extend logic and process', () => {
 
   it('should three level prototypes chain', async () => {
     class CustomParentLogic extends ParentBlock.Logic {
-      @cmd NewCommand() {
-      }
-      @cmd SetChild(...args) {
-        return [
-          this.NewCommand,
-          super.SetChild(...args)
-        ];
+      @cmd
+      NewCommand() {}
+      @cmd
+      SetChild(...args) {
+        return [this.NewCommand, super.SetChild(...args)];
       }
     }
 
     class CustomCustomParentLogic extends CustomParentLogic {
-      @cmd AnotherNewCommand() {
-      }
-      @cmd SetChild(...args) {
-        return [
-          this.AnotherNewCommand,
-          super.SetChild(...args)
-        ];
+      @cmd
+      AnotherNewCommand() {}
+      @cmd
+      SetChild(...args) {
+        return [this.AnotherNewCommand, super.SetChild(...args)];
       }
     }
 
@@ -182,17 +190,17 @@ describe('Extend logic and process', () => {
       'ChildBlock.InitChild',
       'ChildBlock.InitChild',
       'ChildBlock.InitChild',
-      "CustomCustomParentLogic.CallSetChild",
-      "CustomCustomParentLogic.SetChild",
-      "CustomCustomParentLogic.AnotherNewCommand",
-      "CustomCustomParentLogic.SetChild",
-      "CustomCustomParentLogic.NewCommand",
-      "CustomCustomParentLogic.SetChild",
-      "CustomCustomParentLogic.SetChild",
-      "CustomCustomParentLogic.AnotherNewCommand",
-      "CustomCustomParentLogic.SetChild",
-      "CustomCustomParentLogic.NewCommand",
-      "CustomCustomParentLogic.SetChild",
+      'CustomCustomParentLogic.CallSetChild',
+      'CustomCustomParentLogic.SetChild',
+      'CustomCustomParentLogic.AnotherNewCommand',
+      'CustomCustomParentLogic.SetChild',
+      'CustomCustomParentLogic.NewCommand',
+      'CustomCustomParentLogic.SetChild',
+      'CustomCustomParentLogic.SetChild',
+      'CustomCustomParentLogic.AnotherNewCommand',
+      'CustomCustomParentLogic.SetChild',
+      'CustomCustomParentLogic.NewCommand',
+      'CustomCustomParentLogic.SetChild'
     ]);
   });
 });

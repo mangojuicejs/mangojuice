@@ -1,6 +1,5 @@
-import DefaultLogger from "./DefaultLogger";
+import DefaultLogger from './DefaultLogger';
 import { extend } from '../core/utils';
-
 
 /**
  * Simple console logger with stack support
@@ -10,7 +9,7 @@ function SimpleStackLogger(name, model) {
   this.model = model;
   this.stack = [];
   this.cmdMap = {};
-  this.levelText = "";
+  this.levelText = '';
 }
 
 extend(SimpleStackLogger.prototype, DefaultLogger.prototype);
@@ -19,7 +18,7 @@ extend(SimpleStackLogger.prototype, {
     this.log(cmd.name, cmd.args);
     this.stack.push(cmd);
     this.cmdMap[cmd.id] = cmd;
-    this.levelText += "-";
+    this.levelText += '-';
   },
 
   onEndExec(cmd) {
@@ -29,7 +28,7 @@ extend(SimpleStackLogger.prototype, {
   },
 
   log(text, ...args) {
-    const levelDisplay = this.levelText ? ` ${this.levelText} ` : " ";
+    const levelDisplay = this.levelText ? ` ${this.levelText} ` : ' ';
     console.log(`[${this.name}]${levelDisplay}${text}`, ...args);
   }
 });

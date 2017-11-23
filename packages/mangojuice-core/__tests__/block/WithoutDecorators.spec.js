@@ -1,10 +1,16 @@
 import {
-  cmd, logicOf, depends, child, task,
-  delay, utils, throttle, defineCommand,
+  cmd,
+  logicOf,
+  depends,
+  child,
+  task,
+  delay,
+  utils,
+  throttle,
+  defineCommand,
   decorateLogic
-} from "mangojuice-core";
-import { runWithTracking } from "mangojuice-test";
-
+} from 'mangojuice-core';
+import { runWithTracking } from 'mangojuice-test';
 
 describe('Without decorators usage', () => {
   function createTestBlocks() {
@@ -17,8 +23,8 @@ describe('Without decorators usage', () => {
         config() {
           return { initCommands: [this.FromInitOneCmd] };
         }
-        @cmd FromInitOneCmd() {
-        }
+        @cmd
+        FromInitOneCmd() {}
         SomeFunction() {
           return 'hello!';
         }
@@ -32,14 +38,14 @@ describe('Without decorators usage', () => {
       Logic: class BlockA {
         config() {
           return {
-            initCommands: [this.FromInitOneCmd, this.FromInitTwoCmd(1, 2, 3)],
+            initCommands: [this.FromInitOneCmd, this.FromInitTwoCmd(1, 2, 3)]
           };
         }
         children() {
           return {
             b_1: child(BlockB.Logic),
             b_2: BlockB.Logic
-          }
+          };
         }
         hub(cmd) {
           if (cmd.is(logicOf(this.model.b_1).FromInitOneCmd)) {
@@ -51,22 +57,22 @@ describe('Without decorators usage', () => {
         hubAfter(cmd) {
           if (cmd.is(BlockB.Logic.prototype.FromInitOneCmd, this.model.b_1)) {
             return this.HandleB_11;
-          } else if (cmd.is(BlockB.Logic.prototype.FromInitOneCmd, this.model.b_2)) {
+          } else if (
+            cmd.is(BlockB.Logic.prototype.FromInitOneCmd, this.model.b_2)
+          ) {
             return this.HandleB_22;
           }
         }
         port(exec, destroyed) {
-          exec(this.FromSubCmd)
-          exec(this.FromPortCmd)
-          exec(this.FromPortAsync())
+          exec(this.FromSubCmd);
+          exec(this.FromPortCmd);
+          exec(this.FromPortAsync());
         }
         FromPortCmd() {
           return [this.FromPortCmd_1, this.FromPortCmd_2()];
         }
         FromPortAsync() {
-          return task(AsyncTaskDelayed).success(
-            this.FromPortAsync_Success
-          );
+          return task(AsyncTaskDelayed).success(this.FromPortAsync_Success);
         }
         FromPortCmd_1() {}
         FromPortCmd_2() {}
@@ -123,7 +129,7 @@ describe('Without decorators usage', () => {
 
     expect(commandNames).toEqual([
       'BlockB.FromInitOneCmd',
-      'BlockB.SomeFunction',
+      'BlockB.SomeFunction'
     ]);
   });
 
@@ -133,8 +139,7 @@ describe('Without decorators usage', () => {
       ExtOneCommand() {
         return this.ExtTwoCommand();
       }
-      ExtTwoCommand() {
-      }
+      ExtTwoCommand() {}
     }
     class BlockExtTwo extends BlockExtOne {
       FromInitOneCmd() {
@@ -146,16 +151,18 @@ describe('Without decorators usage', () => {
     }
 
     decorateLogic(BlockExtTwo, true);
-    const { app, commandNames } = await runWithTracking({ app: {
-      ...BlockB,
-      Logic: BlockExtTwo
-    }});
+    const { app, commandNames } = await runWithTracking({
+      app: {
+        ...BlockB,
+        Logic: BlockExtTwo
+      }
+    });
 
     expect(commandNames).toEqual([
       'BlockExtTwo.FromInitOneCmd',
       'BlockExtTwo.ExtOneCommand',
       'BlockExtTwo.ExtOneCommand',
-      'BlockExtTwo.ExtTwoCommand',
+      'BlockExtTwo.ExtTwoCommand'
     ]);
   });
 
@@ -172,17 +179,19 @@ describe('Without decorators usage', () => {
     defineCommand(BlockExtOne.prototype, 'ExtOneCommand', throttle(100));
     decorateLogic(BlockExtOne, true);
 
-    const { app, commandNames } = await runWithTracking({ app: {
-      ...BlockB,
-      Logic: BlockExtOne
-    }});
+    const { app, commandNames } = await runWithTracking({
+      app: {
+        ...BlockB,
+        Logic: BlockExtOne
+      }
+    });
 
     expect(commandNames).toEqual([
-      "BlockExtOne.FromInitOneCmd",
-      "BlockExtOne.ExtOneCommand.Throttle",
-      "BlockExtOne.ExtOneCommand",
-      "BlockExtOne.ExtOneCommand.Wait",
-      "BlockExtOne.ExtOneCommand.Exec"
+      'BlockExtOne.FromInitOneCmd',
+      'BlockExtOne.ExtOneCommand.Throttle',
+      'BlockExtOne.ExtOneCommand',
+      'BlockExtOne.ExtOneCommand.Wait',
+      'BlockExtOne.ExtOneCommand.Exec'
     ]);
   });
 });

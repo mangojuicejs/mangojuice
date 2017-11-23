@@ -8,16 +8,21 @@ import procOf from '../core/logic/procOf';
 import delay from '../core/task/delay';
 import { cancelTask } from '../core/cmd/cancel';
 import {
-  nextId, createResultPromise, is, maybeMap,
-  maybeForEach, memoize, noop, fastTry,
-  extend, deepMap
-} from "../core/utils";
-
+  nextId,
+  createResultPromise,
+  is,
+  maybeMap,
+  maybeForEach,
+  memoize,
+  noop,
+  fastTry,
+  extend,
+  deepMap
+} from '../core/utils';
 
 // Constants
 const EMPTY_ARRAY = [];
 const EMPTY_OBJECT = {};
-
 
 /**
  * Go from current proc to the root of the proc tree
@@ -59,7 +64,7 @@ function findRootProc(proc) {
  * and create `config` object in the Process based on the result.
  */
 function prepareConfig(proc) {
-  const { logicClass, configArgs } = proc
+  const { logicClass, configArgs } = proc;
   const logic = new logicClass();
   proc.logic = logic;
 
@@ -100,7 +105,7 @@ function bindChild(proc, childModel, fieldName) {
       parent: proc,
       context: proc.context,
       sharedModel: proc.sharedModel,
-      logger: proc.logger,
+      logger: proc.logger
     });
     subProc.bind(childModel);
     return true;
@@ -131,10 +136,16 @@ function bindComputed(proc) {
   let computedFields = EMPTY_ARRAY;
 
   if (logic.computed) {
-    const ownComputedFields = safeExecFunction(logger, null, () => logic.computed());
+    const ownComputedFields = safeExecFunction(logger, null, () =>
+      logic.computed()
+    );
     if (ownComputedFields) {
-      const computedFieldBinder = k => bindComputedField(proc, k, ownComputedFields[k]);
-      computedFields = maybeMap(Object.keys(ownComputedFields), computedFieldBinder);
+      const computedFieldBinder = k =>
+        bindComputedField(proc, k, ownComputedFields[k]);
+      computedFields = maybeMap(
+        Object.keys(ownComputedFields),
+        computedFieldBinder
+      );
     }
   }
 
@@ -209,7 +220,7 @@ function bindShared(proc, sharedModel) {
 
   // Add new root to shared block
   rootProc.parent = newRoot;
-  const removeTreeNode = () => rootProc.parent = newRoot.parent;
+  const removeTreeNode = () => (rootProc.parent = newRoot.parent);
   proc.destroyPromise.then(removeTreeNode);
   proc.sharedBinding = newRoot;
 
@@ -231,7 +242,7 @@ function bindModel(proc, model) {
   logic.shared = sharedModel;
   logic.meta = meta;
 
-  Object.defineProperty(model, "__proc", {
+  Object.defineProperty(model, '__proc', {
     value: proc,
     enumerable: false,
     configurable: true
@@ -268,7 +279,7 @@ function trackExecs(proc, func) {
  * @return {Promise}
  */
 function runChildren(proc) {
-  const childRunner = (childModel) => procOf(childModel).run();
+  const childRunner = childModel => procOf(childModel).run();
   return mapChildren(proc, proc.model, childRunner);
 }
 
@@ -309,9 +320,11 @@ function runInitCommands(proc) {
  * @return {Promise}
  */
 function runModelObservers(proc) {
-  return Promise.all(maybeMap(proc.observers, function observersIterator(obs) {
-    return safeExecFunction(proc.logger, null, obs);
-  }));
+  return Promise.all(
+    maybeMap(proc.observers, function observersIterator(obs) {
+      return safeExecFunction(proc.logger, null, obs);
+    })
+  );
 }
 
 /**
@@ -350,10 +363,8 @@ function mapChildren(proc, model, iterator, iterKeys) {
   const childRunner = (childModel, k) => {
     resPromise.add(iterator(childModel, k));
   };
-  const keyIterator = k => (
-    config.children[k] &&
-    maybeForEach(model[k], x => childRunner(x, k))
-  );
+  const keyIterator = k =>
+    config.children[k] && maybeForEach(model[k], x => childRunner(x, k));
 
   maybeForEach(childrenKeys, keyIterator);
   return resPromise.get();
@@ -397,8 +408,14 @@ function execTask(proc, taskObj, cmd) {
   const execId = nextId();
   const taskId = cmd.id;
   const { tasks, logger, model, sharedModel } = proc;
-  const { task, executor, successCmd, failCmd,
-    customArgs, execEvery } = taskObj;
+  const {
+    task,
+    executor,
+    successCmd,
+    failCmd,
+    customArgs,
+    execEvery
+  } = taskObj;
 
   if (!execEvery) {
     cancelTask(proc, taskId);
@@ -470,7 +487,7 @@ function updateModel(proc, updateObj) {
     procOf(childModel).tick = tick;
   };
 
-  const unmarkedDestroyer = (childModel) => {
+  const unmarkedDestroyer = childModel => {
     const childProc = procOf(childModel);
     if (childProc.tick !== tick) {
       rebindComputed = true;
@@ -583,7 +600,7 @@ export function Process(opts) {
   this.context = context || {};
   this.logger = logger || new DefaultLogger();
   this.configArgs = configArgs || EMPTY_ARRAY;
-  this.destroyPromise = new Promise(r => this.destroyResolve = r);
+  this.destroyPromise = new Promise(r => (this.destroyResolve = r));
   this.tasks = {};
   this.observers = [];
   this.exec = this.exec.bind(this);

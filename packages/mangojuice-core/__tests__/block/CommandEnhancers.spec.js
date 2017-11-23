@@ -1,6 +1,15 @@
-import { cmd, logicOf, depends, child, task, delay, observe, throttle, debounce } from "mangojuice-core";
-import { runWithTracking } from "mangojuice-test";
-
+import {
+  cmd,
+  logicOf,
+  depends,
+  child,
+  task,
+  delay,
+  observe,
+  throttle,
+  debounce
+} from 'mangojuice-core';
+import { runWithTracking } from 'mangojuice-test';
 
 describe('Command enhancers', () => {
   describe('throttle', () => {
@@ -8,7 +17,8 @@ describe('Command enhancers', () => {
       createModel: () => ({ a: 0 }),
       Logic: class AppBlock {
         @throttle(100)
-        @cmd Increment(inc) {
+        @cmd
+        Increment(inc) {
           return { a: this.model.a + inc };
         }
       }
@@ -22,7 +32,8 @@ describe('Command enhancers', () => {
         hub(cmd) {
           return this.Handler;
         }
-        @cmd Handler() {}
+        @cmd
+        Handler() {}
       }
     };
 
@@ -74,17 +85,17 @@ describe('Command enhancers', () => {
 
       expect(app.model).toEqual({ child: { a: 22 } });
       expect(commandNames).toEqual([
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment",
-        "ParentBlock.Handler",
-        "AppBlock.Increment.Wait",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Exec",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment",
-        "ParentBlock.Handler",
-        "AppBlock.Increment.Wait"
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment',
+        'ParentBlock.Handler',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Exec',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment',
+        'ParentBlock.Handler',
+        'AppBlock.Increment.Wait'
       ]);
     });
 
@@ -106,25 +117,25 @@ describe('Command enhancers', () => {
 
       expect(app.model).toEqual({ child: { a: 621 } });
       expect(commandNames).toEqual([
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment",
-        "ParentBlock.Handler",
-        "AppBlock.Increment.Wait",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Exec",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment",
-        "ParentBlock.Handler",
-        "AppBlock.Increment.Wait",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Exec",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment",
-        "ParentBlock.Handler",
-        "AppBlock.Increment.Wait"
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment',
+        'ParentBlock.Handler',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Exec',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment',
+        'ParentBlock.Handler',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Exec',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment',
+        'ParentBlock.Handler',
+        'AppBlock.Increment.Wait'
       ]);
     });
   });
@@ -134,7 +145,8 @@ describe('Command enhancers', () => {
       createModel: () => ({ a: 0 }),
       Logic: class AppBlock {
         @debounce(100)
-        @cmd Increment(inc) {
+        @cmd
+        Increment(inc) {
           return { a: this.model.a + inc };
         }
       }
@@ -148,7 +160,8 @@ describe('Command enhancers', () => {
         hub(cmd) {
           return this.Handler;
         }
-        @cmd Handler() {}
+        @cmd
+        Handler() {}
       }
     };
 
@@ -202,24 +215,24 @@ describe('Command enhancers', () => {
 
       expect(app.model).toEqual({ child: { a: 23 } });
       expect(commandNames).toEqual([
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment",
-        "ParentBlock.Handler",
-        "AppBlock.Increment.Wait",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Wait",
-        "AppBlock.Increment.Wait.Cancelled",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Wait",
-        "AppBlock.Increment.Wait.Cancelled",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Wait",
-        "AppBlock.Increment.Wait.Cancelled",
-        "AppBlock.Increment.Exec",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment",
-        "ParentBlock.Handler",
-        "AppBlock.Increment.Wait",
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment',
+        'ParentBlock.Handler',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Wait.Cancelled',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Wait.Cancelled',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Wait.Cancelled',
+        'AppBlock.Increment.Exec',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment',
+        'ParentBlock.Handler',
+        'AppBlock.Increment.Wait'
       ]);
     });
 
@@ -241,35 +254,35 @@ describe('Command enhancers', () => {
 
       expect(app.model).toEqual({ child: { a: 621 } });
       expect(commandNames).toEqual([
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment",
-        "ParentBlock.Handler",
-        "AppBlock.Increment.Wait",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Wait",
-        "AppBlock.Increment.Wait.Cancelled",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Wait",
-        "AppBlock.Increment.Wait.Cancelled",
-        "AppBlock.Increment.Exec",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment",
-        "ParentBlock.Handler",
-        "AppBlock.Increment.Wait",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Wait",
-        "AppBlock.Increment.Wait.Cancelled",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Wait",
-        "AppBlock.Increment.Wait.Cancelled",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment.Wait",
-        "AppBlock.Increment.Wait.Cancelled",
-        "AppBlock.Increment.Exec",
-        "AppBlock.Increment.Throttle",
-        "AppBlock.Increment",
-        "ParentBlock.Handler",
-        "AppBlock.Increment.Wait"
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment',
+        'ParentBlock.Handler',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Wait.Cancelled',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Wait.Cancelled',
+        'AppBlock.Increment.Exec',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment',
+        'ParentBlock.Handler',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Wait.Cancelled',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Wait.Cancelled',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Wait.Cancelled',
+        'AppBlock.Increment.Exec',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment',
+        'ParentBlock.Handler',
+        'AppBlock.Increment.Wait'
       ]);
     });
   });

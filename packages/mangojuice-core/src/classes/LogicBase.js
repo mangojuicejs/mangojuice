@@ -3,7 +3,6 @@
  * a type of this class using Flow/TypeScript to be able to
  * use types more aggressively
  */
-function LogicBase() {
-}
+function LogicBase() {}
 
 export default LogicBase;

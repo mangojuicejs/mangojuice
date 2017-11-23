@@ -1,6 +1,5 @@
 import { callTask, delay, CANCEL } from 'mangojuice-core';
 
-
 describe('Task', () => {
   it('should resolve an object with result and emoty error on success', async () => {
     let childTask;
@@ -61,7 +60,9 @@ describe('Task', () => {
 
   it('should reject from error from cancel logic if it happened', async () => {
     const cancelError = new Error('oops');
-    const cancleHandler = jest.fn(() => { throw cancelError });
+    const cancleHandler = jest.fn(() => {
+      throw cancelError;
+    });
     async function simpleTask() {
       this.onCancel(cancleHandler);
       await this.call(delay, 10);
@@ -132,10 +133,7 @@ describe('Task', () => {
       return { test: 2 };
     }
     async function simpleTask_3() {
-      await Promise.all([
-        this.call(simpleTask_2),
-        this.call(simpleTask_1)
-      ]);
+      await Promise.all([this.call(simpleTask_2), this.call(simpleTask_1)]);
       someLogic();
       return { test: 3 };
     }
@@ -160,10 +158,7 @@ describe('Task', () => {
       return { test: 2 };
     }
     async function simpleTask_3() {
-      await Promise.race([
-        this.call(simpleTask_2),
-        this.call(simpleTask_1)
-      ]);
+      await Promise.race([this.call(simpleTask_2), this.call(simpleTask_1)]);
       someLogic();
       await this.call(delay, 1000);
       return { test: 3 };

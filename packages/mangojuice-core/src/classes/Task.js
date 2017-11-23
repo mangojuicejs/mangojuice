@@ -1,7 +1,6 @@
 import { extend } from '../core/utils';
 import ensureCommand from '../core/cmd/ensureCommand';
 
-
 /**
  * Class for declaring an async task.
  * @param {function} taskFn

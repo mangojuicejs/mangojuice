@@ -1,10 +1,10 @@
-const { join } = require("path");
-const { rollup } = require("rollup");
+const { join } = require('path');
+const { rollup } = require('rollup');
 
-const createPlugins = require("./plugins");
+const createPlugins = require('./plugins');
 
 const cwd = process.cwd();
-const pkgJSON = require(join(cwd, "package.json"));
+const pkgJSON = require(join(cwd, 'package.json'));
 
 module.exports = function(options) {
   const {
@@ -21,10 +21,10 @@ module.exports = function(options) {
   const plugins = createPlugins(version, options);
 
   return rollup({
-    entry: join(cwd, "src/index.js"),
+    entry: join(cwd, 'src/index.js'),
     external,
     onwarn(warning) {
-      if (warning.code === "MISSING_EXPORTS") {
+      if (warning.code === 'MISSING_EXPORTS') {
         return;
       }
     },

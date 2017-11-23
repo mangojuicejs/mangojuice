@@ -1,6 +1,5 @@
 import { extend, is, nextId } from '../core/utils';
 
-
 // Constants
 const EMPTY_ARRAY = [];
 
@@ -20,7 +19,7 @@ function Command(func, args, name, nonhandlable) {
   this.args = args || EMPTY_ARRAY;
   this.name = name;
   this.handlable = !nonhandlable;
-};
+}
 
 extend(Command.prototype, {
   /**
@@ -37,7 +36,12 @@ extend(Command.prototype, {
    * @return {Command}
    */
   clone() {
-    const newCmd = new Command(this.func, this.args, this.funcName, !this.handlable);
+    const newCmd = new Command(
+      this.func,
+      this.args,
+      this.funcName,
+      !this.handlable
+    );
     newCmd.id = this.id;
     newCmd.name = this.name;
     newCmd.model = this.model;
@@ -62,11 +66,11 @@ extend(Command.prototype, {
     if (!cmd) return false;
     const { func, name, model } = this;
     const isSameFunc = func === cmd.func || func === cmd || name === cmd;
-    const isSameModel = isSameFunc && (
-      (childModel && childModel === model) ||
-      (!childModel && cmd.logic && cmd.logic.model === model) ||
-      !cmd.logic
-    );
+    const isSameModel =
+      isSameFunc &&
+      ((childModel && childModel === model) ||
+        (!childModel && cmd.logic && cmd.logic.model === model) ||
+        !cmd.logic);
     return isSameFunc && isSameModel;
   },
 

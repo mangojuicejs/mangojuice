@@ -1,6 +1,5 @@
-import { cmd, logicOf, depends, child } from "mangojuice-core";
-import { runWithTracking } from "mangojuice-test";
-
+import { cmd, logicOf, depends, child } from 'mangojuice-core';
+import { runWithTracking } from 'mangojuice-test';
 
 describe('Hub in logic', () => {
   it('should call hub before every command from children blocks', async () => {
@@ -19,7 +18,8 @@ describe('Hub in logic', () => {
             child: BlockB.Logic
           };
         }
-        @cmd SomeCmdA() {}
+        @cmd
+        SomeCmdA() {}
       }
     };
     const BlockB = {
@@ -36,7 +36,8 @@ describe('Hub in logic', () => {
             child: BlockC.Logic
           };
         }
-        @cmd SomeCmdB() {}
+        @cmd
+        SomeCmdB() {}
       }
     };
     const BlockC = {
@@ -45,7 +46,8 @@ describe('Hub in logic', () => {
         hub(cmd) {
           handler(cmd, 'c');
         }
-        @cmd SomeCmdC() {}
+        @cmd
+        SomeCmdC() {}
       }
     };
 
@@ -56,13 +58,13 @@ describe('Hub in logic', () => {
 
     expect(handler).toHaveBeenCalledTimes(4);
     expect(execOrder).toEqual([
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockC.SomeCmdC",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA"
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockC.SomeCmdC',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA'
     ]);
   });
 
@@ -82,7 +84,8 @@ describe('Hub in logic', () => {
             child: BlockB.Logic
           };
         }
-        @cmd SomeCmdA() {}
+        @cmd
+        SomeCmdA() {}
       }
     };
     const BlockB = {
@@ -99,7 +102,8 @@ describe('Hub in logic', () => {
             child: BlockC.Logic
           };
         }
-        @cmd SomeCmdB() {}
+        @cmd
+        SomeCmdB() {}
       }
     };
     const BlockC = {
@@ -108,7 +112,8 @@ describe('Hub in logic', () => {
         hubBefore(cmd) {
           handler(cmd, 'c');
         }
-        @cmd SomeCmdC() {}
+        @cmd
+        SomeCmdC() {}
       }
     };
 
@@ -119,13 +124,13 @@ describe('Hub in logic', () => {
 
     expect(handler).toHaveBeenCalledTimes(4);
     expect(execOrder).toEqual([
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockC.SomeCmdC",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA"
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockC.SomeCmdC',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA'
     ]);
   });
 
@@ -145,7 +150,8 @@ describe('Hub in logic', () => {
             child: BlockB.Logic
           };
         }
-        @cmd SomeCmdA() {}
+        @cmd
+        SomeCmdA() {}
       }
     };
     const BlockB = {
@@ -162,7 +168,8 @@ describe('Hub in logic', () => {
             child: BlockC.Logic
           };
         }
-        @cmd SomeCmdB() {}
+        @cmd
+        SomeCmdB() {}
       }
     };
     const BlockC = {
@@ -171,7 +178,8 @@ describe('Hub in logic', () => {
         hubAfter(cmd) {
           handler(cmd, 'c');
         }
-        @cmd SomeCmdC() {}
+        @cmd
+        SomeCmdC() {}
       }
     };
 
@@ -182,13 +190,13 @@ describe('Hub in logic', () => {
 
     expect(handler).toHaveBeenCalledTimes(4);
     expect(execOrder).toEqual([
-      "BlockC.SomeCmdC",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockA.SomeCmdA",
+      'BlockC.SomeCmdC',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockA.SomeCmdA'
     ]);
   });
 
@@ -208,7 +216,8 @@ describe('Hub in logic', () => {
             child: BlockB.Logic
           };
         }
-        @cmd SomeCmdA() {}
+        @cmd
+        SomeCmdA() {}
       }
     };
     const BlockB = {
@@ -225,7 +234,8 @@ describe('Hub in logic', () => {
             child: BlockC.Logic
           };
         }
-        @cmd SomeCmdB() {}
+        @cmd
+        SomeCmdB() {}
       }
     };
     const BlockC = {
@@ -235,7 +245,8 @@ describe('Hub in logic', () => {
           handler(cmd, 'c');
           return this.SomeCmdC;
         }
-        @cmd SomeCmdC() {}
+        @cmd
+        SomeCmdC() {}
       }
     };
     const SharedA = {
@@ -252,7 +263,8 @@ describe('Hub in logic', () => {
             child: SharedB.Logic
           };
         }
-        @cmd SomeCmdA() {}
+        @cmd
+        SomeCmdA() {}
       }
     };
     const SharedB = {
@@ -262,7 +274,8 @@ describe('Hub in logic', () => {
           handler(cmd, 'c');
           return this.SomeCmdB;
         }
-        @cmd SomeCmdB() {}
+        @cmd
+        SomeCmdB() {}
       }
     };
 
@@ -276,34 +289,34 @@ describe('Hub in logic', () => {
 
     expect(handler).toHaveBeenCalledTimes(25);
     expect(execOrder).toEqual([
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockC.SomeCmdC",
-      "BlockA.SomeCmdA",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockC.SomeCmdC",
-      "SharedA.SomeCmdA",
-      "BlockA.SomeCmdA",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockC.SomeCmdC",
-      "SharedA.SomeCmdA",
-      "BlockA.SomeCmdA",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockC.SomeCmdC",
-      "SharedB.SomeCmdB",
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockC.SomeCmdC',
+      'BlockA.SomeCmdA',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockC.SomeCmdC',
+      'SharedA.SomeCmdA',
+      'BlockA.SomeCmdA',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockC.SomeCmdC',
+      'SharedA.SomeCmdA',
+      'BlockA.SomeCmdA',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockC.SomeCmdC',
+      'SharedB.SomeCmdB'
     ]);
   });
 
@@ -323,7 +336,8 @@ describe('Hub in logic', () => {
             child: BlockB.Logic
           };
         }
-        @cmd SomeCmdA() {}
+        @cmd
+        SomeCmdA() {}
       }
     };
     const BlockB = {
@@ -340,7 +354,8 @@ describe('Hub in logic', () => {
             child: BlockC.Logic
           };
         }
-        @cmd SomeCmdB() {}
+        @cmd
+        SomeCmdB() {}
       }
     };
     const BlockC = {
@@ -350,7 +365,8 @@ describe('Hub in logic', () => {
           handler(cmd, 'c');
           return this.SomeCmdC;
         }
-        @cmd SomeCmdC() {}
+        @cmd
+        SomeCmdC() {}
       }
     };
     const SharedA = {
@@ -367,7 +383,8 @@ describe('Hub in logic', () => {
             child: SharedB.Logic
           };
         }
-        @cmd SomeCmdA() {}
+        @cmd
+        SomeCmdA() {}
       }
     };
     const SharedB = {
@@ -377,7 +394,8 @@ describe('Hub in logic', () => {
           handler(cmd, 'c');
           return this.SomeCmdB;
         }
-        @cmd SomeCmdB() {}
+        @cmd
+        SomeCmdB() {}
       }
     };
 
@@ -391,34 +409,34 @@ describe('Hub in logic', () => {
 
     expect(handler).toHaveBeenCalledTimes(25);
     expect(execOrder).toEqual([
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockC.SomeCmdC",
-      "BlockA.SomeCmdA",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockC.SomeCmdC",
-      "SharedA.SomeCmdA",
-      "BlockA.SomeCmdA",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockC.SomeCmdC",
-      "SharedA.SomeCmdA",
-      "BlockA.SomeCmdA",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockB.SomeCmdB",
-      "BlockA.SomeCmdA",
-      "BlockC.SomeCmdC",
-      "SharedB.SomeCmdB"
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockC.SomeCmdC',
+      'BlockA.SomeCmdA',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockC.SomeCmdC',
+      'SharedA.SomeCmdA',
+      'BlockA.SomeCmdA',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockC.SomeCmdC',
+      'SharedA.SomeCmdA',
+      'BlockA.SomeCmdA',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockB.SomeCmdB',
+      'BlockA.SomeCmdA',
+      'BlockC.SomeCmdC',
+      'SharedB.SomeCmdB'
     ]);
   });
 
@@ -426,8 +444,7 @@ describe('Hub in logic', () => {
     const handler = jest.fn();
     const BlockA = {
       createModel: () => ({}),
-      Logic: class BlockA {
-      }
+      Logic: class BlockA {}
     };
     const SharedA = {
       createModel: () => ({
@@ -443,7 +460,8 @@ describe('Hub in logic', () => {
             child: SharedB.Logic
           };
         }
-        @cmd SomeCmdA() {}
+        @cmd
+        SomeCmdA() {}
       }
     };
     const SharedB = {
@@ -453,7 +471,8 @@ describe('Hub in logic', () => {
           handler(cmd, 'c');
           return this.SomeCmdB;
         }
-        @cmd SomeCmdB() {}
+        @cmd
+        SomeCmdB() {}
       }
     };
 
@@ -468,7 +487,7 @@ describe('Hub in logic', () => {
     expect(execOrder).toEqual([
       'SharedA.SomeCmdA',
       'SharedA.SomeCmdA',
-      'SharedB.SomeCmdB',
+      'SharedB.SomeCmdB'
     ]);
   });
 
@@ -476,8 +495,7 @@ describe('Hub in logic', () => {
     const handler = jest.fn();
     const BlockA = {
       createModel: () => ({}),
-      Logic: class BlockA {
-      }
+      Logic: class BlockA {}
     };
     const SharedA = {
       createModel: () => ({
@@ -493,7 +511,8 @@ describe('Hub in logic', () => {
             child: SharedB.Logic
           };
         }
-        @cmd SomeCmdA() {}
+        @cmd
+        SomeCmdA() {}
       }
     };
     const SharedB = {
@@ -503,7 +522,8 @@ describe('Hub in logic', () => {
           handler(cmd, 'c');
           return this.SomeCmdB;
         }
-        @cmd SomeCmdB() {}
+        @cmd
+        SomeCmdB() {}
       }
     };
 
@@ -518,7 +538,7 @@ describe('Hub in logic', () => {
     expect(execOrder).toEqual([
       'SharedA.SomeCmdA',
       'SharedB.SomeCmdB',
-      'SharedA.SomeCmdA',
+      'SharedA.SomeCmdA'
     ]);
   });
 });

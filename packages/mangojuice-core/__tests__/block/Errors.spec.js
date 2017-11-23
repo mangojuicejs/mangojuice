@@ -1,6 +1,13 @@
-import { cmd, logicOf, depends, child, task, delay, observe } from "mangojuice-core";
-import { runWithTracking } from "mangojuice-test";
-
+import {
+  cmd,
+  logicOf,
+  depends,
+  child,
+  task,
+  delay,
+  observe
+} from 'mangojuice-core';
+import { runWithTracking } from 'mangojuice-test';
 
 describe('Errors handling', () => {
   describe('While sync command execution', () => {
@@ -8,14 +15,17 @@ describe('Errors handling', () => {
     const AppBlock = {
       createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
       Logic: class AppBlock {
-        @cmd SetField(name, value) {
+        @cmd
+        SetField(name, value) {
           throw testError;
           return { [name]: value };
         }
-        @cmd SomeBatch(name, value) {
+        @cmd
+        SomeBatch(name, value) {
           throw testError;
         }
-        @cmd SomeTaskCreator(name, value) {
+        @cmd
+        SomeTaskCreator(name, value) {
           throw testError;
         }
       }
@@ -28,7 +38,7 @@ describe('Errors handling', () => {
       });
 
       expect(errors).toHaveLength(0);
-      await app.proc.exec(logicOf(app.model).SetField("a", 12));
+      await app.proc.exec(logicOf(app.model).SetField('a', 12));
       expect(errors).toHaveLength(1);
       expect(errors[0]).toEqual(testError);
     });
@@ -40,7 +50,7 @@ describe('Errors handling', () => {
       });
 
       expect(errors).toHaveLength(0);
-      await app.proc.exec(logicOf(app.model).SomeBatch("a", 12));
+      await app.proc.exec(logicOf(app.model).SomeBatch('a', 12));
       expect(errors).toHaveLength(1);
       expect(errors[0]).toEqual(testError);
     });
@@ -52,7 +62,7 @@ describe('Errors handling', () => {
       });
 
       expect(errors).toHaveLength(0);
-      await app.proc.exec(logicOf(app.model).SomeTaskCreator("a", 12));
+      await app.proc.exec(logicOf(app.model).SomeTaskCreator('a', 12));
       expect(errors).toHaveLength(1);
       expect(errors[0]).toEqual(testError);
     });
@@ -63,19 +73,22 @@ describe('Errors handling', () => {
     const AppBlock = {
       createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
       Logic: class AppBlock {
-        @cmd SomeTaskCreator(name, value) {
+        @cmd
+        SomeTaskCreator(name, value) {
           return task(async function() {
             await this.call(delay, 100);
             throw testError;
           });
         }
-        @cmd HandledTaskCreator(name, value) {
+        @cmd
+        HandledTaskCreator(name, value) {
           return task(async function() {
             await this.call(delay, 100);
             throw testError;
           }).fail(this.SomeFailHandler);
         }
-        @cmd SomeFailHandler() {}
+        @cmd
+        SomeFailHandler() {}
       }
     };
 
@@ -86,7 +99,7 @@ describe('Errors handling', () => {
       });
 
       expect(errors).toHaveLength(0);
-      await app.proc.exec(logicOf(app.model).SomeTaskCreator("a", 12));
+      await app.proc.exec(logicOf(app.model).SomeTaskCreator('a', 12));
       expect(errors).toHaveLength(1);
       expect(errors[0]).toEqual(testError);
     });
@@ -98,7 +111,7 @@ describe('Errors handling', () => {
       });
 
       expect(errors).toHaveLength(0);
-      await app.proc.exec(logicOf(app.model).HandledTaskCreator("a", 12));
+      await app.proc.exec(logicOf(app.model).HandledTaskCreator('a', 12));
       expect(errors).toHaveLength(0);
       expect(commandNames).toEqual([
         'AppBlock.HandledTaskCreator',
@@ -120,11 +133,13 @@ describe('Errors handling', () => {
         }
       };
 
-      await expect(runWithTracking({
-        app: AppBlock,
-        expectErrors: true
-      })).rejects.toBe(testError);
-    })
+      await expect(
+        runWithTracking({
+          app: AppBlock,
+          expectErrors: true
+        })
+      ).rejects.toBe(testError);
+    });
   });
 
   describe('In special logic functions', () => {
@@ -134,7 +149,8 @@ describe('Errors handling', () => {
       const ChildBlock = {
         createModel: () => ({}),
         Logic: class ChildBlock {
-          @cmd ModelUpdate() {
+          @cmd
+          ModelUpdate() {
             return { test: 'passed' };
           }
         }
@@ -160,8 +176,10 @@ describe('Errors handling', () => {
       const ChildBlock = {
         createModel: () => ({}),
         Logic: class ChildBlock {
-          @cmd HubError() {}
-          @cmd HubNoError() {
+          @cmd
+          HubError() {}
+          @cmd
+          HubNoError() {
             return { test: 'passed' };
           }
         }
@@ -179,7 +197,8 @@ describe('Errors handling', () => {
               return this.HubHandler;
             }
           }
-          @cmd HubHandler() {}
+          @cmd
+          HubHandler() {}
         }
       };
 
@@ -200,8 +219,8 @@ describe('Errors handling', () => {
         'TestLogic.HubHandler',
         'ChildBlock.HubError',
         'ChildBlock.HubNoError',
-        'TestLogic.HubHandler',
+        'TestLogic.HubHandler'
       ]);
-    })
+    });
   });
 });

@@ -1,12 +1,12 @@
 export const is = {
   undef: v => v === null || v === undefined,
   notUndef: v => v !== null && v !== undefined,
-  func: f => typeof f === "function",
-  number: n => typeof n === "number",
-  string: s => typeof s === "string",
+  func: f => typeof f === 'function',
+  number: n => typeof n === 'number',
+  string: s => typeof s === 'string',
   bool: s => s === true || s === false,
   array: Array.isArray,
-  object: obj => obj && !is.array(obj) && typeof obj === "object",
+  object: obj => obj && !is.array(obj) && typeof obj === 'object',
   promise: p => p && is.func(p.then)
 };
 
@@ -36,10 +36,10 @@ export const fastMap = (subject, iterator) => {
   return result;
 };
 
-export const ensureError = (err) =>
+export const ensureError = err =>
   !(err instanceof Error) ? new Error(err) : err;
 
-export const fastTry = (fn) => {
+export const fastTry = fn => {
   try {
     return { result: fn(), error: null };
   } catch (err) {
@@ -86,7 +86,6 @@ export const createResultPromise = () => {
     }
   };
 };
-
 
 export function extend(obj, props) {
   for (let i in props) {

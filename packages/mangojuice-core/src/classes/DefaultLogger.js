@@ -1,6 +1,5 @@
 import { extend } from '../core/utils';
 
-
 /**
  * Empty process logger class.
  * Defines an interface of commands execution logger.

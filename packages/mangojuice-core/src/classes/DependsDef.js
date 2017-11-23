@@ -1,6 +1,5 @@
 import { extend, noop } from '../core/utils';
 
-
 /**
  * Class for declaring computed function dependencies.
  * Given array shuold contain models, binded to some
