@@ -2,7 +2,6 @@ import Command from '../../classes/Command';
 import procOf from '../logic/procOf';
 import ensureCommand from './ensureCommand';
 
-
 /**
  * Cancel task with given id in the process if exists
  * @param  {Process} proc
@@ -33,7 +32,12 @@ function cancel(cmd) {
     const proc = procOf(this.model);
     cancelTask(proc, realCmd.id);
   };
-  const cancelCmd = new Command(cancelFn, null, `${realCmd.funcName}.Cancel`, true);
+  const cancelCmd = new Command(
+    cancelFn,
+    null,
+    `${realCmd.funcName}.Cancel`,
+    true
+  );
   return cancelCmd.bind(realCmd.logic);
 }
 

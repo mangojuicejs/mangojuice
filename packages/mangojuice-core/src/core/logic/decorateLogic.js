@@ -1,10 +1,8 @@
 import { noop, maybeForEach } from '../utils';
 import createCmd from '../cmd/cmd';
 
-
 // Constants
 const UPPERCASE_REGEX = /[A-Z]/;
-
 
 /**
  * By given logic class go through prototypes chain and
@@ -23,7 +21,7 @@ function decorateLogic(LogicClass, deep) {
   }
 
   // Decorate all commands in the logic prototype
-  maybeForEach(Object.getOwnPropertyNames(proto), (k) => {
+  maybeForEach(Object.getOwnPropertyNames(proto), k => {
     if (UPPERCASE_REGEX.test(k.charAt(0))) {
       const descr = Object.getOwnPropertyDescriptor(proto, k);
       if (!descr.get && descr.configurable) {

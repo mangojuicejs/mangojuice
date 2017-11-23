@@ -1,6 +1,5 @@
 import run from './run';
 
-
 /**
  * By given block, model and opts creates a block with given
  * model instead of creating new one. It aimed to use

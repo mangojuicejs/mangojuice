@@ -17,6 +17,9 @@ module.exports = {
     usingJSDOM: true,
     usingJest: true
   },
+  setupFiles: [
+    "<rootDir>/scripts/test/requestAnimationFrame.js"
+  ],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
   moduleNameMapper: {
     "^mangojuice-core": "<rootDir>/packages/mangojuice-core/src",
@@ -26,17 +29,8 @@ module.exports = {
     "^mangojuice-react-core/tests": "<rootDir>/packages/mangojuice-react-core/__tests__/tests.js",
     "^mangojuice-react-core": "<rootDir>/packages/mangojuice-react-core/src",
     "^mangojuice-react": "<rootDir>/packages/mangojuice-react/src",
-    "^mangojuice-test": "<rootDir>/packages/mangojuice-test/src",
+    "^mangojuice-test": "<rootDir>/packages/mangojuice-test/src"
   },
-  projects: [
-    "<rootDir>/packages/mangojuice-core",
-    "<rootDir>/packages/mangojuice-lazy",
-    "<rootDir>/packages/mangojuice-preact",
-    "<rootDir>/packages/mangojuice-inferno",
-    "<rootDir>/packages/mangojuice-react-core",
-    "<rootDir>/packages/mangojuice-react",
-    "<rootDir>/packages/mangojuice-test"
-  ],
   rootDir: __dirname,
   testMatch: [
     "<rootDir>/packages/*/__tests__/**/*spec.js?(x)",
@@ -44,8 +38,5 @@ module.exports = {
     "<rootDir>/packages/*/__tests__/**/*spec.browser.js?(x)",
     "<rootDir>/packages/*/__tests__/**/*spec.browser.ts?(x)"
   ],
-  transform: {
-    "^.+\\.jsx?$": "babel-jest"
-  },
   transformIgnorePatterns: ["<rootDir>/node_modules/(?!lodash-es)"]
 };

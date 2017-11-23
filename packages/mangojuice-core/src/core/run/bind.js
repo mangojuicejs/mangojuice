@@ -1,6 +1,5 @@
 import Process from '../../classes/Process';
 
-
 /**
  * Create model, process and bind model to a process.
  * Returns Process instance ready to run.

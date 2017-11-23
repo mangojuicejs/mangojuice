@@ -1,6 +1,5 @@
 import throttle from './throttle';
 
-
 /**
  * Debounce execution of some command. Works as following:
  * 1. First call execute decorated command instantly

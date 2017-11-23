@@ -1,6 +1,5 @@
 import { CANCEL } from './callTask';
 
-
 /**
  * Wait some time. Support cancellation in the `call`.
  * @param  {number}  ms

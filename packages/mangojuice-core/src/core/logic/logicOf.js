@@ -1,6 +1,5 @@
 import procOf from './procOf';
 
-
 /**
  * Returns a Logic instqnce of given model object. Only if
  * it was binded to some logic. Otherwise it throws an exception.
@@ -14,7 +13,9 @@ import procOf from './procOf';
 function logicOf(model, logicClass) {
   const proc = procOf(model);
   if (logicClass && !(proc.logic instanceof logicClass)) {
-    throw new Error(`Logic is not an instance of ${logicClass.constructor.name}`);
+    throw new Error(
+      `Logic is not an instance of ${logicClass.constructor.name}`
+    );
   }
   return proc.logic;
 }

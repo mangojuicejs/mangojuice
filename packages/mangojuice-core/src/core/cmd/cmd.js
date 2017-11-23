@@ -1,8 +1,7 @@
-import { nextId } from "../utils";
+import { nextId } from '../utils';
 import procOf from '../logic/procOf';
 import Command from '../../classes/Command';
 import ensureCommand from './ensureCommand';
-
 
 /**
  * Creates a Command factory function, which makes a command
@@ -19,7 +18,7 @@ export function createCommandFactory(name, logic, nonhandlable, func) {
   const creator = function commandFactory(...args) {
     const cmd = new Command(func, args, name, nonhandlable);
     return logic ? cmd.bind(logic) : cmd;
-  }
+  };
 
   func.__cmdId = id;
   creator.id = id;
@@ -47,7 +46,12 @@ export function cmd(obj, methodName, descr, nonhandlable, cmdName) {
     configurable: true,
     enumerable: true,
     get() {
-      const factory = createCommandFactory(cmdName || methodName, this, nonhandlable, descr.value);
+      const factory = createCommandFactory(
+        cmdName || methodName,
+        this,
+        nonhandlable,
+        descr.value
+      );
       if (this && this.model && Object.getPrototypeOf(this) === obj) {
         Object.defineProperty(this, methodName, {
           configurable: false,

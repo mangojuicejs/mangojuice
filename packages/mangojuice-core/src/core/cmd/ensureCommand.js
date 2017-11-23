@@ -1,7 +1,6 @@
 import Command from '../../classes/Command';
 import { is } from '../utils';
 
-
 /**
  * Returns a Command instance or throw an error if given
  * arguments can't be used to create a Command.
@@ -20,7 +19,7 @@ function ensureCommand(cmd, ...args) {
       return new Command(cmd, args, cmd.name);
     }
   }
-  throw new Error("You passed something weird instead of cmd");
-};
+  throw new Error('You passed something weird instead of cmd');
+}
 
 export default ensureCommand;

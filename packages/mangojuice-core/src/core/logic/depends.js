@@ -1,6 +1,5 @@
 import DependsDef from '../../classes/DependsDef';
 
-
 /**
  * Returns an object which describes compute function
  * and its dependencies to track changes.
@@ -8,7 +7,7 @@ import DependsDef from '../../classes/DependsDef';
  * @return {object}
  */
 export function depends(...deps) {
-  return new DependsDef(deps)
+  return new DependsDef(deps);
 }
 
 export default depends;

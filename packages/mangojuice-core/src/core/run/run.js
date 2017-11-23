@@ -1,6 +1,5 @@
 import bind from './bind';
 
-
 /**
  * Run given block with opts and return an object with
  * Process instance and promise which will be resolved

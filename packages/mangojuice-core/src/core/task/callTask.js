@@ -1,5 +1,4 @@
-import { sym, is, fastTry, ensureError } from "../utils";
-
+import { sym, is, fastTry, ensureError } from '../utils';
 
 /**
  * A symbol for setting custom promise cancel function.
@@ -9,7 +8,7 @@ import { sym, is, fastTry, ensureError } from "../utils";
  * (see `delay` sources below).
  * @type {string}
  */
-export const CANCEL = sym("CANCEL_PROMISE");
+export const CANCEL = sym('CANCEL_PROMISE');
 
 /**
  * Clss represents a token for cancelling the task
@@ -21,7 +20,7 @@ function CancellationToken(parentToken) {
   }
   const cancellationPromise = new Promise(resolve => {
     this.cancel = () => {
-      const err = new Error("Cancelled");
+      const err = new Error('Cancelled');
       err.cancelled = true;
       resolve(err);
     };
@@ -76,7 +75,7 @@ function getInitContext(initContext) {
  * @return {Promise}
  */
 function call(fn, ...args) {
-  const parentSubtasks = this && this.subtasks || [];
+  const parentSubtasks = (this && this.subtasks) || [];
   const context =
     this && this.token
       ? { ...this, subtasks: [], token: this.token.createDependentToken() }
@@ -113,7 +112,10 @@ function call(fn, ...args) {
           res.done = true;
           resolve({ result, error: null });
         };
-        return Promise.all(context.subtasks).then(successHandler, successHandler);
+        return Promise.all(context.subtasks).then(
+          successHandler,
+          successHandler
+        );
       },
       error => resolve({ result: null, error: ensureError(error) })
     );

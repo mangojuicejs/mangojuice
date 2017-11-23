@@ -1,9 +1,8 @@
-import { is, nextId } from "../utils";
+import { is, nextId } from '../utils';
 import cmd, { createCommandFactory } from './cmd';
 import procOf from '../logic/procOf';
 import task from '../task/task';
 import delay from '../task/delay';
-
 
 /**
  * Returns throttle state for given model and throttle id
@@ -38,23 +37,33 @@ function throttle(ms, debounce) {
     // Cancellable task for waiting given amount of ms
     const throttleWaitTask = function() {
       return this.call(delay, ms);
-    }
+    };
 
     // Execute original command if needed
-    const throttleExecCmd = createCommandFactory(`${name}.Exec`, null, true, function() {
-      const state = getThrottleState(this.model, thId);
-      state.throttled = false;
-      if (state.args) {
-        const execCmd = this[name](...state.args);
-        state.args = null;
-        return execCmd;
+    const throttleExecCmd = createCommandFactory(
+      `${name}.Exec`,
+      null,
+      true,
+      function() {
+        const state = getThrottleState(this.model, thId);
+        state.throttled = false;
+        if (state.args) {
+          const execCmd = this[name](...state.args);
+          state.args = null;
+          return execCmd;
+        }
       }
-    });
+    );
 
     // Just wait give amount of ms
-    const throttleWaitCmd = createCommandFactory(`${name}.Wait`, null, true, function() {
-      return task(throttleWaitTask).success(throttleExecCmd);
-    });
+    const throttleWaitCmd = createCommandFactory(
+      `${name}.Wait`,
+      null,
+      true,
+      function() {
+        return task(throttleWaitTask).success(throttleExecCmd);
+      }
+    );
 
     // Function used instead of original func
     const throttleWrapper = function(...args) {
@@ -64,7 +73,7 @@ function throttle(ms, debounce) {
         return debounce && throttleWaitCmd;
       }
       state.throttled = true;
-      return [ orgCmd(...args), throttleWaitCmd ];
+      return [orgCmd(...args), throttleWaitCmd];
     };
 
     descr.value = throttleWrapper;

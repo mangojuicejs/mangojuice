@@ -1,6 +1,5 @@
 import procOf from './procOf';
 
-
 /**
  * Helper function to handle execution of commands which affects
  * the model. Aimed to be used in mounters to track model updates
@@ -22,7 +21,7 @@ function observe(model, destroyPromise, handler, destroyHandler) {
       if (modelProc.observers) {
         modelProc.observers = modelProc.observers.filter(x => x !== handler);
       }
-    }
+    };
     destroyPromise.then(removeObserver);
   }
 }
