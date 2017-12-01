@@ -196,4 +196,48 @@ describe('Nesting', () => {
     expect(app.model.recursive.a).toEqual(5);
     expect(app.model.recursive.recursive.a).toEqual(2);
   });
+
+  it.only('should track child initialization on model update', async () => {
+    const ChildBlock = {
+      createModel: () => ({}),
+      Logic: class ChildBlock {
+        config() {
+          return { initCommands: this.InitChild };
+        }
+        @cmd
+        InitChild() {
+          return task(function() { return this.call(delay, 100); })
+            .success(this.InitSuccess)
+        }
+        @cmd
+        InitSuccess() {}
+      }
+    };
+    const ParentBlock = {
+      createModel: () => ({ child_3: null }),
+      Logic: class ParentBlock {
+        children() {
+          return { child_3: child(ChildBlock.Logic) };
+        }
+        @cmd
+        SetChild(name, value) {
+          return { [name]: value };
+        }
+      }
+    };
+
+
+    const { app, commandNames } = await runWithTracking({
+      app: ParentBlock
+    });
+    await app.proc.exec(
+      logicOf(app.model).SetChild('child_3', ChildBlock.createModel())
+    );
+
+    expect(commandNames).toEqual([
+      'ParentBlock.SetChild',
+      'ChildBlock.InitChild',
+      'ChildBlock.InitSuccess'
+    ]);
+  });
 });

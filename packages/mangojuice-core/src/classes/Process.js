@@ -472,9 +472,10 @@ function execTask(proc, taskObj, cmd) {
  * @return {Boolean}
  */
 function updateModel(proc, updateObj) {
-  if (!updateObj) return false;
+  if (!updateObj) return null;
 
   const tick = nextId();
+  const resPromise = createResultPromise();
   const updateKeys = Object.keys(updateObj);
   const { model } = proc;
   let rebindComputed = false;
@@ -482,7 +483,7 @@ function updateModel(proc, updateObj) {
   const updateMarker = (childModel, fieldName) => {
     if (bindChild(proc, childModel, fieldName)) {
       rebindComputed = true;
-      procOf(childModel).run();
+      resPromise.add(procOf(childModel).run());
     }
     procOf(childModel).tick = tick;
   };
@@ -509,7 +510,7 @@ function updateModel(proc, updateObj) {
   } else {
     maybeForEach(proc.computedFields, f => f.reset());
   }
-  return true;
+  return resPromise.get();
 }
 
 /**
@@ -555,7 +556,7 @@ function doExecCmd(proc, rawCmd) {
   const { logger, exec } = proc;
   const resPromise = createResultPromise();
   const cmd = !rawCmd.logic ? rawCmd.bind(proc.logic) : rawCmd;
-  let modelUpdated = false;
+  let modelUpdated = null;
 
   // Prepare and run before handlers
   logger.onStartExec(cmd);
@@ -581,6 +582,7 @@ function doExecCmd(proc, rawCmd) {
 
   // Emit model update for view re-rendering
   if (modelUpdated) {
+    resPromise.add(modelUpdated);
     resPromise.add(runModelObservers(proc));
   }
 
