@@ -14,6 +14,9 @@ describe('Exec tasks', () => {
     const Block = {
       createModel: () => ({}),
       Logic: class Block {
+        config() {
+          return { meta: { hello: 'meta' } };
+        }
         @cmd
         SuccessTask() {
           return task(function() {
@@ -34,6 +37,34 @@ describe('Exec tasks', () => {
     await app.proc.exec(logicOf(app.model).SuccessTask);
 
     expect(app.model).toEqual({ test: 123 });
+    expect(commandNames).toEqual(['Block.SuccessTask', 'Block.SuccessHandler']);
+  });
+
+  it('should pass meta to the tasj', async () => {
+    const Block = {
+      createModel: () => ({}),
+      Logic: class Block {
+        config() {
+          return { meta: { hello: 'meta' } };
+        }
+        @cmd
+        SuccessTask() {
+          return task(function({ meta }) { return meta })
+            .success(this.SuccessHandler)
+            .fail(this.FailHandler);
+        }
+        @cmd
+        SuccessHandler(res) {
+          return res;
+        }
+        @cmd
+        FailHandler() {}
+      }
+    };
+    const { app, commandNames } = await runWithTracking({ app: Block });
+    await app.proc.exec(logicOf(app.model).SuccessTask);
+
+    expect(app.model).toEqual({ hello: 'meta' });
     expect(commandNames).toEqual(['Block.SuccessTask', 'Block.SuccessHandler']);
   });
 
