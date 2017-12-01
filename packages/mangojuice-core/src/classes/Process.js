@@ -144,6 +144,8 @@ function stopComputedObservers(proc) {
  * when one of dependent models will be changed.
  */
 function bindComputed(proc) {
+  if (proc.destroyed) return;
+
   const { logic, logger } = proc;
   let computedFields = EMPTY_ARRAY;
   stopComputedObservers(proc);
