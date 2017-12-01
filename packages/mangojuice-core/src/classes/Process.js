@@ -75,6 +75,7 @@ function prepareConfig(proc) {
   let config = { children: EMPTY_OBJECT, childrenKeys: EMPTY_ARRAY, meta: {} };
   config = (logic.config && logic.config(...configArgs)) || {};
   config.meta = config.meta || {};
+  logic.meta = config.meta;
   proc.config = config;
 
   if (logic.children) {
@@ -242,17 +243,15 @@ function bindShared(proc, sharedModel) {
 
 /**
  * Associate instance of the Process with given model by setting
- * hidden `__proc` field in the model. Also set model, shared model
- * and meta in the logic instance.
+ * hidden `__proc` field in the model. Also set model and shared model,
  * @param  {Process} proc
  * @param  {Object} model
  */
 function bindModel(proc, model) {
-  const { logic, config: { meta }, sharedModel } = proc;
+  const { logic, sharedModel } = proc;
   proc.model = model;
   logic.model = model;
   logic.shared = sharedModel;
-  logic.meta = meta;
 
   Object.defineProperty(model, '__proc', {
     value: proc,
