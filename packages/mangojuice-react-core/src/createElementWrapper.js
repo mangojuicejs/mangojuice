@@ -42,6 +42,7 @@ export default reactImpl => {
         ...childContextTypes
       };
       View.__wrapperFunc = WrapperViewFunc;
+      Object.defineProperty(WrapperViewFunc, 'name', { value: View.name || 'View' });
       return WrapperViewFunc;
     }
 
