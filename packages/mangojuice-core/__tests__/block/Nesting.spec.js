@@ -197,7 +197,7 @@ describe('Nesting', () => {
     expect(app.model.recursive.recursive.a).toEqual(2);
   });
 
-  it.only('should track child initialization on model update', async () => {
+  it('should track child initialization on model update', async () => {
     const ChildBlock = {
       createModel: () => ({}),
       Logic: class ChildBlock {

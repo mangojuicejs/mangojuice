@@ -40,14 +40,13 @@ export default reactImpl => {
 
     componentDidMount() {
       this.unmounted = false;
-      const destroyPromise = new Promise(r => (this.destroyResolve = r));
-      observe(this.props.proc.model, destroyPromise, this.updateView);
+      this.stopObserver = observe(this.props.proc.model, this.updateView);
     }
 
     componentWillUnmount() {
       this.unmounted = true;
-      if (this.destroyResolve) {
-        this.destroyResolve();
+      if (this.stopObserver) {
+        this.stopObserver();
       }
     }
 

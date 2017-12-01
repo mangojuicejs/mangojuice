@@ -164,7 +164,7 @@ describe('Errors handling', () => {
         expectErrors: true
       });
 
-      observe(app.model, null, ErroredObsever);
+      observe(app.model, ErroredObsever);
       await app.proc.exec(ChildBlock.Logic.prototype.ModelUpdate);
 
       expect(app.model).toEqual({ test: 'passed' });

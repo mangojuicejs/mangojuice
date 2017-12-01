@@ -77,7 +77,7 @@ declare module "mangojuice-core" {
 
   declare export function depends(...args: any): DependsType;
 
-  declare export function observe(model: Object, destroyeded: Promise<any>, handler: Function): void;
+  declare export function observe(model: Object, handler: Function): void;
 
   declare export function run(block: BlockType, opts?: Object): any;
 

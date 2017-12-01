@@ -125,6 +125,17 @@ function bindChildren(proc) {
 }
 
 /**
+ * Stop all running observers for all existing computed fields
+ * @param  {Process} proc
+ */
+function stopComputedObservers(proc) {
+  const { computedFields } = proc;
+  maybeForEach(computedFields, (f) => {
+    maybeForEach(f.observers, (o) => o());
+  });
+}
+
+/**
  * Replace fields in the model with computed getter with memoization
  * if defined in `logic.computed`.
  * Provide a way to define computed field with object block models
@@ -134,6 +145,7 @@ function bindChildren(proc) {
 function bindComputed(proc) {
   const { logic, logger } = proc;
   let computedFields = EMPTY_ARRAY;
+  stopComputedObservers(proc);
 
   if (logic.computed) {
     const ownComputedFields = safeExecFunction(logger, null, () =>
@@ -172,9 +184,9 @@ function bindComputedField(proc, fieldName, computeVal) {
       get.reset();
       runModelObservers(proc);
     };
-    maybeForEach(computeVal.deps, m => {
-      observe(m, proc.destroyPromise, updateHandler, destroyHandler);
-    });
+    get.observers = maybeMap(computeVal.deps, m => (
+      observe(m, updateHandler, destroyHandler)
+    ));
   }
 
   Object.defineProperty(proc.model, fieldName, {
@@ -602,6 +614,7 @@ export function Process(opts) {
   this.context = context || {};
   this.logger = logger || new DefaultLogger();
   this.configArgs = configArgs || EMPTY_ARRAY;
+  this.computedFields = EMPTY_ARRAY;
   this.destroyPromise = new Promise(r => (this.destroyResolve = r));
   this.tasks = {};
   this.observers = [];
@@ -645,6 +658,7 @@ extend(Process.prototype, {
    */
   destroy(deep) {
     delete this.model.__proc;
+    stopComputedObservers(this);
     stopPorts(this);
     cancelAllTasks(this);
     this.observers = null;

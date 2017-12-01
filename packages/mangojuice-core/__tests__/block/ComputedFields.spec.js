@@ -1,4 +1,4 @@
-import { cmd, logicOf, depends, child } from 'mangojuice-core';
+import { cmd, logicOf, depends, child, procOf } from 'mangojuice-core';
 import { runWithTracking } from 'mangojuice-test';
 
 describe('Computed fields', () => {
@@ -168,6 +168,61 @@ describe('Computed fields', () => {
 
       expect(app.model.c).toEqual(20);
       expect(app.model.d).toEqual(10);
+    });
+
+    it('should remove old observers on re-init of computed fields', async () => {
+      const ChildBlock = {
+        createModel: () => ({}),
+        Logic: class ChildBlock {
+        }
+      };
+      const ParentBlock = {
+        createModel: () => ({
+          child_1: ChildBlock.createModel(),
+          child_2: ChildBlock.createModel(),
+          child_3: null
+        }),
+        Logic: class ParentBlock {
+          children() {
+            return {
+              child_1: child(ChildBlock.Logic),
+              child_2: child(ChildBlock.Logic),
+              child_3: child(ChildBlock.Logic),
+            };
+          }
+          computed() {
+            return {
+              test_1: depends(this.model.child_1, this.model.child_2, this.model.child_3).
+                compute(() => true),
+              test_2: depends(this.model.child_1, this.model.child_2, this.model.child_3).
+                compute(() => true),
+              test_3: depends(this.model.child_1, this.model.child_2, this.model.child_3).
+                compute(() => true)
+            }
+          }
+          @cmd
+          SetChild(name, value) {
+            return { [name]: value };
+          }
+        }
+      };
+
+      const { app, commandNames } = await runWithTracking({
+        app: ParentBlock
+      });
+
+      expect(app.model.observers).toEqual(undefined);
+      expect(procOf(app.model.child_1).observers).toHaveLength(3);
+      expect(procOf(app.model.child_2).observers).toHaveLength(3);
+
+      await app.proc.exec(
+        logicOf(app.model).SetChild('child_3', ChildBlock.createModel())
+      );
+
+      expect(app.model.observers).toEqual(undefined);
+      expect(procOf(app.model.child_1).observers).toHaveLength(3);
+      expect(procOf(app.model.child_2).observers).toHaveLength(3);
+      expect(procOf(app.model.child_3).observers).toHaveLength(3);
     });
   });
 });
