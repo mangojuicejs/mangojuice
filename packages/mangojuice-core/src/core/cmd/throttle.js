@@ -2,6 +2,7 @@ import { is, nextId } from '../utils';
 import cmd, { createCommandFactory } from './cmd';
 import procOf from '../logic/procOf';
 import task from '../task/task';
+import { CANCEL } from '../task/callTask';
 import delay from '../task/delay';
 
 /**
@@ -35,8 +36,15 @@ function throttle(ms, debounce) {
     const orgCmd = createCommandFactory(name, null, false, orgFunc);
 
     // Cancellable task for waiting given amount of ms
-    const throttleWaitTask = function() {
-      return this.call(delay, ms);
+    const throttleWaitTask = function({ model }) {
+      const state = getThrottleState(model, thId);
+      if (debounce) {
+        if (state.initTimer) state.initTimer[CANCEL]();
+        return this.call(delay, ms);
+      }
+      if (state.initTimer) {
+        return state.initTimer.then();
+      }
     };
 
     // Execute original command if needed
@@ -70,10 +78,17 @@ function throttle(ms, debounce) {
       const state = getThrottleState(this.model, thId);
       if (state.throttled) {
         state.args = args;
-        return debounce && throttleWaitCmd;
+        return throttleWaitCmd;
       }
       state.throttled = true;
-      return [orgCmd(...args), throttleWaitCmd];
+      state.initTimer = delay(ms);
+      state.initTimer.then(() => {
+        if (!state.args) {
+          state.throttled = false;
+          state.initTimer = null;
+        }
+      });
+      return orgCmd(...args);
     };
 
     descr.value = throttleWrapper;

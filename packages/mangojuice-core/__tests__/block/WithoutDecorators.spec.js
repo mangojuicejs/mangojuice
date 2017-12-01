@@ -189,9 +189,7 @@ describe('Without decorators usage', () => {
     expect(commandNames).toEqual([
       'BlockExtOne.FromInitOneCmd',
       'BlockExtOne.ExtOneCommand.Throttle',
-      'BlockExtOne.ExtOneCommand',
-      'BlockExtOne.ExtOneCommand.Wait',
-      'BlockExtOne.ExtOneCommand.Exec'
+      'BlockExtOne.ExtOneCommand'
     ]);
   });
 });

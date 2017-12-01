@@ -40,21 +40,17 @@ describe('Command enhancers', () => {
     it('should execute original command instantly for a first time', async () => {
       const { app, commandNames } = await runWithTracking({ app: AppBlock });
 
-      const res = app.proc.exec(logicOf(app.model).Increment(10));
-      await delay(10);
+      await app.proc.exec(logicOf(app.model).Increment(10));
       expect(commandNames).toEqual([
         'AppBlock.Increment.Throttle',
-        'AppBlock.Increment',
-        'AppBlock.Increment.Wait'
+        'AppBlock.Increment'
       ]);
 
-      await res;
+      await delay(110);
       expect(app.model).toEqual({ a: 10 });
       expect(commandNames).toEqual([
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Exec'
       ]);
     });
 
@@ -62,14 +58,13 @@ describe('Command enhancers', () => {
       const { app, commandNames } = await runWithTracking({ app: ParentBlock });
 
       await app.proc.exec(logicOf(app.model.child).Increment(11));
+      await delay(110);
 
       expect(app.model).toEqual({ child: { a: 11 } });
       expect(commandNames).toEqual([
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
-        'ParentBlock.Handler',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Exec'
+        'ParentBlock.Handler'
       ]);
     });
 
@@ -80,23 +75,23 @@ describe('Command enhancers', () => {
       await delay(10);
       app.proc.exec(logicOf(app.model.child).Increment(11));
       await delay(10);
-      app.proc.exec(logicOf(app.model.child).Increment(12));
-      await delay(100);
+      await app.proc.exec(logicOf(app.model.child).Increment(12));
 
-      expect(app.model).toEqual({ child: { a: 22 } });
       expect(commandNames).toEqual([
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler',
+        'AppBlock.Increment.Throttle',
         'AppBlock.Increment.Wait',
         'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Wait.Cancelled',
         'AppBlock.Increment.Exec',
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
-        'ParentBlock.Handler',
-        'AppBlock.Increment.Wait'
+        'ParentBlock.Handler'
       ]);
+      expect(app.model).toEqual({ child: { a: 22 } })
     });
 
     it('should wait another N throttle ms after first throttled exec', async () => {
@@ -111,31 +106,35 @@ describe('Command enhancers', () => {
       app.proc.exec(logicOf(app.model.child).Increment(13));
       await delay(10);
       app.proc.exec(logicOf(app.model.child).Increment(14));
-      await delay(10);
-      app.proc.exec(logicOf(app.model.child).Increment(311));
-      await delay(100);
+      await delay(50);
+      await app.proc.exec(logicOf(app.model.child).Increment(311));
 
-      expect(app.model).toEqual({ child: { a: 621 } });
-      expect(commandNames).toEqual([
+      expect([app.model, ...commandNames]).toEqual([
+        { child: { a: 621 } },
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler',
+        'AppBlock.Increment.Throttle',
         'AppBlock.Increment.Wait',
         'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Wait.Cancelled',
         'AppBlock.Increment.Exec',
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler',
+        'AppBlock.Increment.Throttle',
         'AppBlock.Increment.Wait',
         'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Wait.Cancelled',
         'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Wait.Cancelled',
         'AppBlock.Increment.Exec',
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
-        'ParentBlock.Handler',
-        'AppBlock.Increment.Wait'
+        'ParentBlock.Handler'
       ]);
     });
   });
@@ -173,16 +172,14 @@ describe('Command enhancers', () => {
       expect(commandNames).toEqual([
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
-        'AppBlock.Increment.Wait'
       ]);
 
+      await delay(100)
       await res;
       expect(app.model).toEqual({ a: 10 });
       expect(commandNames).toEqual([
         'AppBlock.Increment.Throttle',
-        'AppBlock.Increment',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Exec'
+        'AppBlock.Increment'
       ]);
     });
 
@@ -195,9 +192,7 @@ describe('Command enhancers', () => {
       expect(commandNames).toEqual([
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
-        'ParentBlock.Handler',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Exec'
+        'ParentBlock.Handler'
       ]);
     });
 
@@ -210,18 +205,15 @@ describe('Command enhancers', () => {
       await delay(70);
       app.proc.exec(logicOf(app.model.child).Increment(12));
       await delay(70);
-      app.proc.exec(logicOf(app.model.child).Increment(13));
-      await delay(120);
+      await app.proc.exec(logicOf(app.model.child).Increment(13));
 
       expect(app.model).toEqual({ child: { a: 23 } });
       expect(commandNames).toEqual([
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler',
-        'AppBlock.Increment.Wait',
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Wait.Cancelled',
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment.Wait',
         'AppBlock.Increment.Wait.Cancelled',
@@ -231,8 +223,7 @@ describe('Command enhancers', () => {
         'AppBlock.Increment.Exec',
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
-        'ParentBlock.Handler',
-        'AppBlock.Increment.Wait'
+        'ParentBlock.Handler'
       ]);
     });
 
@@ -257,6 +248,16 @@ describe('Command enhancers', () => {
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment.Wait',
+        'AppBlock.Increment.Wait.Cancelled',
+        'AppBlock.Increment.Exec',
+        'AppBlock.Increment.Throttle',
+        'AppBlock.Increment',
+        'ParentBlock.Handler',
+        'AppBlock.Increment.Throttle',
         'AppBlock.Increment.Wait',
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment.Wait',
@@ -267,22 +268,7 @@ describe('Command enhancers', () => {
         'AppBlock.Increment.Exec',
         'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
-        'ParentBlock.Handler',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Wait.Cancelled',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Wait.Cancelled',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Wait.Cancelled',
-        'AppBlock.Increment.Exec',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment',
-        'ParentBlock.Handler',
-        'AppBlock.Increment.Wait'
+        'ParentBlock.Handler'
       ]);
     });
   });
