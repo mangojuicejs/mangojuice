@@ -42,7 +42,7 @@ extend(Task.prototype, {
    * @param  {boolean} val
    * @return {Task}
    */
-  multithread(val) {
+  multithread(val = true) {
     this.execEvery = val;
     return this;
   },
