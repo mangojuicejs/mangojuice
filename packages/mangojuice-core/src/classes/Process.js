@@ -182,14 +182,11 @@ function bindComputedField(proc, fieldName, computeVal) {
     get = memoize(computeVal);
   } else if (is.object(computeVal)) {
     get = memoize(() => computeVal.computeFn(...computeVal.deps));
-    const destroyHandler = () => bindComputed(proc);
     const updateHandler = () => {
       get.reset();
       runModelObservers(proc);
     };
-    get.observers = maybeMap(computeVal.deps, m => (
-      observe(m, updateHandler, destroyHandler)
-    ));
+    get.observers = maybeMap(computeVal.deps, m => observe(m, updateHandler));
   }
 
   Object.defineProperty(proc.model, fieldName, {
@@ -434,7 +431,7 @@ function execTask(proc, taskObj, cmd) {
     cancelTask(proc, taskId);
   }
 
-  const doExecTask = (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const handleResult = ({ result, error }) => {
       if (tasks[taskId]) {
         delete tasks[taskId][execId];
@@ -466,13 +463,7 @@ function execTask(proc, taskObj, cmd) {
 
     tasks[taskId] = tasks[taskId] || {};
     tasks[taskId][execId] = res.result;
-  };
-
-  const nextTickExecTask = (resolve, reject) => {
-    delay(0).then(doExecTask.bind(null, resolve, reject));
-  };
-
-  return new Promise(nextTickExecTask);
+  });
 }
 
 /**
@@ -659,13 +650,14 @@ extend(Process.prototype, {
    */
   destroy(deep) {
     delete this.model.__proc;
-    stopComputedObservers(this);
-    stopPorts(this);
-    cancelAllTasks(this);
     this.observers = null;
     this.throttles = null;
     this.tasks = null;
     this.destroyed = true;
+
+    stopPorts(this);
+    stopComputedObservers(this);
+    cancelAllTasks(this);
 
     if (deep !== false) {
       const childDestroyer = x => procOf(x).destroy(true);
