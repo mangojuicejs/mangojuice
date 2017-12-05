@@ -110,3 +110,5 @@ export const memoize = func => {
   };
   return momoizer;
 };
+
+export const defer = Promise.resolve().then.bind(Promise.resolve());

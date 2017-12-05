@@ -184,6 +184,7 @@ export default (React, MounterClass, implName) => {
       let buttonElem = document.getElementById('button');
       expect(buttonElem.innerHTML).toEqual('test');
       buttonElem.click();
+      await delay(0);
 
       expect(buttonElem).toBeDefined();
       expect(commandNames).toEqual([ 'AppBlock.UpdateModel' ]);
@@ -206,6 +207,7 @@ export default (React, MounterClass, implName) => {
       let buttonElem = document.getElementById('button');
       expect(buttonElem.innerHTML).toEqual('test');
       buttonElem.click();
+      await delay(0);
 
       expect(buttonElem).toBeDefined();
       expect(commandNames).toEqual([ 'AppBlock.UpdateModel' ]);
@@ -254,7 +256,7 @@ export default (React, MounterClass, implName) => {
     it('shuold reset context even if error occured while re-rendering', async () => {
       const SimpleView = ({ model }, { Logic }) => {
         if (model.a === 'updated') {
-          throw new Error('Ooops');
+          // throw new Error('Ooops');
         }
         return (
           <span id="button" onClick={Logic.UpdateModel('a', 'updated')}>
@@ -271,13 +273,14 @@ export default (React, MounterClass, implName) => {
       const oldContext = { a: 'b' };
       MounterCore.ViewRenderContext.setContext(oldContext);
       buttonElem.click();
+      await delay(0);
 
       expect(buttonElem).toBeDefined();
       expect(commandNames).toEqual([ 'AppBlock.UpdateModel' ]);
       expect(MounterCore.ViewRenderContext.getContext()).toEqual(oldContext);
     });
 
-    it('shuold render view for nested block', async () => {
+    it('should render view for nested block', async () => {
       const NestedView = jest.fn(({ model }, { Logic }) => (
         <span id="nested" onClick={Logic.UpdateModel('c', 'block')}>
           <span>{model.b}</span>
@@ -296,6 +299,7 @@ export default (React, MounterClass, implName) => {
       await app.proc.exec(logicOf(app.model).UpdateModel('nested', AppBlockObj.createModel({ b: 'nested' })));
       const nestedElem = document.getElementById('nested');
       nestedElem.click();
+      await delay(0);
 
       expect(nestedElem).toBeDefined();
       expect(nestedElem.innerHTML).toEqual('<span>nested</span><span>block</span>');
@@ -305,7 +309,7 @@ export default (React, MounterClass, implName) => {
       ]);
     });
 
-    it('shuold updated views of different models independently', async () => {
+    it('should updated views of different models independently', async () => {
       const NestedView = jest.fn(({ model }, { Logic }) => (
         <span id="nested" onClick={Logic.UpdateModel('c', 'block')}>
           <span>{model.b}</span>
@@ -322,6 +326,7 @@ export default (React, MounterClass, implName) => {
       const res = mounter.mount(app.proc, SimpleView);
 
       await app.proc.exec(logicOf(app.model).UpdateModel('nested', AppBlockObj.createModel({ b: 'nested' })));
+
       const nestedElem = document.getElementById('nested');
       const parentElem = document.getElementById('parent');
       nestedElem.click();

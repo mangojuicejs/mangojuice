@@ -17,7 +17,8 @@ import {
   noop,
   fastTry,
   extend,
-  deepMap
+  deepMap,
+  defer
 } from '../core/utils';
 
 // Constants
@@ -184,7 +185,7 @@ function bindComputedField(proc, fieldName, computeVal) {
     get = memoize(() => computeVal.computeFn(...computeVal.deps));
     const updateHandler = () => {
       get.reset();
-      runModelObservers(proc);
+      enqueueNotifyObservers(proc);
     };
     get.observers = maybeMap(computeVal.deps, m => observe(m, updateHandler));
   }
@@ -323,18 +324,42 @@ function runInitCommands(proc) {
 }
 
 /**
+ * Queue run of model observers of given proc. The observers
+ * will be executed asap afther the end of the stack.
+ * @param  {Process} proc
+ * @return {Promise}
+ */
+let procToNotify = {};
+function enqueueNotifyObservers(proc) {
+  procToNotify[proc.id] = proc;
+  return defer(notifyQueuedProcess);
+}
+
+/**
+ * Go through all queued process to notify attached observers
+ * and empty the queue
+ * @return {Promise}
+ */
+function notifyQueuedProcess() {
+  const list = procToNotify;
+  const procKeys = Object.keys(list);
+  procToNotify = {};
+  return Promise.all(maybeMap(procKeys, function procIterator(procId) {
+    return runAllObservers(list[procId])
+  }));
+}
+
+/**
  * Ren all model observers and returns a Promise which will
  * be resolved when all handlers executed and returned promises
  * is also resolved
  * @param  {Process} proc
  * @return {Promise}
  */
-function runModelObservers(proc) {
-  return Promise.all(
-    maybeMap(proc.observers, function observersIterator(obs) {
-      return safeExecFunction(proc.logger, null, obs);
-    })
-  );
+function runAllObservers(proc) {
+  return Promise.all(maybeMap(proc.observers, function observersIterator(obs) {
+    return safeExecFunction(proc.logger, null, obs);
+  }));
 }
 
 /**
@@ -587,7 +612,7 @@ function doExecCmd(proc, rawCmd) {
   // Emit model update for view re-rendering
   if (modelUpdated) {
     resPromise.add(modelUpdated);
-    resPromise.add(runModelObservers(proc));
+    resPromise.add(enqueueNotifyObservers(proc));
   }
 
   logger.onEndExec(cmd, result);
@@ -638,7 +663,7 @@ extend(Process.prototype, {
     resPromise.add(runChildren(this));
     resPromise.add(runPorts(this));
     resPromise.add(runInitCommands(this));
-    resPromise.add(runModelObservers(this));
+    resPromise.add(runAllObservers(this));
     return resPromise.get();
   },
 
