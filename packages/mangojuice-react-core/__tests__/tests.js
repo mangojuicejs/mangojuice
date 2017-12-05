@@ -256,7 +256,7 @@ export default (React, MounterClass, implName) => {
     it('shuold reset context even if error occured while re-rendering', async () => {
       const SimpleView = ({ model }, { Logic }) => {
         if (model.a === 'updated') {
-          // throw new Error('Ooops');
+          throw new Error('Ooops');
         }
         return (
           <span id="button" onClick={Logic.UpdateModel('a', 'updated')}>
@@ -264,7 +264,7 @@ export default (React, MounterClass, implName) => {
           </span>
         );
       };
-      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj, expectErrors: true });
       const res = mounter.mount(app.proc, SimpleView);
 
       let buttonElem = document.getElementById('button');
