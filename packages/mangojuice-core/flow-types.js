@@ -73,6 +73,8 @@ declare module "mangojuice-core" {
 
   declare export function logicOf<T>(model: Object, clazz?: Class<T>): T;
 
+  declare export function procOf(model: Object): any;
+
   declare export function child<T>(logicClass: Class<{ +config?: (...args: T) => any }>, ...args: T): ConfiguredLogic;
 
   declare export function depends(...args: any): DependsType;
@@ -98,6 +100,7 @@ declare module "mangojuice-core" {
     +delay: typeof delay,
     +cancel: typeof cancel,
     +logicOf: typeof logicOf,
+    +procOf: typeof procOf,
     +child: typeof child,
     +depends: typeof depends,
     +observe: typeof observe,
