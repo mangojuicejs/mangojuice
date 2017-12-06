@@ -46,14 +46,15 @@ export function cmd(obj, methodName, descr, nonhandlable, cmdName) {
     configurable: true,
     enumerable: true,
     get() {
+      const haveModel = this && !!this.model && !!this.meta;
       const fromInstance = Object.getPrototypeOf(this) === obj;
       const factory = createCommandFactory(
         cmdName || methodName,
-        fromInstance ? this : null,
+        haveModel ? this : null,
         nonhandlable,
         descr.value
       );
-      if (this && this.model && fromInstance) {
+      if (haveModel && fromInstance) {
         Object.defineProperty(this, methodName, {
           configurable: false,
           enumerable: true,
