@@ -22,8 +22,9 @@ extend(DependsDef.prototype, {
    * @return {DependsDef}
    */
   compute(func) {
-    this.computeFn = func;
-    return this;
+    const nextDepends = new DependsDef(this.deps);
+    nextDepends.computeFn = func;
+    return nextDepends;
   }
 });
 
