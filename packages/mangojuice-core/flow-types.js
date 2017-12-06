@@ -13,7 +13,8 @@ declare module "mangojuice-core" {
   };
 
   declare type DependsType = {
-    compute: (Function) => DependsType
+    compute: (Function) => DependsType,
+    computeFn: Function
   };
 
   declare type LogicConfig<MetaType> = {
