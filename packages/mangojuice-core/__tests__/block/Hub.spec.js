@@ -541,4 +541,40 @@ describe('Hub in logic', () => {
       'SharedA.SomeCmdA'
     ]);
   });
+
+  it('should catch all commands by command from prototype', async () => {
+    const handler = jest.fn();
+    const BlockA = {
+      createModel: () => ({
+        child_1: BlockB.createModel(),
+        child_2: BlockB.createModel(),
+      }),
+      Logic: class BlockA {
+        hub(cmd) {
+          if (cmd.is(BlockB.Logic.prototype.SomeCmdB)) {
+            handler(cmd, 'a');
+          }
+        }
+        children() {
+          return {
+            child_1: BlockB.Logic,
+            child_2: BlockB.Logic
+          };
+        }
+      }
+    };
+    const BlockB = {
+      createModel: () => ({}),
+      Logic: class BlockB {
+        @cmd
+        SomeCmdB() {}
+      }
+    };
+
+    const { app, execOrder } = await runWithTracking({ app: BlockA });
+    await app.proc.exec(logicOf(app.model.child_1).SomeCmdB);
+    await app.proc.exec(logicOf(app.model.child_2).SomeCmdB);
+
+    expect(handler).toHaveBeenCalledTimes(2);
+  });
 });

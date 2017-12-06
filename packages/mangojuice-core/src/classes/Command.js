@@ -66,11 +66,11 @@ extend(Command.prototype, {
     if (!cmd) return false;
     const { func, name, model } = this;
     const isSameFunc = func === cmd.func || func === cmd || name === cmd;
-    const isSameModel =
-      isSameFunc &&
-      ((childModel && childModel === model) ||
-        (!childModel && cmd.logic && cmd.logic.model === model) ||
-        !cmd.logic);
+    const isSameModel = isSameFunc && (
+      (childModel && childModel === model) ||
+      (!childModel && cmd.logic && cmd.logic.model === model) ||
+      (!childModel && !cmd.logic)
+    );
     return isSameFunc && isSameModel;
   },
 
