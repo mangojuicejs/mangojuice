@@ -29,7 +29,7 @@ function getThrottleState(model, id) {
  * @param  {number} ms
  * @return {function}
  */
-function throttle(ms, debounce) {
+function throttle(ms, { debounce, noInitCall } = {}) {
   return (obj, name, descr) => {
     const thId = nextId();
     const orgFunc = descr.__func || descr.value;
@@ -55,8 +55,10 @@ function throttle(ms, debounce) {
       function() {
         const state = getThrottleState(this.model, thId);
         state.throttled = false;
+        state.calledOnce = false;
         if (state.args) {
           const execCmd = this[name](...state.args);
+          state.calledOnce = true;
           state.args = null;
           return execCmd;
         }
@@ -76,10 +78,13 @@ function throttle(ms, debounce) {
     // Function used instead of original func
     const throttleWrapper = function(...args) {
       const state = getThrottleState(this.model, thId);
-      if (state.throttled) {
+      if (state.throttled || (noInitCall && !state.calledOnce)) {
         state.args = args;
+      }
+      if (state.throttled) {
         return throttleWaitCmd;
       }
+
       state.throttled = true;
       state.initTimer = delay(ms);
       state.initTimer.then(() => {
@@ -88,7 +93,10 @@ function throttle(ms, debounce) {
           state.initTimer = null;
         }
       });
-      return orgCmd(...args);
+
+      return noInitCall && !state.calledOnce
+        ? throttleWaitCmd
+        : orgCmd(...args);
     };
 
     descr.value = throttleWrapper;

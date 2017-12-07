@@ -21,6 +21,12 @@ describe('Command enhancers', () => {
         Increment(inc) {
           return { a: this.model.a + inc };
         }
+
+        @throttle(100, { noInitCall: true })
+        @cmd
+        IncrementNoInitCall(inc) {
+          return { a: this.model.a + inc };
+        }
       }
     };
     const ParentBlock = {
@@ -137,6 +143,55 @@ describe('Command enhancers', () => {
         'ParentBlock.Handler'
       ]);
     });
+
+    it('should provide a way to not do an init call of the command', async () => {
+      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+
+      app.proc.exec(logicOf(app.model).IncrementNoInitCall(10));
+      await delay(10);
+      expect(commandNames).toEqual([
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+      ]);
+
+      await delay(110);
+      expect([ app.model, ...commandNames ]).toEqual([
+        { a: 10 },
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+        'AppBlock.IncrementNoInitCall.Exec',
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall',
+      ]);
+
+      app.proc.exec(logicOf(app.model).IncrementNoInitCall(10));
+      await delay(10);
+      expect([ app.model, ...commandNames ]).toEqual([
+        { a: 10 },
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+        'AppBlock.IncrementNoInitCall.Exec',
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall',
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+      ]);
+
+      await delay(110);
+      expect([ app.model, ...commandNames ]).toEqual([
+        { a: 20 },
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+        'AppBlock.IncrementNoInitCall.Exec',
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall',
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+        'AppBlock.IncrementNoInitCall.Exec',
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall',
+      ]);
+    });
   });
 
   describe('debounce', () => {
@@ -146,6 +201,12 @@ describe('Command enhancers', () => {
         @debounce(100)
         @cmd
         Increment(inc) {
+          return { a: this.model.a + inc };
+        }
+
+        @debounce(100, { noInitCall: true })
+        @cmd
+        IncrementNoInitCall(inc) {
           return { a: this.model.a + inc };
         }
       }
@@ -270,6 +331,62 @@ describe('Command enhancers', () => {
         'AppBlock.Increment',
         'ParentBlock.Handler'
       ]);
+    });
+
+    it('should provide a way to not do an init call of the command', async () => {
+      const { app, commandNames } = await runWithTracking({ app: AppBlock });
+
+      app.proc.exec(logicOf(app.model).IncrementNoInitCall(10));
+      await delay(10);
+      expect(commandNames).toEqual([
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+      ]);
+
+      await delay(50);
+      app.proc.exec(logicOf(app.model).IncrementNoInitCall(10));
+      expect([ app.model, ...commandNames ]).toEqual([
+        { a: 0 },
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+      ]);
+
+      await delay(50);
+      app.proc.exec(logicOf(app.model).IncrementNoInitCall(10));
+      expect([ app.model, ...commandNames ]).toEqual([
+        { a: 0 },
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+        'AppBlock.IncrementNoInitCall.Wait.Cancelled',
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+      ]);
+
+      await delay(110);
+      const res = app.proc.exec(logicOf(app.model).IncrementNoInitCall(10));
+      expect([ app.model, ...commandNames ]).toEqual([
+        { a: 10 },
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+        'AppBlock.IncrementNoInitCall.Wait.Cancelled',
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+        'AppBlock.IncrementNoInitCall.Wait.Cancelled',
+        'AppBlock.IncrementNoInitCall.Exec',
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall',
+        'AppBlock.IncrementNoInitCall.Throttle',
+        'AppBlock.IncrementNoInitCall.Wait',
+      ]);
+
+      await res;
+      expect(app.model).toEqual({ a: 20 });
     });
   });
 });

@@ -10,8 +10,8 @@ import throttle from './throttle';
  * @param  {number} ms
  * @return {Object}
  */
-function debounce(ms) {
-  return throttle(ms, true);
+function debounce(ms, opts) {
+  return throttle(ms, { ...opts, debounce: true });
 }
 
 export default debounce;
