@@ -18,7 +18,8 @@ import {
   fastTry,
   extend,
   deepMap,
-  defer
+  defer,
+  safeExecFunction
 } from '../core/utils';
 
 // Constants
@@ -152,7 +153,7 @@ function bindComputed(proc) {
   stopComputedObservers(proc);
 
   if (logic.computed) {
-    const ownComputedFields = safeExecFunction(logger, null, () =>
+    const ownComputedFields = safeExecFunction(logger, () =>
       logic.computed()
     );
     if (ownComputedFields) {
@@ -185,7 +186,7 @@ function bindComputedField(proc, fieldName, computeVal) {
     get = memoize(() => computeVal.computeFn(...computeVal.deps));
     const updateHandler = () => {
       get.reset();
-      enqueueNotifyObservers(proc);
+      runAllObservers(proc);
     };
     get.observers = maybeMap(computeVal.deps, m => observe(m, updateHandler));
   }
@@ -273,7 +274,7 @@ function bindModel(proc, model) {
 function trackExecs(proc, func) {
   const newTracker = !proc.execPromise;
   proc.execPromise = proc.execPromise || createResultPromise();
-  proc.execPromise.add(safeExecFunction(proc.logger, null, func));
+  proc.execPromise.add(safeExecFunction(proc.logger, func));
   const res = proc.execPromise.get();
   if (newTracker) {
     proc.execPromise = null;
@@ -324,32 +325,6 @@ function runInitCommands(proc) {
 }
 
 /**
- * Queue run of model observers of given proc. The observers
- * will be executed asap afther the end of the stack.
- * @param  {Process} proc
- * @return {Promise}
- */
-let procToNotify = {};
-function enqueueNotifyObservers(proc) {
-  procToNotify[proc.id] = proc;
-  return defer(notifyQueuedProcess);
-}
-
-/**
- * Go through all queued process to notify attached observers
- * and empty the queue
- * @return {Promise}
- */
-function notifyQueuedProcess() {
-  const list = procToNotify;
-  const procKeys = Object.keys(list);
-  procToNotify = {};
-  return Promise.all(maybeMap(procKeys, function procIterator(procId) {
-    return runAllObservers(list[procId])
-  }));
-}
-
-/**
  * Ren all model observers and returns a Promise which will
  * be resolved when all handlers executed and returned promises
  * is also resolved
@@ -358,7 +333,7 @@ function notifyQueuedProcess() {
  */
 function runAllObservers(proc) {
   return Promise.all(maybeMap(proc.observers, function observersIterator(obs) {
-    return safeExecFunction(proc.logger, null, obs);
+    return safeExecFunction(proc.logger, obs);
   }));
 }
 
@@ -403,21 +378,6 @@ function mapChildren(proc, model, iterator, iterKeys) {
 
   maybeForEach(childrenKeys, keyIterator);
   return resPromise.get();
-}
-
-/**
- * Execute some function in try/catch and if some error
- * accured print it to console and call logger function.
- * Returns result of function execution or null.
- * @param  {Function}    func
- * @return {any}
- */
-function safeExecFunction(logger, cmd, func) {
-  const { result, error } = fastTry(func);
-  if (error) {
-    logger.onCatchError(error, cmd);
-  }
-  return result;
 }
 
 /**
@@ -559,7 +519,7 @@ function handleCommand(proc, cmd, isAfter) {
   // Get all commands from all defined hubs
   const cmds = mapParents(proc, function maybeExecHub(parnetProc) {
     if (parnetProc.logic[type]) {
-      return safeExecFunction(logger, null, function safeExecHub() {
+      return safeExecFunction(logger, function safeExecHub() {
         return parnetProc.logic[type](cmd);
       });
     }
@@ -593,7 +553,7 @@ function doExecCmd(proc, rawCmd) {
 
   // Execute command
   const safeExecCmd = () => cmd.exec();
-  const result = safeExecFunction(logger, cmd, safeExecCmd);
+  const result = safeExecFunction(logger, safeExecCmd, cmd);
   if (result) {
     if (result instanceof Task) {
       const taskPromise = execTask(proc, result, cmd);
@@ -605,15 +565,15 @@ function doExecCmd(proc, rawCmd) {
     }
   }
 
-  // Run after handlers
-  logger.onExecuted(cmd, result);
-  resPromise.add(handleCommand(proc, cmd, true));
-
   // Emit model update for view re-rendering
   if (modelUpdated) {
     resPromise.add(modelUpdated);
-    resPromise.add(enqueueNotifyObservers(proc));
+    resPromise.add(runAllObservers(proc));
   }
+
+  // Run after handlers
+  logger.onExecuted(cmd, result);
+  resPromise.add(handleCommand(proc, cmd, true));
 
   logger.onEndExec(cmd, result);
   return resPromise.get();

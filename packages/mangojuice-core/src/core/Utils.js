@@ -112,3 +112,11 @@ export const memoize = func => {
 };
 
 export const defer = Promise.resolve().then.bind(Promise.resolve());
+
+export function safeExecFunction(logger, func, context) {
+  const { result, error } = fastTry(func);
+  if (error && logger) {
+    logger.onCatchError(error, context);
+  }
+  return result;
+}

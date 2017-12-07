@@ -224,5 +224,58 @@ describe('Computed fields', () => {
       expect(procOf(app.model.child_2).observers).toHaveLength(3);
       expect(procOf(app.model.child_3).observers).toHaveLength(3);
     });
+
+    it('should provide new computed values in "hubAfter"', async () => {
+      const handler = jest.fn();
+      const ChildBlock = {
+        createModel: () => ({ val: 0 }),
+        Logic: class ChildBlock {
+          @cmd
+          SetVal(val) {
+            return { val };
+          }
+        }
+      };
+      const ParentBlock = {
+        createModel: () => ({
+          child_1: ChildBlock.createModel(),
+          child_2: ChildBlock.createModel(),
+          child_3: ChildBlock.createModel()
+        }),
+        Logic: class ParentBlock {
+          children() {
+            return {
+              child_1: child(ChildBlock.Logic),
+              child_2: child(ChildBlock.Logic),
+              child_3: child(ChildBlock.Logic),
+            };
+          }
+          computed() {
+            return {
+              test_1: depends(this.model.child_1, this.model.child_2, this.model.child_3).
+                compute((a,b,c) => a.val + b.val + c.val),
+              test_2: depends(this.model.child_1, this.model.child_2, this.model.child_3).
+                compute((a,b,c) => a.val - b.val - c.val)
+            }
+          }
+          hubAfter() {
+            handler(this.model.test_1, this.model.test_2);
+          }
+        }
+      };
+
+      const { app, commandNames } = await runWithTracking({
+        app: ParentBlock
+      });
+
+      await app.proc.exec(logicOf(app.model.child_1).SetVal(1));
+      await app.proc.exec(logicOf(app.model.child_2).SetVal(10));
+      await app.proc.exec(logicOf(app.model.child_3).SetVal(100));
+
+      expect(handler).toHaveBeenCalledTimes(3);
+      expect(handler.mock.calls[0]).toEqual([1, 1]);
+      expect(handler.mock.calls[1]).toEqual([11, -9]);
+      expect(handler.mock.calls[2]).toEqual([111, -109]);
+    });
   });
 });

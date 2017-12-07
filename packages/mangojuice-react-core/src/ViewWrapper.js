@@ -40,7 +40,11 @@ export default reactImpl => {
 
     componentDidMount() {
       this.unmounted = false;
-      this.stopObserver = observe(this.props.proc.model, this.updateView);
+      this.stopObserver = observe(
+        this.props.proc.model,
+        this.updateView,
+        { batched: true }
+      );
     }
 
     componentWillUnmount() {

@@ -14,10 +14,25 @@ function DependsDef(deps) {
 
 extend(DependsDef.prototype, {
   /**
-   * Set computed funtion to be used for computing the field
-   * on every self model update or on every dependencies model
-   * updated. It will get given in construction dependencies
-   * models as arguments.
+   * Create new instance of dependency object and set compute
+   * function to it. Works this way to be able to override computed
+   * fields with saving dependencies more easily. For example:
+   *
+   * ```js
+   * computed() {
+   *   const oldComputed = super.computed();
+   *   return {
+   *     ...oldComputed,
+   *
+   *     // Override `oldField` compute function with saved dependencies
+   *     // and use overrided compute function inside new compute function
+   *     oldField: oldComputed.compute(function newComputedFn(...args) {
+   *       return 1 > 0 || oldComputed.oldField.computeFn(...args);
+   *     })
+   *   };
+   * }
+   * ```
+   *
    * @param  {function} func
    * @return {DependsDef}
    */
