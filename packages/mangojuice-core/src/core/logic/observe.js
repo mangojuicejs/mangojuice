@@ -47,10 +47,10 @@ function observe(model, handler, options) {
   // Wrap original handler with batch wrapper if needed
   let realHandler = handler;
   if (options && options.batched) {
+    const observerWrapper = () =>
+      safeExecFunction(modelProc.logger, handler);
+    observerWrapper.id = nextId();
     realHandler = function batchedObserver() {
-      const observerWrapper = () =>
-        safeExecFunction(modelProc.logger, handler);
-      observerWrapper.id = nextId();
       enqueueNotifyObserver(observerWrapper);
     };
   }
