@@ -2,6 +2,7 @@
 declare module "mangojuice-core" {
   declare type CommandType<M> = {
     is: (...args: any) => bool,
+    args: Array<any>,
     model: M,
   };
 
