@@ -1,6 +1,6 @@
 {
   "name": "mangojuice-inferno",
-  "version": "1.0.2-13",
+  "version": "1.0.2-14",
   "description": "",
   "author": {
     "name": "Artem Artemev",
@@ -21,8 +21,8 @@
     }
   },
   "dependencies": {
-    "mangojuice-core": "1.0.2-13",
-    "mangojuice-react-core": "1.0.2-13"
+    "mangojuice-core": "1.0.2-14",
+    "mangojuice-react-core": "1.0.2-14"
   },
   "peerDependencies": {
     "inferno": "x.x.x",
