@@ -1,10 +1,5 @@
 // @flow
 declare module "mangojuice-core" {
-  declare type CommandType<M> = {
-    is: (...args: any) => bool,
-    args: Array<any>,
-    model: M,
-  };
 
   declare type TaskObject = {
     success: (cmd: any) => TaskObject,
@@ -34,6 +29,7 @@ declare module "mangojuice-core" {
 
   declare export class Command {
     is: (...args: any) => bool,
+    args: Array<any>,
     model: Object
   }
 
