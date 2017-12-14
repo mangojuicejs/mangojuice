@@ -428,4 +428,39 @@ describe('Exec tasks', () => {
     expect(app.model).toEqual({ another: 11, some: 21 });
     expect(commandNames).toEqual(['Block.SuccessTask', 'Block.SuccessHandler']);
   });
+
+  it('should provide a way to execute notify command', async () => {
+    const Block = {
+      createModel: () => ({}),
+      Logic: class Block {
+        @cmd
+        SuccessTask() {
+          return task(function() {
+            this.notify({ notify: true });
+            return { success: true };
+          })
+            .notify(this.NotifyHandler)
+            .success(this.SuccessHandler);
+        }
+        @cmd
+        NotifyHandler(res) {
+          return res
+        }
+        @cmd
+        SuccessHandler(res) {
+          return res;
+        }
+      }
+    };
+    const { app, commandNames } = await runWithTracking({ app: Block });
+
+    await app.proc.exec(logicOf(app.model).SuccessTask);
+
+    expect(commandNames).toEqual([
+      'Block.SuccessTask',
+      'Block.NotifyHandler',
+      'Block.SuccessHandler'
+    ]);
+    expect(app.model).toEqual({ notify: true, success: true });
+  });
 });

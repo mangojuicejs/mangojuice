@@ -13,6 +13,18 @@ export function Task(taskFn, executor) {
 
 extend(Task.prototype, {
   /**
+   * Set a notify handler command. Will be executed
+   * if the task will call `this.notify` inside a task
+   * with same arguments as passed to `this.notify`
+   * @param  {Command} cmd
+   * @return {Task}
+   */
+  notify(cmd) {
+    this.notifyCmd = ensureCommand(cmd);
+    return this;
+  },
+
+  /**
    * Set a success handler command. Will be executed
    * with return value from the task function on success
    * @param  {Command} cmd

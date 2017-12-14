@@ -305,4 +305,25 @@ describe('Task', () => {
     expect(parentTask.cancelled).toEqual(true);
     expect(someLogic).toHaveBeenCalledTimes(0);
   });
+
+  it('should provide a way to pass arguments', async () => {
+    async function simpleTask(...args) {
+      return args;
+    }
+
+    const res = await callTask(simpleTask, 1,2,3);
+    expect(res).toEqual({"error": null, "result": [1, 2, 3]});
+  });
+
+  it('should provide a way to pass custom notify function', async () => {
+    async function simpleTask() {
+      const res = await this.notify(1,2,3);
+      return res;
+    }
+
+    const res = await callTask.call({
+      notify: (...args) => delay(10).then(() => args)
+    }, simpleTask);
+    expect(res).toEqual({"error": null, "result": [1, 2, 3]});
+  });
 });

@@ -406,6 +406,7 @@ function execTask(proc, taskObj, cmd) {
   const {
     task,
     executor,
+    notifyCmd,
     successCmd,
     failCmd,
     customArgs,
@@ -435,9 +436,15 @@ function execTask(proc, taskObj, cmd) {
       }
     };
 
+    const handleNotify = (...args) => {
+      if (!notifyCmd) return Promise.resolve();
+      return proc.exec(notifyCmd.appendArgs(args));
+    };
+
     const res = fastTry(() => {
       const props = { model, meta: config.meta, shared: sharedModel };
-      const taskProc = executor(task, props, ...(customArgs || cmd.args));
+      const context = { notify: handleNotify };
+      const taskProc = executor.call(context, task, props, ...(customArgs || cmd.args));
       taskProc.then(handleResult, handleResult);
       return taskProc;
     });

@@ -2,6 +2,7 @@
 declare module "mangojuice-core" {
 
   declare type TaskObject = {
+    notify: (cmd: any) => TaskObject,
     success: (cmd: any) => TaskObject,
     fail: (cmd: any) => TaskObject,
     args: (...args: Array<any>) => TaskObject,
