@@ -14,6 +14,18 @@ reactImpl.wrappedCreateElement = createElement;
 const Mounter = ReactBindCore.ReactMounter(reactImpl);
 
 // Export react with createElement overrided
-const toExport = { ...React, Mounter, createElement };
+const toExport = { Mounter, createElement };
+const blacklistProps = {
+  PropTypes: 1,
+  createClass: 1,
+  createElement: 1,
+  Mounter: 1
+};
+for (let k in React) {
+  if (!blacklistProps[k]) {
+    toExport[k] = React[k];
+  }
+}
+
 module.exports = toExport;
 module.exports.default = toExport;
