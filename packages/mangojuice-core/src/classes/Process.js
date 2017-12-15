@@ -3,7 +3,7 @@ import Command from './Command';
 import DefaultLogger from './DefaultLogger';
 import ensureCommand from '../core/cmd/ensureCommand';
 import createCmd from '../core/cmd/cmd';
-import observe from '../core/logic/observe';
+import observe, { incExecCounter, decExecCounter } from '../core/logic/observe';
 import procOf from '../core/logic/procOf';
 import delay from '../core/task/delay';
 import { cancelTask } from '../core/cmd/cancel';
@@ -582,6 +582,7 @@ function doExecCmd(proc, rawCmd) {
   let modelUpdated = null;
 
   // Prepare and run before handlers
+  incExecCounter();
   logger.onStartExec(cmd);
   resPromise.add(handleCommand(proc, cmd, false));
 
@@ -608,6 +609,7 @@ function doExecCmd(proc, rawCmd) {
   // Run after handlers
   logger.onExecuted(cmd, result);
   resPromise.add(handleCommand(proc, cmd, true));
+  decExecCounter();
 
   logger.onEndExec(cmd, result);
   return resPromise.get();
