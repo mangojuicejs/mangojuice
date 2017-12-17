@@ -19,6 +19,7 @@ function ensureCommand(cmd, ...args) {
       return new Command(cmd, args, cmd.name);
     }
   }
+  console.trace();
   throw new Error('You passed something weird instead of cmd');
 }
 

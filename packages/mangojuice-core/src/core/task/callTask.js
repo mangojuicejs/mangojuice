@@ -21,6 +21,7 @@ export const CANCEL = sym('CANCEL_PROMISE');
  * @param {Array<any>}        args
  */
 function TaskCall(parent, fn, args) {
+  this.execution = null;
   this.parent = parent;
   this.subtasks = [];
   this.cancelResolve = noop;
@@ -43,9 +44,14 @@ extend(TaskCall.prototype, {
    * @return {Promise}
    */
   exec() {
+    if (this.execution) {
+      return this.execution;
+    }
+
     const task = fastTry(() => this.fn.apply(this, this.args));
     if (task.error) {
-      return Promise.resolve(task);
+      this.execution = Promise.resolve(task);
+      return this.execution;
     }
 
     const handleTaskFinish = (result) => {
@@ -83,9 +89,11 @@ extend(TaskCall.prototype, {
       return { result, error: null };
     };
 
-    return Promise
+    this.execution = Promise
       .race([ this.cancelPromise, task.result ])
       .then(handleTaskFinish, handleTaskFinish);
+
+    return this.execution;
   },
 
   /**

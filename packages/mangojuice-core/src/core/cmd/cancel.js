@@ -12,9 +12,9 @@ export function cancelTask(proc, taskId) {
   delete proc.tasks[taskId];
 
   for (const execId in taskProcs) {
-    const taskProc = taskProcs[execId];
-    if (taskProc && taskProc.cancel) {
-      taskProc.cancel();
+    const taskCall = taskProcs[execId];
+    if (taskCall && taskCall.cancel) {
+      taskCall.cancel();
     }
   }
 }

@@ -187,7 +187,11 @@ describe('Exec tasks', () => {
   it('should user custom executor if defined', async () => {
     const customEngine = jest.fn((func, ...args) => {
       const result = func(...args);
-      return Promise.resolve({ result, error: null });
+      return {
+        exec() {
+          return Promise.resolve({ result, error: null });
+        }
+      };
     });
     const Block = {
       createModel: () => ({}),

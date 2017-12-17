@@ -9,7 +9,6 @@ import delay from '../core/task/delay';
 import { cancelTask } from '../core/cmd/cancel';
 import {
   nextId,
-  createResultPromise,
   is,
   maybeMap,
   maybeForEach,
@@ -17,8 +16,7 @@ import {
   noop,
   fastTry,
   extend,
-  deepMap,
-  defer,
+  deepForEach,
   safeExecFunction
 } from '../core/utils';
 
@@ -122,7 +120,7 @@ function bindChild(proc, childModel, fieldName) {
  * @param  {Process} proc
  */
 function bindChildren(proc) {
-  mapChildren(proc, proc.model, (childModel, fieldName) => {
+  forEachChildren(proc, proc.model, (childModel, fieldName) => {
     bindChild(proc, childModel, fieldName);
   });
 }
@@ -264,25 +262,6 @@ function bindModel(proc, model) {
 }
 
 /**
- * Run given func with tracking `exec` (sync) calls. Rerutns a
- * Promise which will be resolved when all `exec` will be finished.
- * If execs tracking is already activated just use already active tracker.
- * @param  {Process} proc
- * @param  {Function} func
- * @return {Promise}
- */
-function trackExecs(proc, func) {
-  const newTracker = !proc.execPromise;
-  proc.execPromise = proc.execPromise || createResultPromise();
-  proc.execPromise.add(safeExecFunction(proc.logger, func));
-  const res = proc.execPromise.get();
-  if (newTracker) {
-    proc.execPromise = null;
-  }
-  return res;
-}
-
-/**
  * Itereate through all children models with logic assigned
  * and run binded process. Returns a Promise which will be
  * resolved when all inicialisation of all children logics
@@ -292,7 +271,7 @@ function trackExecs(proc, func) {
  */
 function runChildren(proc) {
   const childRunner = childModel => procOf(childModel).run();
-  return mapChildren(proc, proc.model, childRunner);
+  forEachChildren(proc, proc.model, childRunner);
 }
 
 /**
@@ -305,8 +284,7 @@ function runChildren(proc) {
 function runPorts(proc) {
   const { logic, logger, destroyPromise, exec } = proc;
   if (logic.port) {
-    const portRunner = () => logic.port(exec, destroyPromise);
-    return trackExecs(proc, portRunner);
+    logic.port(exec, destroyPromise);
   }
 }
 
@@ -320,7 +298,9 @@ function runPorts(proc) {
 function runInitCommands(proc) {
   const { config: { initCommands }, exec } = proc;
   if (initCommands) {
-    return Promise.all(maybeMap(initCommands, cmd => exec(cmd)));
+    maybeForEach(initCommands, function initCmdIterator(cmd) {
+      exec(cmd);
+    });
   }
 }
 
@@ -332,9 +312,9 @@ function runInitCommands(proc) {
  * @return {Promise}
  */
 function runAllObservers(proc) {
-  return Promise.all(maybeMap(proc.observers, function observersIterator(obs) {
-    return safeExecFunction(proc.logger, obs);
-  }));
+  maybeForEach(proc.observers, function observersIterator(obs) {
+    safeExecFunction(proc.logger, obs);
+  });
 }
 
 /**
@@ -362,22 +342,19 @@ function stopPorts(proc) {
  * @param  {Array} iterKeys
  * @return {Promise}
  */
-function mapChildren(proc, model, iterator, iterKeys) {
+function forEachChildren(proc, model, iterator, iterKeys) {
   const { config } = proc;
-  if (!iterator || !config.children) {
-    return Promise.resolve();
-  }
+  if (!iterator || !config.children) return;
 
-  const resPromise = createResultPromise();
   const childrenKeys = iterKeys || config.childrenKeys || EMPTY_ARRAY;
-  const childRunner = (childModel, k) => {
-    resPromise.add(iterator(childModel, k));
+  const childRunner = (childModel, k) => iterator(childModel, k);
+  const keyIterator = k => {
+    if (config.children[k]) {
+      maybeForEach(model[k], x => childRunner(x, k));
+    }
   };
-  const keyIterator = k =>
-    config.children[k] && maybeForEach(model[k], x => childRunner(x, k));
 
   maybeForEach(childrenKeys, keyIterator);
-  return resPromise.get();
 }
 
 /**
@@ -413,49 +390,50 @@ function execTask(proc, taskObj, cmd) {
     execEvery
   } = taskObj;
 
+  // If not in multi-thread mode – cancel all running task with
+  // same identifier (command id)
   if (!execEvery) {
     cancelTask(proc, taskId);
   }
 
-  return new Promise((resolve, reject) => {
-    const handleResult = ({ result, error }) => {
-      if (tasks[taskId]) {
-        delete tasks[taskId][execId];
-      }
-      if (error) {
-        if (error.cancelled) {
-          reject(new Command(null, null, `${cmd.funcName}.Cancelled`, true));
-        } else {
-          const actualFailCmd = failCmd && failCmd.appendArgs([error]);
-          if (!actualFailCmd) logger.onCatchError(error);
-          reject(actualFailCmd);
-        }
-      } else {
-        const actualSuccessCmd = successCmd && successCmd.appendArgs([result]);
-        resolve(actualSuccessCmd);
-      }
-    };
-
-    const handleNotify = (...args) => {
-      if (!notifyCmd) return Promise.resolve();
-      return proc.exec(notifyCmd.appendArgs(args));
-    };
-
-    const res = fastTry(() => {
-      const props = { model, meta: config.meta, shared: sharedModel };
-      const context = { notify: handleNotify };
-      const taskProc = executor.call(context, task, props, ...(customArgs || cmd.args));
-      taskProc.then(handleResult, handleResult);
-      return taskProc;
-    });
-
-    if (res.error) {
-      handleResult(res);
+  // Handle result of the execution of a task – returns
+  // success command if error not defined, fail command otherwise
+  const handleResult = ({ result, error }) => {
+    if (tasks[taskId]) {
+      delete tasks[taskId][execId];
     }
+    if (error) {
+      if (error.cancelled) {
+        return new Command(null, null, `${cmd.funcName}.Cancelled`, true);
+      } else {
+        const actualFailCmd = failCmd && failCmd.appendArgs([error]);
+        if (!actualFailCmd) logger.onCatchError(error);
+        return actualFailCmd;
+      }
+    } else {
+      const actualSuccessCmd = successCmd && successCmd.appendArgs([result]);
+      return actualSuccessCmd;
+    }
+  };
 
-    tasks[taskId] = tasks[taskId] || {};
-    tasks[taskId][execId] = res.result;
-  });
+  // Run notify command if presented
+  const handleNotify = (...args) => {
+    if (notifyCmd) {
+      proc.exec(notifyCmd.appendArgs(args));
+    };
+  };
+
+  // Run the task function and wait for the result
+  const props = { model, meta: config.meta, shared: sharedModel };
+  const context = { notify: handleNotify };
+  const args = customArgs || cmd.args || EMPTY_ARRAY;
+  const taskCall = executor.call(context, task, props, ...args);
+
+  // Track task execution
+  tasks[taskId] = tasks[taskId] || {};
+  tasks[taskId][execId] = taskCall;
+
+  return taskCall.exec().then(handleResult, handleResult);
 }
 
 /**
@@ -494,11 +472,10 @@ function isShallowEqual(model, update) {
  */
 function updateModel(proc, updateObj) {
   if (!updateObj || isShallowEqual(proc.model, updateObj)) {
-    return null;
+    return false;
   }
 
   const tick = nextId();
-  const resPromise = createResultPromise();
   const updateKeys = Object.keys(updateObj);
   const { model } = proc;
   let rebindComputed = false;
@@ -506,7 +483,7 @@ function updateModel(proc, updateObj) {
   const updateMarker = (childModel, fieldName) => {
     if (bindChild(proc, childModel, fieldName)) {
       rebindComputed = true;
-      resPromise.add(procOf(childModel).run());
+      procOf(childModel).run();
     }
     procOf(childModel).tick = tick;
   };
@@ -521,8 +498,8 @@ function updateModel(proc, updateObj) {
 
   // Go throught all children models and mark which one
   // created and removed
-  mapChildren(proc, updateObj, updateMarker);
-  mapChildren(proc, model, unmarkedDestroyer, updateKeys);
+  forEachChildren(proc, updateObj, updateMarker);
+  forEachChildren(proc, model, unmarkedDestroyer, updateKeys);
   extend(model, updateObj);
 
   // Computed field may depend on child model, and when child
@@ -533,7 +510,7 @@ function updateModel(proc, updateObj) {
   } else {
     maybeForEach(proc.computedFields, f => f.reset());
   }
-  return resPromise.get();
+  return true;
 }
 
 /**
@@ -560,10 +537,8 @@ function handleCommand(proc, cmd, isAfter) {
   });
 
   // Exec all commands in defined order
-  const execs = deepMap(cmds, c => proc.exec(c));
-
+  deepForEach(cmds, c => proc.exec(c));
   logger.onEndHandling(cmd, isAfter);
-  return Promise.all(execs);
 }
 
 /**
@@ -577,14 +552,13 @@ function handleCommand(proc, cmd, isAfter) {
  */
 function doExecCmd(proc, rawCmd) {
   const { logger, exec } = proc;
-  const resPromise = createResultPromise();
   const cmd = !rawCmd.logic ? rawCmd.bind(proc.logic) : rawCmd;
   let modelUpdated = null;
 
   // Prepare and run before handlers
   incExecCounter();
   logger.onStartExec(cmd);
-  resPromise.add(handleCommand(proc, cmd, false));
+  handleCommand(proc, cmd, false);
 
   // Execute command
   const safeExecCmd = () => cmd.exec();
@@ -592,9 +566,9 @@ function doExecCmd(proc, rawCmd) {
   if (result) {
     if (result instanceof Task) {
       const taskPromise = execTask(proc, result, cmd);
-      resPromise.add(taskPromise.then(exec, exec));
+      taskPromise.then(exec, exec);
     } else if (result && (is.array(result) || (result.func && result.id))) {
-      resPromise.add(Promise.all(deepMap(result, x => exec(x))));
+      deepForEach(result, x => exec(x));
     } else if (is.object(result)) {
       modelUpdated = updateModel(proc, result);
     }
@@ -602,17 +576,15 @@ function doExecCmd(proc, rawCmd) {
 
   // Emit model update for view re-rendering
   if (modelUpdated) {
-    resPromise.add(modelUpdated);
-    resPromise.add(runAllObservers(proc));
+    runAllObservers(proc);
   }
 
   // Run after handlers
   logger.onExecuted(cmd, result);
-  resPromise.add(handleCommand(proc, cmd, true));
-  decExecCounter();
+  handleCommand(proc, cmd, true);
 
   logger.onEndExec(cmd, result);
-  return resPromise.get();
+  decExecCounter();
 }
 
 /**
@@ -655,12 +627,10 @@ extend(Process.prototype, {
    * @return {Promise}
    */
   run() {
-    const resPromise = createResultPromise();
-    resPromise.add(runChildren(this));
-    resPromise.add(runPorts(this));
-    resPromise.add(runInitCommands(this));
-    resPromise.add(runAllObservers(this));
-    return resPromise.get();
+    runChildren(this);
+    runPorts(this);
+    runInitCommands(this);
+    runAllObservers(this);
   },
 
   /**
@@ -671,9 +641,9 @@ extend(Process.prototype, {
    */
   destroy(deep) {
     delete this.model.__proc;
-    this.observers = null;
-    this.throttles = null;
-    this.tasks = null;
+    this.observers = [];
+    this.throttles = {};
+    this.tasks = {};
     this.destroyed = true;
 
     stopPorts(this);
@@ -682,7 +652,7 @@ extend(Process.prototype, {
 
     if (deep !== false) {
       const childDestroyer = x => procOf(x).destroy(true);
-      mapChildren(this, this.model, childDestroyer);
+      forEachChildren(this, this.model, childDestroyer);
     }
   },
 
@@ -697,12 +667,9 @@ extend(Process.prototype, {
    * when the commend will be fully executed (command + handlers)
    *
    * @param  {Function|Object} cmd [description]
-   * @return {Promise}
    */
   exec(cmd) {
-    if (!cmd || this.destroyed) {
-      return Promise.resolve();
-    }
+    if (!cmd || this.destroyed) return;
 
     // Create result promise and get active model
     const realCmd = ensureCommand(cmd);
@@ -710,21 +677,35 @@ extend(Process.prototype, {
     const modelProc = procOf(cmdModel, true);
 
     // Execute in current proc or in binded different proc
-    let result;
     if (modelProc) {
       if (modelProc.model !== this.model) {
-        result = modelProc.exec(realCmd);
+        modelProc.exec(realCmd);
       } else {
-        result = doExecCmd(this, realCmd);
+        doExecCmd(this, realCmd);
+      }
+    }
+  },
+
+  /**
+   * Returns a promise which will be resolved when all async
+   * tasks and related handlers in the process and all children
+   * processes will be finished.
+   * @return {[type]} [description]
+   */
+  finished() {
+    const promises = [];
+    for (let taskId in this.tasks) {
+      for (let execId in this.tasks[taskId]) {
+        promises.push(this.tasks[taskId][execId].execution);
       }
     }
 
-    // Add result to active exec tracker if defined
-    if (this.execPromise && result) {
-      this.execPromise.add(result);
-    }
+    forEachChildren(this, this.model, function iterateChildren(childModel, fieldName) {
+      const proc = procOf(childModel);
+      promises.push(proc.finished());
+    });
 
-    return result;
+    return Promise.all(promises);
   }
 });
 

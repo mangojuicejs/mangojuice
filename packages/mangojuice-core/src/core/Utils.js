@@ -61,35 +61,21 @@ export const maybeMap = runOnMixed.bind(null, fastMap);
 
 export const maybeForEach = runOnMixed.bind(null, fastForEach);
 
-export const deepMap = (vals, fn, res = []) => {
+export const deepForEach = (vals, fn) => {
   maybeForEach(vals, function deepMapIterator(v) {
     if (is.array(v)) {
-      return deepMap(v, fn, res);
+      deepForEach(v, fn, res);
     } else {
-      res.push(fn(v));
+      fn(v);
     }
   });
-  return res;
-};
-
-export const createResultPromise = () => {
-  let res = Promise.resolve();
-  return {
-    get() {
-      return res;
-    },
-    add(nextPromise) {
-      if (nextPromise !== res) {
-        res = res.then(() => nextPromise);
-      }
-      return this;
-    }
-  };
 };
 
 export function extend(obj, props) {
-  for (let i in props) {
-    obj[i] = props[i];
+  if (props) {
+    for (let i in props) {
+      obj[i] = props[i];
+    }
   }
   return obj;
 }
@@ -110,8 +96,6 @@ export const memoize = func => {
   };
   return momoizer;
 };
-
-export const defer = Promise.resolve().then.bind(Promise.resolve());
 
 export function safeExecFunction(logger, func, context) {
   const { result, error } = fastTry(func);

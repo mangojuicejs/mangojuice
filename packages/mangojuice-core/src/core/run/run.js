@@ -11,7 +11,13 @@ import bind from './bind';
  */
 function run(block, opts = {}) {
   const { proc, model } = bind(block, opts);
-  return { proc, model, block, run: proc.run() };
+  proc.run();
+  return {
+    proc,
+    model,
+    block,
+    finished: proc.finished()
+  };
 }
 
 export default run;
