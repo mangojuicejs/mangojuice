@@ -20,9 +20,11 @@ import {
   safeExecFunction
 } from '../core/utils';
 
+
 // Constants
 const EMPTY_ARRAY = [];
 const EMPTY_OBJECT = {};
+const EMPTY_FINISHED = Promise.resolve();
 
 /**
  * Go from current proc to the root of the proc tree
@@ -701,11 +703,18 @@ extend(Process.prototype, {
     }
 
     forEachChildren(this, this.model, function iterateChildren(childModel, fieldName) {
-      const proc = procOf(childModel);
-      promises.push(proc.finished());
+      const proc = procOf(childModel, true);
+      if (proc) {
+        const childFinished = proc.finished();
+        if (childFinished !== EMPTY_FINISHED) {
+          promises.push(proc.finished());
+        }
+      }
     });
 
-    return Promise.all(promises);
+    return promises.length
+      ? Promise.all(promises).then(() => this.finished())
+      : EMPTY_FINISHED;
   }
 });
 
