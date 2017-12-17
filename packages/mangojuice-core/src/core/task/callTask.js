@@ -1,4 +1,5 @@
-import { sym, is, fastTry, ensureError } from '../utils';
+import { sym, is, fastTry, ensureError, extend, noop } from '../utils';
+
 
 /**
  * A symbol for setting custom promise cancel function.
@@ -10,56 +11,127 @@ import { sym, is, fastTry, ensureError } from '../utils';
  */
 export const CANCEL = sym('CANCEL_PROMISE');
 
+
 /**
- * Clss represents a token for cancelling the task
- * @param {CancellationToken} parentToken
+ * Main task executor class, which set as a context for a
+ * task function. Provides a way to execute a task, cancel
+ * the task and wait for all subtasks to be finished.
+ * @param {Object|TaskCall}   parent
+ * @param {Function}          fn
+ * @param {Array<any>}        args
  */
-function CancellationToken(parentToken) {
-  if (!(this instanceof CancellationToken)) {
-    return new CancellationToken(parentToken);
+function TaskCall(parent, fn, args) {
+  this.parent = parent;
+  this.subtasks = [];
+  this.cancelResolve = noop;
+  this.cancelPromise = new Promise(r => this.cancelResolve = r);
+  this.args = args;
+  this.fn = fn;
+  this.done = false;
+  this.cancelled = false;
+
+  if (parent && parent.cancelPromise) {
+    parent.cancelPromise.then(this.cancelResolve);
   }
-  const cancellationPromise = new Promise(resolve => {
-    this.cancel = () => {
-      const err = new Error('Cancelled');
-      err.cancelled = true;
-      resolve(err);
+}
+
+extend(TaskCall.prototype, {
+  /**
+   * Execute a task and handle the response. Returns
+   * an array which will be executed when the task and all
+   * subtasks finished
+   * @return {Promise}
+   */
+  exec() {
+    const task = fastTry(() => this.fn.apply(this, this.args));
+    if (task.error) {
+      return Promise.resolve(task);
+    }
+
+    const handleTaskFinish = (result) => {
+      if (this.done || this.cancelled) return;
+
+      if (result instanceof Error) {
+        if (result.cancelled) {
+          this.cancelled = true;
+          const runCancelHandlers = () => {
+            if (task.result && task.result[CANCEL]) task.result[CANCEL]();
+            if (this.cancelHandler) this.cancelHandler();
+          };
+          const { error } = fastTry(runCancelHandlers);
+          const ret = { result: null, error: error || result };
+          return result.task === this ? ret : Promise.reject(ret);
+        }
+
+        this.cancel();
+        return { result: null, error: result };
+      }
+
+      if (this.subtasks.length > 0) {
+        const resProxy = () => result;
+        const subtasksWaitPromise = Promise.all(this.subtasks)
+          .then(resProxy, resProxy);
+        const finalRace = Promise
+          .race([ this.cancelPromise, subtasksWaitPromise ])
+          .then(handleTaskFinish, handleTaskFinish);
+
+        this.subtasks = [];
+        return finalRace;
+      }
+
+      this.done = true;
+      return { result, error: null };
     };
-  });
-  this.register = callback => {
-    cancellationPromise.then(callback);
-  };
-  this.createDependentToken = () => new CancellationToken(this);
-  if (parentToken && parentToken instanceof CancellationToken) {
-    parentToken.register(this.cancel);
+
+    return Promise
+      .race([ this.cancelPromise, task.result ])
+      .then(handleTaskFinish, handleTaskFinish);
+  },
+
+  /**
+   * Call some subtask. The parrent task will be finished only
+   * when all children tasks will be resolved
+   * @param  {Function}  fn
+   * @param  {...any} args
+   * @return {Promise}
+   */
+  call(fn, ...args) {
+    const task = new TaskCall(this, fn, args);
+    const execPromise = task.exec()
+    this.subtasks.push(execPromise);
+    execPromise.task = task;
+    return execPromise;
+  },
+
+  /**
+   * Cancel this task and all children subtasks
+   */
+  cancel() {
+    const err = new Error('Cancelled');
+    err.cancelled = true;
+    err.task = this;
+    this.cancelResolve(err);
+  },
+
+  /**
+   * Set a handler which will be executed when task cancelled
+   * @param  {Function} handler
+   */
+  onCancel(handler) {
+    this.cancelHandler = handler;
+  },
+
+  /**
+   * Run `notify` function of parent object/task with provided
+   * arguments if defined.
+   * @param  {...any} args
+   */
+  notify(...args) {
+    if (this.parent && this.parent.notify) {
+      return this.parent.notify(...args);
+    }
   }
-}
-
-/**
- * Helper function that will register a callback function
- * for handling task cancellation.
- * @param  {Function} callback
- * @return {void}
- */
-function registerCancelHandler(callback) {
-  this[CANCEL] = callback;
-}
-
-/**
- * Creates initial task context for `call` function without
- * any active context.
- * @return {Object}
- */
-function getInitContext(initContext) {
-  const token = new CancellationToken();
-  return {
-    ...initContext,
-    cancelTask: token.cancel,
-    onCancel: registerCancelHandler,
-    subtasks: [],
-    token,
-    call
-  };
-}
+});
 
 /**
  * Call some async function with arguments and returns
@@ -75,55 +147,7 @@ function getInitContext(initContext) {
  * @return {Promise}
  */
 function call(fn, ...args) {
-  const parentSubtasks = (this && this.subtasks) || [];
-  const context =
-    this && this.token
-      ? { ...this, subtasks: [], token: this.token.createDependentToken() }
-      : getInitContext(this);
-  context.call = context.call.bind(context);
-
-  const res = new Promise((resolve, reject) => {
-    // Run func and check for sync code errors
-    const execRes = fastTry(() => fn.apply(context, args));
-    if (execRes.error) {
-      return resolve(execRes);
-    }
-
-    // Normalize response to be always a promise
-    if (!is.promise(execRes.result)) {
-      execRes.result = Promise.resolve(execRes.result);
-    }
-
-    // Register for token cancellations
-    context.token.register(cancelError => {
-      if (res.done) return;
-      const { error } = fastTry(() => {
-        if (execRes.result[CANCEL]) execRes.result[CANCEL]();
-        if (context[CANCEL]) context[CANCEL]();
-      });
-      res.cancelled = true;
-      reject({ result: null, error: error || cancelError });
-    });
-
-    // Handle result
-    execRes.result.then(
-      result => {
-        const successHandler = () => {
-          res.done = true;
-          resolve({ result, error: null });
-        };
-        return Promise.all(context.subtasks).then(
-          successHandler,
-          successHandler
-        );
-      },
-      error => resolve({ result: null, error: ensureError(error) })
-    );
-  });
-
-  parentSubtasks.push(res);
-  res.cancel = context.token.cancel;
-  return res;
+  return new TaskCall(this, fn, args);
 }
 
 export const callTask = call;
