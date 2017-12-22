@@ -185,8 +185,10 @@ function bindComputedField(proc, fieldName, computeVal) {
   } else if (is.object(computeVal)) {
     get = memoize(() => computeVal.computeFn(...computeVal.deps));
     const updateHandler = () => {
-      get.reset();
-      runAllObservers(proc);
+      if (get.computed()) {
+        get.reset();
+        runAllObservers(proc);
+      }
     };
     get.observers = maybeMap(computeVal.deps, m => observe(m, updateHandler));
   }

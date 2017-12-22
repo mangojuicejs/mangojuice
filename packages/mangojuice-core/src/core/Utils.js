@@ -90,6 +90,7 @@ export const memoize = func => {
     }
     return data;
   };
+  momoizer.computed = () => computed;
   momoizer.reset = () => {
     data = undefined;
     computed = false;
