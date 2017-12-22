@@ -1,4 +1,4 @@
-import { extend } from '../core/utils';
+import { extend, is } from '../core/utils';
 import ensureCommand from '../core/cmd/ensureCommand';
 
 /**
@@ -54,8 +54,8 @@ extend(Task.prototype, {
    * @param  {boolean} val
    * @return {Task}
    */
-  multithread(val = true) {
-    this.execEvery = val;
+  multithread(val) {
+    this.execEvery = is.undef(val) ? true : val;
     return this;
   },
 

@@ -1,7 +1,9 @@
 import { extend, is, nextId } from '../core/utils';
 
+
 // Constants
 const EMPTY_ARRAY = [];
+const EMPTY_OBJECT = {};
 
 /**
  * Class wihch represents a command to be execute by processor.
@@ -12,13 +14,14 @@ const EMPTY_ARRAY = [];
  * @param {Array<any>} args
  * @param {String} name [description]
  */
-function Command(func, args, name, nonhandlable) {
+function Command(func, args, name, nonhandlable, options) {
   this.id = (func && func.__cmdId) || nextId();
   this.funcName = name;
   this.func = func;
   this.args = args || EMPTY_ARRAY;
   this.name = name;
   this.handlable = !nonhandlable;
+  this.options = options || EMPTY_OBJECT;
 }
 
 extend(Command.prototype, {
@@ -40,7 +43,8 @@ extend(Command.prototype, {
       this.func,
       this.args,
       this.funcName,
-      !this.handlable
+      !this.handlable,
+      this.options
     );
     newCmd.id = this.id;
     newCmd.name = this.name;

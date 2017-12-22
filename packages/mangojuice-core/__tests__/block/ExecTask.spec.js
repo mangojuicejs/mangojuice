@@ -189,7 +189,8 @@ describe('Exec tasks', () => {
       const result = func(...args);
       return {
         exec() {
-          return Promise.resolve({ result, error: null });
+          this.execution = Promise.resolve({ result, error: null });
+          return this.execution;
         }
       };
     });

@@ -1,4 +1,4 @@
-import { CANCEL } from './callTask';
+import { CANCEL } from '../../classes/TaskCall';
 
 
 // Constants

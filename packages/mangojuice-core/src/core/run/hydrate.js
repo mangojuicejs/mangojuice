@@ -1,4 +1,6 @@
 import run from './run';
+import { extend } from '../utils';
+
 
 /**
  * By given block, model and opts creates a block with given
@@ -10,7 +12,10 @@ import run from './run';
  * @return {Object}
  */
 function hydrate(block, model) {
-  return { ...block, createModel: () => model };
+  const newBlock = {};
+  extend(newBlock, block);
+  extend(newBlock, { createModel: () => model });
+  return newBlock;
 }
 
 export default hydrate;

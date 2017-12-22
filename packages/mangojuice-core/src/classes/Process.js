@@ -1,5 +1,6 @@
 import Task from './Task';
 import Command from './Command';
+import DelayedExec from './DelayedExec';
 import DefaultLogger from './DefaultLogger';
 import ensureCommand from '../core/cmd/ensureCommand';
 import createCmd from '../core/cmd/cmd';
@@ -25,6 +26,7 @@ import {
 const EMPTY_ARRAY = [];
 const EMPTY_OBJECT = {};
 const EMPTY_FINISHED = Promise.resolve();
+const DELAY_TASK = 'DELAY';
 
 /**
  * Go from current proc to the root of the proc tree
@@ -591,6 +593,29 @@ function doExecCmd(proc, rawCmd) {
   decExecCounter();
 }
 
+
+/**
+ * Handle delayed command execution. Decide when to execute the
+ * command and when delay it, etc.
+ * @param  {Process} proc
+ * @param  {Command} cmd
+ */
+function doDelayExecCmd(proc, cmd) {
+  const { tasks } = proc;
+  const taskId = cmd.id;
+  const tasksObj = tasks[taskId] = tasks[taskId] || {};
+
+  let taskObj = tasksObj[DELAY_TASK];
+  if (!taskObj) {
+    const executor = doExecCmd.bind(null, proc);
+    const cleanup = () => delete tasksObj[DELAY_TASK];
+    taskObj = tasksObj[DELAY_TASK] = new DelayedExec(executor, cleanup, cmd.options);
+  }
+
+  taskObj.exec(cmd);
+}
+
+
 /**
  * Main logic execution class
  */
@@ -685,7 +710,12 @@ extend(Process.prototype, {
       if (modelProc.model !== this.model) {
         modelProc.exec(realCmd);
       } else {
-        doExecCmd(this, realCmd);
+        const opts = realCmd.options;
+        if (opts.debounce > 0 || opts.throttle > 0) {
+          doDelayExecCmd(this, realCmd)
+        } else {
+          doExecCmd(this, realCmd);
+        }
       }
     }
   },
@@ -694,13 +724,16 @@ extend(Process.prototype, {
    * Returns a promise which will be resolved when all async
    * tasks and related handlers in the process and all children
    * processes will be finished.
-   * @return {[type]} [description]
+   * @return {Promise}
    */
   finished() {
     const promises = [];
     for (let taskId in this.tasks) {
       for (let execId in this.tasks[taskId]) {
-        promises.push(this.tasks[taskId][execId].execution);
+        const execution = this.tasks[taskId][execId].execution;
+        if (execution) {
+          promises.push(execution);
+        }
       }
     }
 
@@ -708,7 +741,7 @@ extend(Process.prototype, {
       const proc = procOf(childModel, true);
       if (proc) {
         const childFinished = proc.finished();
-        if (childFinished !== EMPTY_FINISHED) {
+        if (childFinished && childFinished !== EMPTY_FINISHED) {
           promises.push(proc.finished());
         }
       }

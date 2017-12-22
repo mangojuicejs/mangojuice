@@ -6,7 +6,6 @@ import {
   task,
   delay,
   utils,
-  throttle,
   defineCommand,
   decorateLogic
 } from 'mangojuice-core';
@@ -176,7 +175,7 @@ describe('Without decorators usage', () => {
       ExtOneCommand() {}
     }
 
-    defineCommand(BlockExtOne.prototype, 'ExtOneCommand', throttle(100));
+    defineCommand(BlockExtOne.prototype, 'ExtOneCommand', cmd({ throttle: 100 }));
     decorateLogic(BlockExtOne, true);
 
     const { app, commandNames } = await runWithTracking({
@@ -188,7 +187,6 @@ describe('Without decorators usage', () => {
 
     expect(commandNames).toEqual([
       'BlockExtOne.FromInitOneCmd',
-      'BlockExtOne.ExtOneCommand.Throttle',
       'BlockExtOne.ExtOneCommand'
     ]);
   });

@@ -6,8 +6,6 @@ import {
   task,
   delay,
   observe,
-  throttle,
-  debounce
 } from 'mangojuice-core';
 import { runWithTracking } from 'mangojuice-test';
 
@@ -16,14 +14,12 @@ describe('Command enhancers', () => {
     const AppBlock = {
       createModel: () => ({ a: 0 }),
       Logic: class AppBlock {
-        @throttle(100)
-        @cmd
+        @cmd({ throttle: 100 })
         Increment(inc) {
           return { a: this.model.a + inc };
         }
 
-        @throttle(100, { noInitCall: true })
-        @cmd
+        @cmd({ throttle: 100, noInitCall: true })
         IncrementNoInitCall(inc) {
           return { a: this.model.a + inc };
         }
@@ -48,29 +44,13 @@ describe('Command enhancers', () => {
 
       await app.proc.exec(logicOf(app.model).Increment(10));
       expect(commandNames).toEqual([
-        'AppBlock.Increment.Throttle',
         'AppBlock.Increment'
       ]);
 
       await delay(110);
       expect(app.model).toEqual({ a: 10 });
       expect(commandNames).toEqual([
-        'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
-      ]);
-    });
-
-    it('should make all suuport commands nonhandlable', async () => {
-      const { app, commandNames } = await runWithTracking({ app: ParentBlock });
-
-      await app.proc.exec(logicOf(app.model.child).Increment(11));
-      await delay(110);
-
-      expect(app.model).toEqual({ child: { a: 11 } });
-      expect(commandNames).toEqual([
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment',
-        'ParentBlock.Handler'
       ]);
     });
 
@@ -84,16 +64,8 @@ describe('Command enhancers', () => {
       await app.proc.exec(logicOf(app.model.child).Increment(12));
 
       expect(commandNames).toEqual([
-        'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Wait.Cancelled',
-        'AppBlock.Increment.Exec',
-        'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler'
       ]);
@@ -117,28 +89,10 @@ describe('Command enhancers', () => {
 
       expect([app.model, ...commandNames]).toEqual([
         { child: { a: 621 } },
-        'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Wait.Cancelled',
-        'AppBlock.Increment.Exec',
-        'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Wait.Cancelled',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Wait.Cancelled',
-        'AppBlock.Increment.Exec',
-        'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler'
       ]);
@@ -149,46 +103,25 @@ describe('Command enhancers', () => {
 
       app.proc.exec(logicOf(app.model).IncrementNoInitCall(10));
       await delay(10);
-      expect(commandNames).toEqual([
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
-      ]);
+      expect(commandNames).toEqual([]);
 
       await delay(110);
       expect([ app.model, ...commandNames ]).toEqual([
         { a: 10 },
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
-        'AppBlock.IncrementNoInitCall.Exec',
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall',
+        'AppBlock.IncrementNoInitCall'
       ]);
 
       app.proc.exec(logicOf(app.model).IncrementNoInitCall(10));
       await delay(10);
       expect([ app.model, ...commandNames ]).toEqual([
         { a: 10 },
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
-        'AppBlock.IncrementNoInitCall.Exec',
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall',
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
+        'AppBlock.IncrementNoInitCall'
       ]);
 
       await delay(110);
       expect([ app.model, ...commandNames ]).toEqual([
         { a: 20 },
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
-        'AppBlock.IncrementNoInitCall.Exec',
-        'AppBlock.IncrementNoInitCall.Throttle',
         'AppBlock.IncrementNoInitCall',
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
-        'AppBlock.IncrementNoInitCall.Exec',
-        'AppBlock.IncrementNoInitCall.Throttle',
         'AppBlock.IncrementNoInitCall',
       ]);
     });
@@ -198,14 +131,12 @@ describe('Command enhancers', () => {
     const AppBlock = {
       createModel: () => ({ a: 0 }),
       Logic: class AppBlock {
-        @debounce(100)
-        @cmd
+        @cmd({ debounce: 100 })
         Increment(inc) {
           return { a: this.model.a + inc };
         }
 
-        @debounce(100, { noInitCall: true })
-        @cmd
+        @cmd({ debounce: 100, noInitCall: true })
         IncrementNoInitCall(inc) {
           return { a: this.model.a + inc };
         }
@@ -231,7 +162,6 @@ describe('Command enhancers', () => {
       const res = app.proc.exec(logicOf(app.model).Increment(10));
       await delay(10);
       expect(commandNames).toEqual([
-        'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
       ]);
 
@@ -239,21 +169,7 @@ describe('Command enhancers', () => {
       await res;
       expect(app.model).toEqual({ a: 10 });
       expect(commandNames).toEqual([
-        'AppBlock.Increment.Throttle',
         'AppBlock.Increment'
-      ]);
-    });
-
-    it('should make all suuport commands nonhandlable', async () => {
-      const { app, commandNames } = await runWithTracking({ app: ParentBlock });
-
-      await app.proc.exec(logicOf(app.model.child).Increment(11));
-
-      expect(app.model).toEqual({ child: { a: 11 } });
-      expect(commandNames).toEqual([
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment',
-        'ParentBlock.Handler'
       ]);
     });
 
@@ -270,19 +186,8 @@ describe('Command enhancers', () => {
 
       expect(app.model).toEqual({ child: { a: 23 } });
       expect(commandNames).toEqual([
-        'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Wait.Cancelled',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Wait.Cancelled',
-        'AppBlock.Increment.Exec',
-        'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler'
       ]);
@@ -306,28 +211,10 @@ describe('Command enhancers', () => {
 
       expect(app.model).toEqual({ child: { a: 621 } });
       expect(commandNames).toEqual([
-        'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Wait.Cancelled',
-        'AppBlock.Increment.Exec',
-        'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Wait.Cancelled',
-        'AppBlock.Increment.Throttle',
-        'AppBlock.Increment.Wait',
-        'AppBlock.Increment.Wait.Cancelled',
-        'AppBlock.Increment.Exec',
-        'AppBlock.Increment.Throttle',
         'AppBlock.Increment',
         'ParentBlock.Handler'
       ]);
@@ -339,50 +226,25 @@ describe('Command enhancers', () => {
       app.proc.exec(logicOf(app.model).IncrementNoInitCall(10));
       await delay(10);
       expect(commandNames).toEqual([
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
       ]);
 
       await delay(50);
       app.proc.exec(logicOf(app.model).IncrementNoInitCall(10));
       expect([ app.model, ...commandNames ]).toEqual([
         { a: 0 },
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
       ]);
 
       await delay(50);
       app.proc.exec(logicOf(app.model).IncrementNoInitCall(10));
       expect([ app.model, ...commandNames ]).toEqual([
         { a: 0 },
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
-        'AppBlock.IncrementNoInitCall.Wait.Cancelled',
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
       ]);
 
       await delay(110);
       const res = app.proc.exec(logicOf(app.model).IncrementNoInitCall(10));
       expect([ app.model, ...commandNames ]).toEqual([
         { a: 10 },
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
-        'AppBlock.IncrementNoInitCall.Wait.Cancelled',
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
-        'AppBlock.IncrementNoInitCall.Wait.Cancelled',
-        'AppBlock.IncrementNoInitCall.Exec',
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall',
-        'AppBlock.IncrementNoInitCall.Throttle',
-        'AppBlock.IncrementNoInitCall.Wait',
+        'AppBlock.IncrementNoInitCall'
       ]);
 
       await res;

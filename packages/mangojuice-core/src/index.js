@@ -5,8 +5,6 @@ import DefaultLogger from './classes/DefaultLogger';
 import SimpleStackLogger from './classes/SimpleStackLogger';
 import cmd from './core/cmd/cmd';
 import cancel from './core/cmd/cancel';
-import debounce from './core/cmd/debounce';
-import throttle from './core/cmd/throttle';
 import defineCommand from './core/cmd/defineCommand';
 import ensureCommand from './core/cmd/ensureCommand';
 import child from './core/logic/child';
@@ -17,7 +15,8 @@ import procOf from './core/logic/procOf';
 import decorateLogic from './core/logic/decorateLogic';
 import delay from './core/task/delay';
 import task from './core/task/task';
-import callTask, { CANCEL } from './core/task/callTask';
+import callTask from './core/task/callTask';
+import { CANCEL } from './classes/TaskCall';
 import run from './core/run/run';
 import bind from './core/run/bind';
 import hydrate from './core/run/hydrate';
@@ -35,8 +34,6 @@ export {
   // Core
   cmd,
   cancel,
-  debounce,
-  throttle,
   defineCommand,
   ensureCommand,
   child,

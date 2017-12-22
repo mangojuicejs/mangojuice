@@ -56,10 +56,6 @@ declare module "mangojuice-core" {
 
   declare export function cmd(): any;
 
-  declare export function debounce(): any;
-
-  declare export function throttle(): any;
-
   declare export function defineCommand(): any;
 
   declare export function decorateLogic<T>(clazz: Class<T>, deep?: bool): Class<T>;
@@ -92,8 +88,6 @@ declare module "mangojuice-core" {
     +LogicBase: typeof LogicBase,
     +Command: typeof Command,
     +cmd: typeof cmd,
-    +debounce: typeof debounce,
-    +throttle: typeof throttle,
     +defineCommand: typeof defineCommand,
     +task: typeof task,
     +delay: typeof delay,

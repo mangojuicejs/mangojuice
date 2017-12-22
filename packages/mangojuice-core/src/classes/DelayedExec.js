@@ -1,0 +1,75 @@
+import { extend, noop } from '../core/utils';
+
+
+/**
+ * An async task executor which aimed only to help with
+ * delayed (throttle/debounce) command execution.
+ * Supports to run in "debounce" and "throttle" mode,
+ * with instant init call or without.
+ */
+function DelayedExec(executor, cleanup, options) {
+  this.finish = noop;
+  this.executor = executor || noop;
+  this.cleanup = cleanup || noop;
+  this.delay = options.throttle || options.debounce || 0;
+  this.debounce = options.debounce > 0;
+  this.noInitCall = !!options.noInitCall;
+  this.doExec = this.doExec.bind(this);
+}
+
+extend(DelayedExec.prototype, {
+  exec(cmd) {
+    if (this.isThrottled) {
+      this.lastCmd = cmd;
+      this.ensureExecution();
+      if (this.debounce) this.restart();
+      return;
+    }
+
+    this.isThrottled = true;
+    this.restart();
+
+    if (this.noInitCall && !this.calledOnce) {
+      this.lastCmd = cmd;
+      this.ensureExecution();
+    } else {
+      this.executor(cmd);
+      this.finilize();
+    }
+  },
+
+  doExec() {
+    this.isThrottled = false;
+    if (this.lastCmd) {
+      this.calledOnce = true;
+      this.exec(this.lastCmd);
+      this.lastCmd = null;
+    } else {
+      this.cleanup();
+      this.finilize();
+    }
+  },
+
+  ensureExecution() {
+    if (!this.execution) {
+      this.execution = new Promise(r => this.finish = r);
+    }
+  },
+
+  finilize() {
+    this.finish();
+    this.execution = null;
+    this.finish = noop;
+  },
+
+  cancel() {
+    clearInterval(this.timer);
+  },
+
+  restart() {
+    this.cancel();
+    this.timer = setTimeout(this.doExec, this.delay);
+  }
+});
+
+export default DelayedExec;
