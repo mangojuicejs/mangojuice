@@ -607,7 +607,7 @@ function doDelayExecCmd(proc, cmd) {
 
   let taskObj = tasksObj[DELAY_TASK];
   if (!taskObj) {
-    const executor = doExecCmd.bind(null, proc);
+    const executor = (finalCmd) => doExecCmd(proc, finalCmd);
     const cleanup = () => delete tasksObj[DELAY_TASK];
     taskObj = tasksObj[DELAY_TASK] = new DelayedExec(executor, cleanup, cmd.options);
   }
@@ -671,8 +671,6 @@ extend(Process.prototype, {
   destroy(deep) {
     delete this.model.__proc;
     this.observers = [];
-    this.throttles = {};
-    this.tasks = {};
     this.destroyed = true;
 
     stopPorts(this);
@@ -741,7 +739,7 @@ extend(Process.prototype, {
       const proc = procOf(childModel, true);
       if (proc) {
         const childFinished = proc.finished();
-        if (childFinished && childFinished !== EMPTY_FINISHED) {
+        if (childFinished !== EMPTY_FINISHED) {
           promises.push(proc.finished());
         }
       }

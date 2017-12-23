@@ -34,7 +34,7 @@ extend(DelayedExec.prototype, {
       this.ensureExecution();
     } else {
       this.executor(cmd);
-      this.finilize();
+      this.finalize();
     }
   },
 
@@ -42,11 +42,12 @@ extend(DelayedExec.prototype, {
     this.isThrottled = false;
     if (this.lastCmd) {
       this.calledOnce = true;
-      this.exec(this.lastCmd);
+      const finalCmd = this.lastCmd;
       this.lastCmd = null;
+      this.exec(finalCmd);
     } else {
       this.cleanup();
-      this.finilize();
+      this.finalize();
     }
   },
 
@@ -56,7 +57,7 @@ extend(DelayedExec.prototype, {
     }
   },
 
-  finilize() {
+  finalize() {
     this.finish();
     this.execution = null;
     this.finish = noop;
@@ -64,10 +65,12 @@ extend(DelayedExec.prototype, {
 
   cancel() {
     clearInterval(this.timer);
+    this.finalize();
+    this.cleanup();
   },
 
   restart() {
-    this.cancel();
+    clearInterval(this.timer);
     this.timer = setTimeout(this.doExec, this.delay);
   }
 });

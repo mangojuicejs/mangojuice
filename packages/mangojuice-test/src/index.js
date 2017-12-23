@@ -22,6 +22,7 @@ export function runWithTracking({ expectErrors, app, shared } = {}) {
   class TrackerLogger extends DefaultLogger {
     onCatchError(e) {
       if (!expectErrors) {
+        console.error(e);
         throw e;
       }
       errors.push(e);
