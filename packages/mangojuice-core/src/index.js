@@ -21,6 +21,8 @@ import run from './core/run/run';
 import bind from './core/run/bind';
 import hydrate from './core/run/hydrate';
 import * as utils from './core/utils';
+import * as config from './config';
+
 
 export {
   // Constants
@@ -48,5 +50,6 @@ export {
   run,
   bind,
   hydrate,
-  utils
+  utils,
+  config
 };

@@ -1,4 +1,5 @@
 import { extend, noop } from '../core/utils';
+import { ZERO_DELAY } from '../config';
 
 
 /**
@@ -11,7 +12,7 @@ function DelayedExec(executor, cleanup, options) {
   this.finish = noop;
   this.executor = executor || noop;
   this.cleanup = cleanup || noop;
-  this.delay = options.throttle || options.debounce || 0;
+  this.delay = ZERO_DELAY ? 0 : (options.throttle || options.debounce || 0);
   this.debounce = options.debounce > 0;
   this.noInitCall = !!options.noInitCall;
   this.doExec = this.doExec.bind(this);

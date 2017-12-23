@@ -84,6 +84,8 @@ declare module "mangojuice-core" {
 
   declare export var utils: any;
 
+  declare export var config: any;
+
   declare export default {|
     +LogicBase: typeof LogicBase,
     +Command: typeof Command,
@@ -100,6 +102,7 @@ declare module "mangojuice-core" {
     +run: typeof run,
     +bind: typeof bind,
     +hydrate: typeof hydrate,
-    +utils: typeof utils
+    +utils: typeof utils,
+    +config: typeof config
   |};
 }

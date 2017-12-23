@@ -1,8 +1,6 @@
 import { CANCEL } from '../../classes/TaskCall';
+import { ZERO_DELAY } from '../../config';
 
-
-// Constants
-let DELAY_LIMIT = Infinity;
 
 /**
  * Wait some time. Support cancellation in the `call`.
@@ -10,7 +8,7 @@ let DELAY_LIMIT = Infinity;
  * @return {Promise}
  */
 export function delay(ms) {
-  const actualMs = ms > DELAY_LIMIT ? DELAY_LIMIT : ms;
+  const actualMs = ZERO_DELAY ? 0 : ms;
   let timeoutId;
   const res = new Promise(resolve => {
     timeoutId = setTimeout(() => resolve(), actualMs);
@@ -18,15 +16,5 @@ export function delay(ms) {
   res[CANCEL] = () => clearTimeout(timeoutId);
   return res;
 }
-
-/**
- * Set upper delay limit so any delay will take no longer
- * than given amount of milliseconds. Useful for testing
- * and server rendering.
- * @param  {number} ms
- */
-delay.setLimit = (ms) => {
-  DELAY_LIMIT = ms;
-};
 
 export default delay;
