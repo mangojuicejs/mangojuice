@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import ReactBindCore from 'mangojuice-react-core';
+import ReactBindCore, { injectLogic } from 'mangojuice-react-core';
 
 // React interface implementation
 const reactImpl = {
@@ -14,7 +14,7 @@ reactImpl.wrappedCreateElement = createElement;
 const Mounter = ReactBindCore.ReactMounter(reactImpl);
 
 // Export react with createElement overrided
-const toExport = { Mounter, createElement };
+const toExport = { Mounter, createElement, injectLogic };
 const blacklistProps = {
   PropTypes: 1,
   createClass: 1,

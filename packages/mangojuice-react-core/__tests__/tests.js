@@ -65,7 +65,7 @@ export default (React, MounterClass, implName) => {
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
       const res = mounter.mount(app.proc, SimpleView);
 
-      expect(ChildView.__wrapperFunc.name).toEqual('ChildView');
+      expect(ChildView.__wrapperFunc.name).toEqual('Logic(ChildView)');
     });
 
     it('shuold render a statefull view of a block', async () => {
@@ -382,6 +382,46 @@ export default (React, MounterClass, implName) => {
         'AppBlock.UpdateModel',
         'AppBlock.UpdateModel'
       ]);
+    });
+
+    it('shuold not inject a logic if model prop not provided', async () => {
+      const ExternalComponent = ({ children }, { Logic }) => (
+        <div><span>{children}</span><span>{`${Logic}`}</span></div>
+      );
+      const OrgExternalComponent = ExternalComponent;
+      const SimpleView = ({ model }, { Logic }) => (
+        <span id="button" onClick={Logic.TestAction}>
+          <ExternalComponent>{model.a}</ExternalComponent>
+        </span>
+      );
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
+      const res = mounter.mount(app.proc, SimpleView);
+
+      const buttonElem = document.getElementById('button');
+      buttonElem.click();
+
+      expect(buttonElem).toBeDefined();
+      expect(buttonElem.innerHTML).toEqual('<div><span>test</span><span>undefined</span></div>');
+      expect(OrgExternalComponent).toEqual(ExternalComponent);
+    });
+
+    it('shuold provide a way to inject a logic manually', async () => {
+      const ExternalComponent = React.injectLogic(({ children }, { Logic }) => (
+        <div><span>{children}</span><span>{typeof Logic.TestAction}</span></div>
+      ));
+      const SimpleView = ({ model }, { Logic }) => (
+        <span id="button" onClick={Logic.TestAction}>
+          <ExternalComponent>{model.a}</ExternalComponent>
+        </span>
+      );
+      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
+      const res = mounter.mount(app.proc, SimpleView);
+
+      const buttonElem = document.getElementById('button');
+      buttonElem.click();
+
+      expect(buttonElem).toBeDefined();
+      expect(buttonElem.innerHTML).toEqual('<div><span>test</span><span>function</span></div>');
     });
   });
 };

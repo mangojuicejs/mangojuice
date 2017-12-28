@@ -1,7 +1,7 @@
 import Inferno from 'inferno';
 import Component from 'inferno-component';
 import originalCreateElement from 'inferno-create-element';
-import ReactBindCore from 'mangojuice-react-core';
+import ReactBindCore, { injectLogic } from 'mangojuice-react-core';
 
 // React interface implementation
 const reactImpl = {
@@ -15,6 +15,6 @@ reactImpl.wrappedCreateElement = createElement;
 const Mounter = ReactBindCore.ReactMounter(reactImpl);
 
 // Export react with createElement overrided
-const toExport = { ...Inferno, Component, createElement, Mounter };
+const toExport = { ...Inferno, Component, createElement, Mounter, injectLogic };
 module.exports = toExport;
 module.exports.default = toExport;

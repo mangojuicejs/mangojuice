@@ -1,5 +1,5 @@
 import Preact from 'preact';
-import ReactBindCore from 'mangojuice-react-core';
+import ReactBindCore, { injectLogic } from 'mangojuice-react-core';
 
 // React interface implementation
 const reactImpl = {
@@ -13,6 +13,6 @@ reactImpl.wrappedCreateElement = createElement;
 const Mounter = ReactBindCore.ReactMounter(reactImpl);
 
 // Export react with createElement overrided
-const toExport = { ...Preact, Mounter, createElement };
+const toExport = { ...Preact, Mounter, createElement, injectLogic };
 module.exports = toExport;
 module.exports.default = toExport;

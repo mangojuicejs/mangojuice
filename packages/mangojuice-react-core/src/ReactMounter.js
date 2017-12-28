@@ -1,6 +1,14 @@
 import ViewWrapperCreator from './ViewWrapper';
+import injectLogic from './injectLogic';
 
-export default reactImpl => {
+
+/**
+ * By given react implementation object create a react mounter class
+ * that should be used to mount view for a model
+ * @param  {Object} reactImpl
+ * @return {Class}
+ */
+function createReactMounter(reactImpl) {
   const ViewWrapper = ViewWrapperCreator(reactImpl);
   const { createElement, unmountComponentAtNode, render } = reactImpl;
 
@@ -15,7 +23,11 @@ export default reactImpl => {
       const nest = (model, nestView, nestProps) => {
         return this.execView(model.__proc, nestView, nestProps);
       };
-      const viewProps = { key: proc.id, View, proc, nest, props };
+      const viewProps = {
+        key: proc.id,
+        View: injectLogic(View),
+        proc, nest, props
+      };
       return createElement(ViewWrapper, viewProps);
     }
 
@@ -40,3 +52,6 @@ export default reactImpl => {
 
   return ReactMounter;
 };
+
+
+export default createReactMounter;
