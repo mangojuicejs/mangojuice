@@ -386,7 +386,7 @@ export default (React, MounterClass, implName) => {
 
     it('shuold not inject a logic if model prop not provided', async () => {
       const ExternalComponent = ({ children }, { Logic }) => (
-        <div><span>{children}</span><span>{`${Logic}`}</span></div>
+        <div><span>{children}</span></div>
       );
       const OrgExternalComponent = ExternalComponent;
       const SimpleView = ({ model }, { Logic }) => (
@@ -401,7 +401,7 @@ export default (React, MounterClass, implName) => {
       buttonElem.click();
 
       expect(buttonElem).toBeDefined();
-      expect(buttonElem.innerHTML).toEqual('<div><span>test</span><span>undefined</span></div>');
+      expect(buttonElem.innerHTML).toEqual('<div><span>test</span></div>');
       expect(OrgExternalComponent).toEqual(ExternalComponent);
     });
 
