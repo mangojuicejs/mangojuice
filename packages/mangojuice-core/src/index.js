@@ -19,6 +19,7 @@ import callTask from './core/task/callTask';
 import { CANCEL } from './classes/TaskCall';
 import run from './core/run/run';
 import bind from './core/run/bind';
+import mount from './core/run/mount';
 import hydrate from './core/run/hydrate';
 import * as utils from './core/utils';
 import * as config from './config';
@@ -49,6 +50,7 @@ export {
   callTask,
   run,
   bind,
+  mount,
   hydrate,
   utils,
   config

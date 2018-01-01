@@ -230,16 +230,16 @@ As you can see, to nest one block to another you have to nest all three parts of
 ### Multiple counter problem
 What if each item should have some specific logic, like a counter? In MJS that is not a problem. Let's create a separate Block for result item with counter logic and then use it in `SearchResults`:
 ```js
-// ResultsItem.js
+// ResultItem.js
 import React from 'mangojuice-react';
 import { cmd } from 'mangojuice-core';
 
-class ResultsItem {
+class ResultItem {
   @cmd Increment(amount) {
     return { counter: this.model.counter + amount };
   }
 };
-export const Logic = ResultsItem
+export const Logic = ResultItem
 export const createModel = (text) => ({
   counter: 0,
   text
@@ -259,18 +259,18 @@ export const View = ({ model }, { Logic }) => (
 ```js
 // SearchResults.js
 ...
-import * as ResultsItem from './ResultsItem';
+import * as ResultItem from './ResultItem';
 
 class SearchResults = {
   children() {
     return {
-      results: ResultsItem.Logic
+      results: ResultItem.Logic
     };
   }
   ...
   @cmd SetResultsList(results) {
     return {
-      results: results.map(x => ResultsItem.createModel(x)),
+      results: results.map(x => ResultItem.createModel(x)),
       loading: false
     };
   }
@@ -280,15 +280,15 @@ export const View = ({ model }) => (
   <div>
     {model.loading && <div>Loading...</div>}
     {model.error && <div>{model.error}</div>}
-    {model.results.map((x, i) => <ResultsItem.View model={x} />)}
+    {model.results.map((x, i) => <ResultItem.View model={x} />)}
   </div>
 )
 ```
-**`results: ResultsItem.Logic`** associates a logic with `results` model's field. But `results` is an array. In this case logic will be associated with each object of an array.
+**`results: ResultItem.Logic`** associates a logic with `results` model's field. But `results` is an array. In this case logic will be associated with each object of an array.
 
-**`results: results.map(x => ResultsItem.createModel(x))`** in `SetResultsList` command just creates a `ResultsItem` model for each result item.
+**`results: results.map(x => ResultItem.createModel(x))`** in `SetResultsList` command just creates a `ResultItem` model for each result item.
 
-**`<ResultsItem.View model={x} />`** in the View shows View of `ResultsItem` block for each result item.
+**`<ResultItem.View model={x} />`** in the View shows View of `ResultItem` block for each result item.
 
 As you can see, MJS understands two types of child model: object and array. If child model is an object then the Logic will be associated with this object. If an array – with each element of the array. MJS do not support primitives as child model. If child model becomes `null` then Logic for the child will be destroyed.
 

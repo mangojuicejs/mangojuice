@@ -80,6 +80,8 @@ declare module "mangojuice-core" {
 
   declare export function bind(block: BlockType, opts?: Object): any;
 
+  declare export function mount(mounter: any, blockRes: any, ...otherBlocks: Array<any>): any;
+
   declare export function hydrate(block: BlockType, model: Object): any;
 
   declare export var utils: any;
@@ -101,6 +103,7 @@ declare module "mangojuice-core" {
     +observe: typeof observe,
     +run: typeof run,
     +bind: typeof bind,
+    +mount: typeof mount,
     +hydrate: typeof hydrate,
     +utils: typeof utils,
     +config: typeof config
