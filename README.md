@@ -18,6 +18,10 @@ npm install babel-plugin-transform-decorators-legacy
 ```
 MangoJuice relies on decorators, so you should add decorators transformer to your babel configuration.
 
+## Live example
+You can play with the search app explained in this README here:
+
+[![Edit multipage](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/mangojuicejs/mangojuice-example-app/tree/master/)
 
 ## Quick start
 MangoJuice (MJS) consists of three main parts:
