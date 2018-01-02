@@ -2,7 +2,7 @@ import { noop, maybeForEach } from '../utils';
 import createCmd from '../cmd/cmd';
 
 // Constants
-const UPPERCASE_REGEX = /[A-Z]/;
+const UPPERCASE_REGEX = /_?[A-Z]/;
 
 /**
  * By given logic class go through prototypes chain and
