@@ -76,6 +76,8 @@ declare module "mangojuice-core" {
 
   declare export function observe(model: Object, handler: Function): void;
 
+  declare export function handle(model: Object, handler: Function): void;
+
   declare export function run(block: BlockType, opts?: Object): any;
 
   declare export function bind(block: BlockType, opts?: Object): any;
@@ -101,6 +103,9 @@ declare module "mangojuice-core" {
     +child: typeof child,
     +depends: typeof depends,
     +observe: typeof observe,
+    +handle: typeof handle,
+    +handleAfter: typeof handle,
+    +handleBefore: typeof handle,
     +run: typeof run,
     +bind: typeof bind,
     +mount: typeof mount,

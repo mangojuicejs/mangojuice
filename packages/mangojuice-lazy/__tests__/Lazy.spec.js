@@ -243,7 +243,7 @@ describe('Lazy block loading', () => {
         children() {
           return { child: child(LazyBlock.Logic) };
         }
-        hub(cmd) {
+        hubBefore(cmd) {
           if (cmd.is(logicOf(this.model.child).SetField)) {
             handled(cmd);
             return this.HandleChild;

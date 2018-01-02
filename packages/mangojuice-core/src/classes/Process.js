@@ -72,20 +72,15 @@ function prepareConfig(proc) {
   const logic = new logicClass();
   proc.logic = logic;
 
-  if (!logic.hubBefore && logic.hub) {
-    logic.hubBefore = logic.hub;
+  if (!logic.hubAfter && logic.hub) {
+    logic.hubAfter = logic.hub;
   }
 
   let config = { children: EMPTY_OBJECT, childrenKeys: EMPTY_ARRAY, meta: {} };
-  config = (logic.config && logic.config(...configArgs)) || {};
+  config = (logic.config && logic.config(...configArgs)) || config;
   config.meta = config.meta || {};
   logic.meta = config.meta;
   proc.config = config;
-
-  if (logic.children) {
-    config.children = logic.children() || {};
-    config.childrenKeys = Object.keys(config.children);
-  }
 }
 
 /**
@@ -124,9 +119,14 @@ function bindChild(proc, childModel, fieldName) {
  * @param  {Process} proc
  */
 function bindChildren(proc) {
-  forEachChildren(proc, proc.model, (childModel, fieldName) => {
-    bindChild(proc, childModel, fieldName);
-  });
+  const { logic, config } = proc;
+  if (logic.children) {
+    config.children = logic.children() || {};
+    config.childrenKeys = Object.keys(config.children);
+  }
+
+  const iterateChildren = (model, field) => bindChild(proc, model, field);
+  forEachChildren(proc, proc.model, iterateChildren);
 }
 
 /**
@@ -155,16 +155,12 @@ function bindComputed(proc) {
   stopComputedObservers(proc);
 
   if (logic.computed) {
-    const ownComputedFields = safeExecFunction(logger, () =>
-      logic.computed()
-    );
+    const safeExecComputed = () => logic.computed();
+    const ownComputedFields = safeExecFunction(logger, safeExecComputed);
+
     if (ownComputedFields) {
-      const computedFieldBinder = k =>
-        bindComputedField(proc, k, ownComputedFields[k]);
-      computedFields = maybeMap(
-        Object.keys(ownComputedFields),
-        computedFieldBinder
-      );
+      const fieldBinder = (k) => bindComputedField(proc, k, ownComputedFields[k]);
+      computedFields = maybeMap(Object.keys(ownComputedFields), fieldBinder);
     }
   }
 
@@ -185,14 +181,17 @@ function bindComputedField(proc, fieldName, computeVal) {
   if (is.func(computeVal)) {
     get = memoize(computeVal);
   } else if (is.object(computeVal)) {
-    get = memoize(() => computeVal.computeFn(...computeVal.deps));
+    const computeWithDeps = () => computeVal.computeFn(...computeVal.deps)
+    get = memoize(computeWithDeps);
+
     const updateHandler = () => {
       if (get.computed()) {
         get.reset();
         runAllObservers(proc);
       }
     };
-    get.observers = maybeMap(computeVal.deps, m => observe(m, updateHandler));
+    const observeDependency = (m) => observe(m, updateHandler);
+    get.observers = maybeMap(computeVal.deps, observeDependency);
   }
 
   Object.defineProperty(proc.model, fieldName, {
@@ -203,47 +202,6 @@ function bindComputedField(proc, fieldName, computeVal) {
   });
 
   return get;
-}
-
-/**
- * Get proc attached to given model, find root proc
- * in the tree and add new parent proc to the root,
- * so given proc will become a new root in the tree
- * @param  {Object} model
- * @param  {Process} newRoot
- */
-function bindShared(proc, sharedModel) {
-  // Check that proc of model exists
-  const modelProc = procOf(sharedModel, true);
-  if (!modelProc) return;
-
-  // Update existing binding or create a new one
-  if (proc.sharedBinding) {
-    proc.sharedBinding.logic = proc.logic;
-    return;
-  }
-
-  // Actually add a new root with only some parms
-  // to work with `handleCommand` function in Process
-  const newRoot = {
-    parent: null,
-    logic: proc.logic,
-    exec: proc.exec
-  };
-
-  // Check that proc of the model is from different tree
-  const rootProc = findRootProc(modelProc);
-  const rootOfNewProc = findRootProc(proc);
-  if (rootProc === rootOfNewProc) return;
-
-  // Add new root to shared block
-  rootProc.parent = newRoot;
-  const removeTreeNode = () => (rootProc.parent = newRoot.parent);
-  proc.destroyPromise.then(removeTreeNode);
-  proc.sharedBinding = newRoot;
-
-  // Resuse app context from shared block
-  proc.context = modelProc.context;
 }
 
 /**
@@ -263,8 +221,6 @@ function bindModel(proc, model) {
     enumerable: false,
     configurable: true
   });
-
-  bindShared(proc, sharedModel);
 }
 
 /**
@@ -304,9 +260,8 @@ function runPorts(proc) {
 function runInitCommands(proc) {
   const { config: { initCommands }, exec } = proc;
   if (initCommands) {
-    maybeForEach(initCommands, function initCmdIterator(cmd) {
-      exec(cmd);
-    });
+    const initCmdIterator = (cmd) => exec(cmd);
+    maybeForEach(initCommands, initCmdIterator);
   }
 }
 
@@ -318,9 +273,8 @@ function runInitCommands(proc) {
  * @return {Promise}
  */
 function runAllObservers(proc) {
-  maybeForEach(proc.observers, function observersIterator(obs) {
-    safeExecFunction(proc.logger, obs);
-  });
+  const observersIterator = (obs) => obs();
+  maybeForEach(proc.observers, observersIterator);
 }
 
 /**
@@ -443,31 +397,6 @@ function execTask(proc, taskObj, cmd) {
 }
 
 /**
- * Compare model with update object and returns true
- * if update object do not have anything new.
- * @param  {Object}  model
- * @param  {Object}  update
- * @return {Boolean}
- */
-function isShallowEqual(model, update) {
-  for (let key in update) {
-    if (is.array(model[key]) && is.array(update[key])) {
-      if (model[key].length !== update[key].length) {
-        return false;
-      }
-      for (let i = 0; i < model[key].length; i++) {
-        if (model[key][i] !== update[key][i]) {
-          return false;
-        }
-      }
-    } else if (model[key] !== update[key]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/**
  * Update the binded model with update object passed as an argument.
  * Returns true when model was changed, otherwise returns false.
  * Also while updating process destryoy/create processes for
@@ -477,9 +406,7 @@ function isShallowEqual(model, update) {
  * @return {Boolean}
  */
 function updateModel(proc, updateObj) {
-  if (!updateObj || isShallowEqual(proc.model, updateObj)) {
-    return false;
-  }
+  if (!updateObj) return false;
 
   const tick = nextId();
   const updateKeys = Object.keys(updateObj);
@@ -530,20 +457,21 @@ function updateModel(proc, updateObj) {
 function handleCommand(proc, cmd, isAfter) {
   if (!cmd.handlable) return;
   const { logger } = proc;
-  const type = isAfter ? 'hubAfter' : 'hubBefore';
+  const logicFnName = isAfter ? 'hubAfter' : 'hubBefore';
+  const handlersArr = isAfter ? proc.handlersAfter : proc.handlersBefore;
   logger.onStartHandling(cmd, isAfter);
 
   // Get all commands from all defined hubs
   const cmds = mapParents(proc, function maybeExecHub(parnetProc) {
-    if (parnetProc.logic[type]) {
-      return safeExecFunction(logger, function safeExecHub() {
-        return parnetProc.logic[type](cmd);
-      });
+    if (parnetProc.logic[logicFnName]) {
+      const safeExecHub = () => parnetProc.logic[logicFnName](cmd);
+      return safeExecFunction(logger, safeExecHub);
     }
   });
 
   // Exec all commands in defined order
   deepForEach(cmds, c => proc.exec(c));
+  maybeForEach(handlersArr, handler => handler(cmd));
   logger.onEndHandling(cmd, isAfter);
 }
 
@@ -559,7 +487,7 @@ function handleCommand(proc, cmd, isAfter) {
 function doExecCmd(proc, rawCmd) {
   const { logger, exec } = proc;
   const cmd = !rawCmd.logic ? rawCmd.bind(proc.logic) : rawCmd;
-  let modelUpdated = null;
+  let modelUpdated = false;
 
   // Prepare and run before handlers
   incExecCounter();
@@ -588,7 +516,6 @@ function doExecCmd(proc, rawCmd) {
   // Run after handlers
   logger.onExecuted(cmd, result);
   handleCommand(proc, cmd, true);
-
   logger.onEndExec(cmd, result);
   decExecCounter();
 }
@@ -632,6 +559,8 @@ export function Process(opts) {
   this.destroyPromise = new Promise(r => (this.destroyResolve = r));
   this.tasks = {};
   this.observers = [];
+  this.handlersAfter = [];
+  this.handlersBefore = [];
   this.exec = this.exec.bind(this);
 }
 
@@ -671,6 +600,8 @@ extend(Process.prototype, {
   destroy(deep) {
     delete this.model.__proc;
     this.observers = [];
+    this.handlersBefore = [];
+    this.handlersAfter = [];
     this.destroyed = true;
 
     stopPorts(this);
@@ -729,7 +660,7 @@ extend(Process.prototype, {
     for (let taskId in this.tasks) {
       for (let execId in this.tasks[taskId]) {
         const execution = this.tasks[taskId][execId].execution;
-        if (execution) {
+        if (is.promise(execution)) {
           promises.push(execution);
         }
       }
@@ -740,7 +671,7 @@ extend(Process.prototype, {
       if (proc) {
         const childFinished = proc.finished();
         if (childFinished !== EMPTY_FINISHED) {
-          promises.push(proc.finished());
+          promises.push(childFinished);
         }
       }
     });

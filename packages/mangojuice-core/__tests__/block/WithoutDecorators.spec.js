@@ -46,7 +46,7 @@ describe('Without decorators usage', () => {
             b_2: BlockB.Logic
           };
         }
-        hub(cmd) {
+        hubBefore(cmd) {
           if (cmd.is(logicOf(this.model.b_1).FromInitOneCmd)) {
             return this.HandleB_1;
           } else if (cmd.is(logicOf(this.model.b_2).FromInitOneCmd)) {
