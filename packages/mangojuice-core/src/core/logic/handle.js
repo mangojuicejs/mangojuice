@@ -12,10 +12,10 @@ import { extend } from '../utils';
  * @param  {Object} options
  * @return {Function}
  */
-function handle(type, model, handler) {
-  return observe(model, handler, { type })
+function handleCmd(type, model, handler) {
+  return observe(model, handler, { type });
 }
 
-export const handleBefore = handle.bind(null, 'handlersBefore');
-export const handleAfter = handle.bind(null, 'handlersAfter');
+export const handleBefore = handleCmd.bind(null, 'handlersBefore');
+export const handleAfter = handleCmd.bind(null, 'handlersAfter');
 export const handle = handleAfter;

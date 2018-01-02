@@ -145,7 +145,7 @@ describe('Nesting', () => {
             recursive: child(RecursiveBlock.Logic)
           };
         }
-        hub(cmd) {
+        hubBefore(cmd) {
           if (cmd.is(this.Increment, this.model.recursive)) {
             return this.Increment('a', cmd.args[1]);
           }

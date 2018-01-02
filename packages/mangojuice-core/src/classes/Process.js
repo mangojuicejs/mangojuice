@@ -559,7 +559,8 @@ export function Process(opts) {
   this.destroyPromise = new Promise(r => (this.destroyResolve = r));
   this.tasks = {};
   this.observers = [];
-  this.handlers = [];
+  this.handlersAfter = [];
+  this.handlersBefore = [];
   this.exec = this.exec.bind(this);
 }
 
@@ -572,8 +573,8 @@ extend(Process.prototype, {
   bind(model) {
     prepareConfig(this);
     bindModel(this, model);
-    bindComputed(this);
     bindChildren(this);
+    bindComputed(this);
   },
 
   /**
