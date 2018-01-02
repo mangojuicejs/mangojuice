@@ -729,7 +729,7 @@ extend(Process.prototype, {
     for (let taskId in this.tasks) {
       for (let execId in this.tasks[taskId]) {
         const execution = this.tasks[taskId][execId].execution;
-        if (execution) {
+        if (is.promise(execution)) {
           promises.push(execution);
         }
       }
@@ -740,7 +740,7 @@ extend(Process.prototype, {
       if (proc) {
         const childFinished = proc.finished();
         if (childFinished !== EMPTY_FINISHED) {
-          promises.push(proc.finished());
+          promises.push(childFinished);
         }
       }
     });
