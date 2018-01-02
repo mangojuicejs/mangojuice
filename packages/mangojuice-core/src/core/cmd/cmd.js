@@ -7,6 +7,8 @@ import ensureCommand from './ensureCommand';
 /**
  * Creates a command object with given name and automatically
  * binded logic instance.
+ *
+ * @private
  * @param  {string}   name
  * @param  {object}   logic
  * @param  {bool}     nonhandlable
@@ -33,6 +35,8 @@ export function createCommandFactory(name, logic, nonhandlable, func, options) {
  * Creates a object field descriptor with given options and
  * all data passed to class method decorator – prototype, method name,
  * etc.
+ *
+ * @private
  * @param  {object} options
  * @param  {object} obj
  * @param  {string} methodName

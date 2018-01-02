@@ -6,9 +6,11 @@ import { nextId, fastForEach, safeExecFunction } from '../utils';
 let observersToNotify = {};
 let execCounter = 0;
 
+
 /**
  * Queue run of model observer. The observer
  * will be executed ASAP afther the end of the stack.
+ * @private
  * @param  {Process} proc
  * @return {Promise}
  */
@@ -19,6 +21,7 @@ function enqueueNotifyObserver(observer) {
 /**
  * Go through all queued observers and run them. Empty
  * the queue before that.
+ * @private
  * @return {Promise}
  */
 function notifyQueuedObservers() {
@@ -32,6 +35,7 @@ function notifyQueuedObservers() {
 
 /**
  * Increase processing counter
+ * @private
  */
 export function incExecCounter() {
   execCounter += 1;
@@ -40,6 +44,7 @@ export function incExecCounter() {
 /**
  * Decrease processing counter. When hits zero – run all
  * pending observers
+ * @private
  */
 export function decExecCounter() {
   execCounter -= 1;

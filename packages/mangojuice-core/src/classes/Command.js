@@ -10,6 +10,8 @@ const EMPTY_OBJECT = {};
  * The command instance is immutable, so any function that
  * makes some change in the command will produce a new command
  * instead of changing the original one.
+ *
+ * @class  Command
  * @param {Function} func
  * @param {Array<any>} args
  * @param {String} name [description]
@@ -24,7 +26,7 @@ function Command(func, args, name, nonhandlable, options) {
   this.options = options || EMPTY_OBJECT;
 }
 
-extend(Command.prototype, {
+extend(Command.prototype, /** @lends Command.prototype */{
   /**
    * Execute function incapsulated to the command in scope
    * of logic object.

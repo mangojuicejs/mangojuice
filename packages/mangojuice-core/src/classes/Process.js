@@ -35,6 +35,7 @@ const DELAY_TASK = 'DELAY';
  * @param  {Process} proc
  * @param  {string} type
  * @param  {function} iterator
+ * @private
  */
 function mapParents(proc, iterator) {
   let currParent = proc.parent;
@@ -51,6 +52,7 @@ function mapParents(proc, iterator) {
  * in the tree without parents (tree root)
  * @param  {Process} proc
  * @return {Process}
+ * @private
  */
 function findRootProc(proc) {
   let currParent = proc;
@@ -66,6 +68,7 @@ function findRootProc(proc) {
 /**
  * Run `children` and `config` methods of the logic object
  * and create `config` object in the Process based on the result.
+ * @private
  */
 function prepareConfig(proc) {
   const { logicClass, configArgs } = proc;
@@ -92,6 +95,7 @@ function prepareConfig(proc) {
  * @param  {Object} childModel
  * @param  {String} fieldName
  * @return {Boolean}
+ * @private
  */
 function bindChild(proc, childModel, fieldName) {
   if (childModel && !procOf(childModel, true)) {
@@ -117,6 +121,7 @@ function bindChild(proc, childModel, fieldName) {
  * Go throught all children fields and bind each child
  * model to appropreate logic
  * @param  {Process} proc
+ * @private
  */
 function bindChildren(proc) {
   const { logic, config } = proc;
@@ -132,6 +137,7 @@ function bindChildren(proc) {
 /**
  * Stop all running observers for all existing computed fields
  * @param  {Process} proc
+ * @private
  */
 function stopComputedObservers(proc) {
   const { computedFields } = proc;
@@ -146,6 +152,7 @@ function stopComputedObservers(proc) {
  * Provide a way to define computed field with object block models
  * dependencies. So the field will be invalidated and re-computed
  * when one of dependent models will be changed.
+ * @private
  */
 function bindComputed(proc) {
   if (proc.destroyed) return;
@@ -174,6 +181,7 @@ function bindComputed(proc) {
  * @param  {string} fieldName
  * @param  {function|DependsDef} computeVal
  * @return {Memoize}
+ * @private
  */
 function bindComputedField(proc, fieldName, computeVal) {
   let get = noop;
@@ -209,6 +217,7 @@ function bindComputedField(proc, fieldName, computeVal) {
  * hidden `__proc` field in the model. Also set model and shared model,
  * @param  {Process} proc
  * @param  {Object} model
+ * @private
  */
 function bindModel(proc, model) {
   const { logic, sharedModel } = proc;
@@ -230,6 +239,7 @@ function bindModel(proc, model) {
  * will be finished.
  * @param  {Process} proc
  * @return {Promise}
+ * @private
  */
 function runChildren(proc) {
   const childRunner = childModel => procOf(childModel).run();
@@ -242,6 +252,7 @@ function runChildren(proc) {
  * If `port` returns not a Promise then it will be resolved instantly.
  * @param  {Process} proc
  * @return {Promise}
+ * @private
  */
 function runPorts(proc) {
   const { logic, logger, destroyPromise, exec } = proc;
@@ -256,6 +267,7 @@ function runPorts(proc) {
  * all init commands will be fully executed.
  * @param  {Process} proc
  * @return {Promise}
+ * @private
  */
 function runInitCommands(proc) {
   const { config: { initCommands }, exec } = proc;
@@ -271,6 +283,7 @@ function runInitCommands(proc) {
  * is also resolved
  * @param  {Process} proc
  * @return {Promise}
+ * @private
  */
 function runAllObservers(proc) {
   const observersIterator = (obs) => obs();
@@ -281,6 +294,7 @@ function runAllObservers(proc) {
  * Resolve destroy promise which will notify `port` that it should
  * cleanup and stop execution.
  * @param  {Process} proc
+ * @private
  */
 function stopPorts(proc) {
   if (proc.destroyResolve) {
@@ -301,6 +315,7 @@ function stopPorts(proc) {
  * @param  {Function} iterator
  * @param  {Array} iterKeys
  * @return {Promise}
+ * @private
  */
 function forEachChildren(proc, model, iterator, iterKeys) {
   const { config } = proc;
@@ -320,6 +335,7 @@ function forEachChildren(proc, model, iterator, iterKeys) {
 /**
  * Cancel all executing tasks of the process
  * @param  {Process} proc
+ * @private
  */
 function cancelAllTasks(proc) {
   for (const taskId in proc.tasks) {
@@ -335,6 +351,7 @@ function cancelAllTasks(proc) {
  * @param  {Process} proc
  * @param  {Task} taskObj
  * @return {Promise}
+ * @private
  */
 function execTask(proc, taskObj, cmd) {
   const execId = nextId();
@@ -404,6 +421,7 @@ function execTask(proc, taskObj, cmd) {
  *
  * @param  {?Object} updateObj
  * @return {Boolean}
+ * @private
  */
 function updateModel(proc, updateObj) {
   if (!updateObj) return false;
@@ -453,6 +471,7 @@ function updateModel(proc, updateObj) {
  * @param  {Object} model
  * @param  {Object} cmd
  * @return {Promise}
+ * @private
  */
 function handleCommand(proc, cmd, isAfter) {
   if (!cmd.handlable) return;
@@ -483,6 +502,7 @@ function handleCommand(proc, cmd, isAfter) {
  * will be fully executed (command + all handlers).
  *
  * @param  {Object} cmd
+ * @private
  */
 function doExecCmd(proc, rawCmd) {
   const { logger, exec } = proc;
@@ -526,6 +546,7 @@ function doExecCmd(proc, rawCmd) {
  * command and when delay it, etc.
  * @param  {Process} proc
  * @param  {Command} cmd
+ * @private
  */
 function doDelayExecCmd(proc, cmd) {
   const { tasks } = proc;
@@ -545,6 +566,7 @@ function doDelayExecCmd(proc, cmd) {
 
 /**
  * Main logic execution class
+ * @class Process
  */
 export function Process(opts) {
   const { parent, sharedModel, logger, logic, configArgs, context } = opts;
@@ -564,7 +586,7 @@ export function Process(opts) {
   this.exec = this.exec.bind(this);
 }
 
-extend(Process.prototype, {
+extend(Process.prototype, /** @lends Process.prototype */{
   /**
    * Bind given model to a process instance and appropreate
    * logic instance.

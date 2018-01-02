@@ -3,6 +3,8 @@ import ensureCommand from '../core/cmd/ensureCommand';
 
 /**
  * Class for declaring an async task.
+ *
+ * @class Task
  * @param {function} taskFn
  * @param {function} executor
  */
@@ -11,7 +13,7 @@ export function Task(taskFn, executor) {
   this.executor = executor;
 }
 
-extend(Task.prototype, {
+extend(Task.prototype, /** @lends Task.prototype */{
   /**
    * Set a notify handler command. Will be executed
    * if the task will call `this.notify` inside a task

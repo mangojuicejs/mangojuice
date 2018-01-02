@@ -6,6 +6,7 @@ import ensureCommand from './ensureCommand';
  * Cancel task with given id in the process if exists
  * @param  {Process} proc
  * @param  {nubmer} id
+ * @private
  */
 export function cancelTask(proc, taskId) {
   const taskProcs = proc.tasks[taskId];

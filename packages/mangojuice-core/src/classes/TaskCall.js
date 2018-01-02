@@ -16,9 +16,12 @@ export const CANCEL = sym('CANCEL_PROMISE');
  * Main task executor class, which set as a context for a
  * task function. Provides a way to execute a task, cancel
  * the task and wait for all subtasks to be finished.
+ *
+ * @class TaskCall
  * @param {Object|TaskCall}   parent
  * @param {Function}          fn
  * @param {Array<any>}        args
+ * @private
  */
 function TaskCall(parent, fn, args) {
   this.execution = null;
@@ -36,7 +39,7 @@ function TaskCall(parent, fn, args) {
   }
 }
 
-extend(TaskCall.prototype, {
+extend(TaskCall.prototype, /** @lends TaskCall.prototype */{
   /**
    * Execute a task and handle the response. Returns
    * an array which will be executed when the task and all

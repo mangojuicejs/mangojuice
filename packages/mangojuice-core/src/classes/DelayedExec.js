@@ -7,6 +7,8 @@ import { ZERO_DELAY } from '../config';
  * delayed (throttle/debounce) command execution.
  * Supports to run in "debounce" and "throttle" mode,
  * with instant init call or without.
+ *
+ * @private
  */
 function DelayedExec(executor, cleanup, options) {
   this.finish = noop;

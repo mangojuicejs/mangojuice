@@ -5,6 +5,8 @@ import { extend, noop } from '../core/utils';
  * Given array shuold contain models, binded to some
  * logec. They will be passed to compute function. Also
  * they will be used to track changed and re-run compute
+ *
+ * @class DependsDef
  * @param {Array<Object>} deps
  */
 function DependsDef(deps) {
@@ -12,7 +14,7 @@ function DependsDef(deps) {
   this.deps = deps;
 }
 
-extend(DependsDef.prototype, {
+extend(DependsDef.prototype, /** @lends DependsDef.prototype */{
   /**
    * Create new instance of dependency object and set compute
    * function to it. Works this way to be able to override computed

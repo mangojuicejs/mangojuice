@@ -2,7 +2,6 @@ import Process from './classes/Process';
 import Command from './classes/Command';
 import LogicBase from './classes/LogicBase';
 import DefaultLogger from './classes/DefaultLogger';
-import SimpleStackLogger from './classes/SimpleStackLogger';
 import cmd from './core/cmd/cmd';
 import cancel from './core/cmd/cancel';
 import defineCommand from './core/cmd/defineCommand';
@@ -34,7 +33,6 @@ export {
   Command,
   LogicBase,
   DefaultLogger,
-  SimpleStackLogger,
   // Core
   cmd,
   cancel,

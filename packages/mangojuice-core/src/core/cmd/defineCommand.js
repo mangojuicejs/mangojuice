@@ -4,6 +4,7 @@
  * name of the fuction which should be converted to a command factory
  * and the decorator function. The decorator function soulc be `cmd`
  * or return from `debounce` or `throttle`.
+ *
  * @param  {Object}    proto
  * @param  {string}    name
  * @param  {function}  decorator
