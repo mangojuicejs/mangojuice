@@ -1,4 +1,4 @@
-import { cmd, logicOf, depends, child, task, delay } from 'mangojuice-core';
+import { cmd, logicOf, depends, child, task, delay, handleBefore } from 'mangojuice-core';
 import { runWithTracking } from 'mangojuice-test';
 
 describe('Init commands execution', () => {
@@ -56,11 +56,9 @@ describe('Init commands execution', () => {
           return this.HandleB_1;
         } else if (cmd.is(logicOf(this.model.b_2).FromInitOneCmd)) {
           return this.HandleB_2;
-        } else if (cmd.is('SharedBlock.FromInitOneCmd')) {
-          return this.FromSubCmd;
         }
       }
-      hubAfter(cmd) {
+      hub(cmd) {
         if (cmd.is(BlockB.Logic.prototype.FromInitOneCmd, this.model.b_1)) {
           return this.HandleB_11;
         } else if (
@@ -70,6 +68,11 @@ describe('Init commands execution', () => {
         }
       }
       port(exec, destroyed) {
+        destroyed.then(handleBefore(this.shared, (cmd) => {
+          if (cmd.is('SharedBlock.FromPortAsync_Success')) {
+            exec(this.FromSubCmd);
+          }
+        }));
         exec(this.FromSubCmd);
         exec(this.FromPortCmd);
         exec(this.FromPortAsync());
@@ -115,7 +118,6 @@ describe('Init commands execution', () => {
     expect(commandNames).toEqual([
       'SharedBlock.FromPortAsync',
       'SharedBlock.FromInitOneCmd',
-      'BlockA.FromSubCmd',
       'BlockB.FromInitOneCmd',
       'BlockA.HandleB_1',
       'BlockA.HandleB_11',
@@ -130,6 +132,7 @@ describe('Init commands execution', () => {
       'BlockA.FromInitOneCmd',
       'BlockA.FromInitTwoCmd',
       'SharedBlock.FromPortAsync_Success',
+      'BlockA.FromSubCmd',
       'BlockA.FromPortAsync_Success'
     ]);
   });
