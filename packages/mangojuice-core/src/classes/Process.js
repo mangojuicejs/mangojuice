@@ -155,15 +155,15 @@ function bindComputed(proc) {
   stopComputedObservers(proc);
 
   if (logic.computed) {
-    const ownComputedFields = safeExecFunction(logger, () =>
-      logic.computed()
-    );
+    const ownComputedFields = safeExecFunction(logger, function safeExecComputed() {
+      return logic.computed();
+    });
     if (ownComputedFields) {
-      const computedFieldBinder = k =>
-        bindComputedField(proc, k, ownComputedFields[k]);
       computedFields = maybeMap(
         Object.keys(ownComputedFields),
-        computedFieldBinder
+        function computedFieldBinder(k) {
+          return bindComputedField(proc, k, ownComputedFields[k]);
+        }
       );
     }
   }
@@ -443,31 +443,6 @@ function execTask(proc, taskObj, cmd) {
 }
 
 /**
- * Compare model with update object and returns true
- * if update object do not have anything new.
- * @param  {Object}  model
- * @param  {Object}  update
- * @return {Boolean}
- */
-function isShallowEqual(model, update) {
-  for (let key in update) {
-    if (is.array(model[key]) && is.array(update[key])) {
-      if (model[key].length !== update[key].length) {
-        return false;
-      }
-      for (let i = 0; i < model[key].length; i++) {
-        if (model[key][i] !== update[key][i]) {
-          return false;
-        }
-      }
-    } else if (model[key] !== update[key]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/**
  * Update the binded model with update object passed as an argument.
  * Returns true when model was changed, otherwise returns false.
  * Also while updating process destryoy/create processes for
@@ -477,9 +452,7 @@ function isShallowEqual(model, update) {
  * @return {Boolean}
  */
 function updateModel(proc, updateObj) {
-  if (!updateObj || isShallowEqual(proc.model, updateObj)) {
-    return false;
-  }
+  if (!updateObj) return false;
 
   const tick = nextId();
   const updateKeys = Object.keys(updateObj);
