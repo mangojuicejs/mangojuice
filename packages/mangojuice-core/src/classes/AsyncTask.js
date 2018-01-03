@@ -17,13 +17,13 @@ export const CANCEL = sym('CANCEL_PROMISE');
  * task function. Provides a way to execute a task, cancel
  * the task and wait for all subtasks to be finished.
  *
- * @class TaskCall
- * @param {Object|TaskCall}   parent
+ * @class AsyncTask
+ * @param {Object|AsyncTask}   parent
  * @param {Function}          fn
  * @param {Array<any>}        args
  * @private
  */
-function TaskCall(parent, fn, args) {
+function AsyncTask(parent, fn, args) {
   this.execution = null;
   this.parent = parent;
   this.subtasks = [];
@@ -39,7 +39,7 @@ function TaskCall(parent, fn, args) {
   }
 }
 
-extend(TaskCall.prototype, /** @lends TaskCall.prototype */{
+extend(AsyncTask.prototype, /** @lends AsyncTask.prototype */{
   /**
    * Execute a task and handle the response. Returns
    * an array which will be executed when the task and all
@@ -107,7 +107,7 @@ extend(TaskCall.prototype, /** @lends TaskCall.prototype */{
    * @return {Promise}
    */
   call(fn, ...args) {
-    const task = new TaskCall(this, fn, args);
+    const task = new AsyncTask(this, fn, args);
     const execPromise = task.exec()
     this.subtasks.push(execPromise);
     execPromise.task = task;
@@ -144,4 +144,4 @@ extend(TaskCall.prototype, /** @lends TaskCall.prototype */{
   }
 });
 
-export default TaskCall;
+export default AsyncTask;

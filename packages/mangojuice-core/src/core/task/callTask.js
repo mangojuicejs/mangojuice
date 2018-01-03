@@ -1,4 +1,4 @@
-import TaskCall from '../../classes/TaskCall';
+import AsyncTask from '../../classes/AsyncTask';
 
 
 /**
@@ -15,7 +15,7 @@ import TaskCall from '../../classes/TaskCall';
  * @return {Promise}
  */
 function call(fn, ...args) {
-  return new TaskCall(this, fn, args);
+  return new AsyncTask(this, fn, args);
 }
 
 export default call;

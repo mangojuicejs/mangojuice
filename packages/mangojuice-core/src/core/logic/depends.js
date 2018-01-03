@@ -1,4 +1,4 @@
-import DependsDef from '../../classes/DependsDef';
+import ComputedField from '../../classes/ComputedField';
 
 /**
  * Returns an object which describes compute function
@@ -7,7 +7,7 @@ import DependsDef from '../../classes/DependsDef';
  * @return {object}
  */
 export function depends(...deps) {
-  return new DependsDef(deps);
+  return new ComputedField(deps);
 }
 
 export default depends;

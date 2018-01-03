@@ -16,7 +16,7 @@ import decorateLogic from './core/logic/decorateLogic';
 import delay from './core/task/delay';
 import task from './core/task/task';
 import callTask from './core/task/callTask';
-import { CANCEL } from './classes/TaskCall';
+import { CANCEL } from './classes/AsyncTask';
 import run from './core/run/run';
 import bind from './core/run/bind';
 import mount from './core/run/mount';

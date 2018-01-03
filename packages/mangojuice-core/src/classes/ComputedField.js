@@ -6,15 +6,15 @@ import { extend, noop } from '../core/utils';
  * logec. They will be passed to compute function. Also
  * they will be used to track changed and re-run compute
  *
- * @class DependsDef
+ * @class ComputedField
  * @param {Array<Object>} deps
  */
-function DependsDef(deps) {
+function ComputedField(deps) {
   this.computeFn = noop;
   this.deps = deps;
 }
 
-extend(DependsDef.prototype, /** @lends DependsDef.prototype */{
+extend(ComputedField.prototype, /** @lends ComputedField.prototype */{
   /**
    * Create new instance of dependency object and set compute
    * function to it. Works this way to be able to override computed
@@ -36,13 +36,13 @@ extend(DependsDef.prototype, /** @lends DependsDef.prototype */{
    * ```
    *
    * @param  {function} func
-   * @return {DependsDef}
+   * @return {ComputedField}
    */
   compute(func) {
-    const nextDepends = new DependsDef(this.deps);
+    const nextDepends = new ComputedField(this.deps);
     nextDepends.computeFn = func;
     return nextDepends;
   }
 });
 
-export default DependsDef;
+export default ComputedField;

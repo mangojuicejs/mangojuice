@@ -1,4 +1,4 @@
-import { CANCEL } from '../../classes/TaskCall';
+import { CANCEL } from '../../classes/AsyncTask';
 import { ZERO_DELAY } from '../../config';
 
 

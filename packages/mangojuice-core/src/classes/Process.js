@@ -1,6 +1,6 @@
-import Task from './Task';
+import TaskMeta from './TaskMeta';
 import Command from './Command';
-import DelayedExec from './DelayedExec';
+import ThrottleTask from './ThrottleTask';
 import DefaultLogger from './DefaultLogger';
 import ensureCommand from '../core/cmd/ensureCommand';
 import createCmd from '../core/cmd/cmd';
@@ -175,7 +175,7 @@ function bindComputed(proc) {
  * object.
  * @param  {Process} proc
  * @param  {string} fieldName
- * @param  {function|DependsDef} computeVal
+ * @param  {function|ComputedField} computeVal
  * @return {Memoize}
  * @private
  */
@@ -514,7 +514,7 @@ function doExecCmd(proc, rawCmd) {
   const safeExecCmd = () => cmd.exec();
   const result = safeExecFunction(logger, safeExecCmd, cmd);
   if (result) {
-    if (result instanceof Task) {
+    if (result instanceof TaskMeta) {
       const taskPromise = execTask(proc, result, cmd);
       taskPromise.then(exec, exec);
     } else if (result && (is.array(result) || (result.func && result.id))) {
@@ -532,7 +532,7 @@ function doExecCmd(proc, rawCmd) {
   // Run after handlers
   logger.onExecuted(cmd, result);
   handleCommand(proc, cmd, true);
-  logger.onEndExec(cmd, result);
+  logger.onEndExec(cmd);
   decExecCounter();
 }
 
@@ -553,7 +553,7 @@ function doDelayExecCmd(proc, cmd) {
   if (!taskObj) {
     const executor = (finalCmd) => doExecCmd(proc, finalCmd);
     const cleanup = () => delete tasksObj[DELAY_TASK];
-    taskObj = tasksObj[DELAY_TASK] = new DelayedExec(executor, cleanup, cmd.options);
+    taskObj = tasksObj[DELAY_TASK] = new ThrottleTask(executor, cleanup, cmd.options);
   }
 
   taskObj.exec(cmd);

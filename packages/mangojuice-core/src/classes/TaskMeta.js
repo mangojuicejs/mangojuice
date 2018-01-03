@@ -4,22 +4,22 @@ import ensureCommand from '../core/cmd/ensureCommand';
 /**
  * Class for declaring an async task.
  *
- * @class Task
+ * @class TaskMeta
  * @param {function} taskFn
  * @param {function} executor
  */
-export function Task(taskFn, executor) {
+export function TaskMeta(taskFn, executor) {
   this.task = taskFn;
   this.executor = executor;
 }
 
-extend(Task.prototype, /** @lends Task.prototype */{
+extend(TaskMeta.prototype, /** @lends TaskMeta.prototype */{
   /**
    * Set a notify handler command. Will be executed
    * if the task will call `this.notify` inside a task
    * with same arguments as passed to `this.notify`
    * @param  {Command} cmd
-   * @return {Task}
+   * @return {TaskMeta}
    */
   notify(cmd) {
     this.notifyCmd = ensureCommand(cmd);
@@ -30,7 +30,7 @@ extend(Task.prototype, /** @lends Task.prototype */{
    * Set a success handler command. Will be executed
    * with return value from the task function on success
    * @param  {Command} cmd
-   * @return {Task}
+   * @return {TaskMeta}
    */
   success(cmd) {
     this.successCmd = ensureCommand(cmd);
@@ -42,7 +42,7 @@ extend(Task.prototype, /** @lends Task.prototype */{
    * will exit with exception. The exception will be passed
    * to the fail command as first argument.
    * @param  {Command} cmd
-   * @return {Task}
+   * @return {TaskMeta}
    */
   fail(cmd) {
     this.failCmd = ensureCommand(cmd);
@@ -54,7 +54,7 @@ extend(Task.prototype, /** @lends Task.prototype */{
    * will run in parallel with other calls of the same task
    * in scope of one process (model).
    * @param  {boolean} val
-   * @return {Task}
+   * @return {TaskMeta}
    */
   multithread(val) {
     this.execEvery = is.undef(val) ? true : val;
@@ -68,7 +68,7 @@ extend(Task.prototype, /** @lends Task.prototype */{
    * `{ result, error }` also returned promise should have
    * a function `cancel` to be able to cancel the execution.
    * @param  {function} engine
-   * @return {Task}
+   * @return {TaskMeta}
    */
   engine(engine) {
     this.executor = engine;
@@ -80,7 +80,7 @@ extend(Task.prototype, /** @lends Task.prototype */{
    * starting from second argument. By default a task will receive
    * the same set of arguments as a task command.
    * @param  {...any} args
-   * @return {Task}
+   * @return {TaskMeta}
    */
   args(...args) {
     this.customArgs = args;
@@ -88,4 +88,4 @@ extend(Task.prototype, /** @lends Task.prototype */{
   }
 });
 
-export default Task;
+export default TaskMeta;
