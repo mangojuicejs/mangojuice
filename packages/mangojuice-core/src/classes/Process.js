@@ -32,10 +32,11 @@ const DELAY_TASK = 'DELAY';
  * Go from current proc to the root of the proc tree
  * and run iterator function if handler of given type
  * exists in the process instance.
+ *
+ * @private
  * @param  {Process} proc
  * @param  {string} type
  * @param  {function} iterator
- * @private
  */
 function mapParents(proc, iterator) {
   let currParent = proc.parent;
@@ -50,9 +51,10 @@ function mapParents(proc, iterator) {
 /**
  * By given Process instance find some parent process
  * in the tree without parents (tree root)
+ *
+ * @private
  * @param  {Process} proc
  * @return {Process}
- * @private
  */
 function findRootProc(proc) {
   let currParent = proc;
@@ -88,10 +90,11 @@ function prepareConfig(proc) {
  * If model already binded to some model do nothing.
  * Return true if model sucessfully binded to the process.
  * Othersise returns false
+ *
+ * @private
  * @param  {Object} childModel
  * @param  {String} fieldName
  * @return {Boolean}
- * @private
  */
 function bindChild(proc, childModel, fieldName) {
   if (childModel && !procOf(childModel, true)) {
@@ -116,8 +119,9 @@ function bindChild(proc, childModel, fieldName) {
 /**
  * Go throught all children fields and bind each child
  * model to appropreate logic
- * @param  {Process} proc
+ *
  * @private
+ * @param  {Process} proc
  */
 function bindChildren(proc) {
   const { logic, config } = proc;
@@ -132,8 +136,9 @@ function bindChildren(proc) {
 
 /**
  * Stop all running observers for all existing computed fields
- * @param  {Process} proc
+ *
  * @private
+ * @param  {Process} proc
  */
 function stopComputedObservers(proc) {
   const { computedFields } = proc;
@@ -173,11 +178,12 @@ function bindComputed(proc) {
 /**
  * Bind field in the model with given computed function or dependency
  * object.
+ *
+ * @private
  * @param  {Process} proc
  * @param  {string} fieldName
  * @param  {function|ComputedField} computeVal
  * @return {Memoize}
- * @private
  */
 function bindComputedField(proc, fieldName, computeVal) {
   let get = noop;
@@ -211,9 +217,10 @@ function bindComputedField(proc, fieldName, computeVal) {
 /**
  * Associate instance of the Process with given model by setting
  * hidden `__proc` field in the model. Also set model and shared model,
+ *
+ * @private
  * @param  {Process} proc
  * @param  {Object} model
- * @private
  */
 function bindModel(proc, model) {
   const { logic, sharedModel } = proc;
@@ -233,9 +240,10 @@ function bindModel(proc, model) {
  * and run binded process. Returns a Promise which will be
  * resolved when all inicialisation of all children logics
  * will be finished.
+ *
+ * @private
  * @param  {Process} proc
  * @return {Promise}
- * @private
  */
 function runChildren(proc) {
   const childRunner = childModel => procOf(childModel).run();
@@ -246,9 +254,10 @@ function runChildren(proc) {
  * Execute `port` method of the logic, if provided. Returns a Promise
  * which will be resolved when returend by `port` promise will be resolved.
  * If `port` returns not a Promise then it will be resolved instantly.
+ *
+ * @private
  * @param  {Process} proc
  * @return {Promise}
- * @private
  */
 function runPorts(proc) {
   const { logic, logger, destroyPromise, exec } = proc;
@@ -261,9 +270,10 @@ function runPorts(proc) {
  * Execute init commands which could be defined in `config` method
  * of the object. Returns a Promise which will be resolved when
  * all init commands will be fully executed.
+ *
+ * @private
  * @param  {Process} proc
  * @return {Promise}
- * @private
  */
 function runInitCommands(proc) {
   const { config: { initCommands }, exec } = proc;
@@ -277,9 +287,10 @@ function runInitCommands(proc) {
  * Ren all model observers and returns a Promise which will
  * be resolved when all handlers executed and returned promises
  * is also resolved
+ *
+ * @private
  * @param  {Process} proc
  * @return {Promise}
- * @private
  */
 function runAllObservers(proc) {
   const observersIterator = (obs) => obs();
@@ -289,8 +300,9 @@ function runAllObservers(proc) {
 /**
  * Resolve destroy promise which will notify `port` that it should
  * cleanup and stop execution.
- * @param  {Process} proc
+ *
  * @private
+ * @param  {Process} proc
  */
 function stopPorts(proc) {
   if (proc.destroyResolve) {
@@ -306,12 +318,13 @@ function stopPorts(proc) {
  * iterator function.
  * Returns a Promise which resolves with a list with data
  * returned by each call to iterator function.
+ *
+ * @private
  * @param  {Process} proc
  * @param  {Object} model
  * @param  {Function} iterator
  * @param  {Array} iterKeys
  * @return {Promise}
- * @private
  */
 function forEachChildren(proc, model, iterator, iterKeys) {
   const { config } = proc;
@@ -330,8 +343,9 @@ function forEachChildren(proc, model, iterator, iterKeys) {
 
 /**
  * Cancel all executing tasks of the process
- * @param  {Process} proc
+ *
  * @private
+ * @param  {Process} proc
  */
 function cancelAllTasks(proc) {
   for (const taskId in proc.tasks) {
@@ -344,10 +358,11 @@ function cancelAllTasks(proc) {
  * Returns a Promise which will be resolved when task will
  * be resolved or reject with with a command, which should
  * be executed next.
+ *
+ * @private
  * @param  {Process} proc
  * @param  {Task} taskObj
  * @return {Promise}
- * @private
  */
 function execTask(proc, taskObj, cmd) {
   const execId = nextId();
@@ -415,9 +430,9 @@ function execTask(proc, taskObj, cmd) {
  * Also while updating process destryoy/create processes for
  * removed/added models.
  *
+ * @private
  * @param  {?Object} updateObj
  * @return {Boolean}
- * @private
  */
 function updateModel(proc, updateObj) {
   if (!updateObj) return false;
@@ -464,10 +479,11 @@ function updateModel(proc, updateObj) {
  * Run all parent handler from parent processes to handle
  * executed command. Returns a promise which will be resolved
  * when all handlers will be fully executed.
+ *
+ * @private
  * @param  {Object} model
  * @param  {Object} cmd
  * @return {Promise}
- * @private
  */
 function handleCommand(proc, cmd, isAfter) {
   if (!cmd.handlable) return;
@@ -497,8 +513,8 @@ function handleCommand(proc, cmd, isAfter) {
  * Returns a promise which will be resolved when a command
  * will be fully executed (command + all handlers).
  *
- * @param  {Object} cmd
  * @private
+ * @param  {Object} cmd
  */
 function doExecCmd(proc, rawCmd) {
   const { logger, exec } = proc;
@@ -540,9 +556,10 @@ function doExecCmd(proc, rawCmd) {
 /**
  * Handle delayed command execution. Decide when to execute the
  * command and when delay it, etc.
+ *
+ * @private
  * @param  {Process} proc
  * @param  {Command} cmd
- * @private
  */
 function doDelayExecCmd(proc, cmd) {
   const { tasks } = proc;

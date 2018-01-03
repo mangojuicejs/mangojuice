@@ -3,7 +3,7 @@ import createCmd from '../cmd/cmd';
 
 
 // Constants
-const UPPERCASE_REGEX = /_?[A-Z]/;
+const UPPERCASE_REGEX = /^_?[A-Z]/;
 
 /**
  * By given logic class go through prototypes chain and

@@ -17,11 +17,11 @@ export const CANCEL = sym('CANCEL_PROMISE');
  * task function. Provides a way to execute a task, cancel
  * the task and wait for all subtasks to be finished.
  *
+ * @private
  * @class AsyncTask
  * @param {Object|AsyncTask}   parent
  * @param {Function}          fn
  * @param {Array<any>}        args
- * @private
  */
 function AsyncTask(parent, fn, args) {
   this.execution = null;
