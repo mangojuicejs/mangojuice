@@ -6,20 +6,21 @@ import { extend, is } from '../core/utils';
  * class from it, but for better type-checking it could be really usefull.
  *
  * Logic class defines:
- * - A set of commands that could change an associated model
+ * - A set of commands that could change an associated model – methods decorated with {@link cmd}
  * - What fields of the model should be associated with which logic class
  *   (children blocks) – {@link LogicBase#children} method
  * - A set of computed model fields – {@link LogicBase#computed} method
  * - A set of rules to handle commands from children logic – {@link LogicBase#hub} methods
- * - A logic to handle external event – {@link LogicBase#port} method.
+ * - A logic to handle external events – {@link LogicBase#port} method.
  *
  * So, it defines all business-logic of some part of your application.
- * But the main goal of the logic – change associated model.
+ * But the main goal of the logic – change associated model. Check {@link cmd} and {@link Process#exec}
+ * to have a better understanding how command can be defined and how it is executed.
  *
  * @class  LogicBase
  * @property {Object} model   A model object which is associated with the
  *                            logic class in parent logic.
- * @property {Object} meta    An object debined in `config` method for storing
+ * @property {Object} meta    An object defined in {@link LogicBase#config} method for storing
  *                            some internal logic state.
  * @property {Object} shared  An object with some shared state, defined while
  *                            run process of the app.
@@ -128,7 +129,7 @@ extend(LogicBase.prototype, /** @lends LogicBase.prototype */{
    * can determine that the command is exactly what you are waiting for.
    *
    * @example
-   * hub(cmd) {
+   * hubAfter(cmd) {
    *   if (cmd.is(ChildBlock.Logic.prototype.SomeCommand)) {
    *     return this.HandlerCommand(123);
    *   }
@@ -139,13 +140,6 @@ extend(LogicBase.prototype, /** @lends LogicBase.prototype */{
    * @param  {Command} cmd  Command that was executed in some child logic
    *                        or in any child of the child and so on down to
    *                        the leaf of the tree.
-   * @return {?Command|?Array<Command>}
-   */
-  hub(cmd) {},
-
-  /**
-   * An alias for {@link LogicBase#hub}
-   * @param  {Command} cmd
    * @return {?Command|?Array<Command>}
    */
   hubAfter(cmd) {},

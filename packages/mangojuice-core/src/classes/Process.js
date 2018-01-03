@@ -75,10 +75,6 @@ function prepareConfig(proc) {
   const logic = new logicClass();
   proc.logic = logic;
 
-  if (!logic.hubAfter && logic.hub) {
-    logic.hubAfter = logic.hub;
-  }
-
   let config = { children: EMPTY_OBJECT, childrenKeys: EMPTY_ARRAY, meta: {} };
   config = (logic.config && logic.config(...configArgs)) || config;
   config.meta = config.meta || {};

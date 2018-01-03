@@ -198,7 +198,7 @@ class Main {
       results: SearchResults.Logic
     };
   }
-  hub(cmd) {
+  hubAfter(cmd) {
     if (cmd.is(logicOf(this.model.form).Search)) {
       return logicOf(this.model.results).Search(this.model.form.query);
     }
@@ -222,7 +222,7 @@ The main block contains the Form and Results blocks and ties them together.
 
 **`children()`** helps to define what logic should be associated with what model. In the example above we are saying that the block have two child logical blocks.
 
-**`hub(cmd)`** is a special function you can define in the logic class, which executed with every command from every children logic **after** the command will be executed. And it is extremely useful for handling child logic in the parrent one. There is also `hubBefore` for catching commands **before** execution and `hubAfter` which is an alias for `hub`. The function should return a command or a list of commands which should be executed next.
+**`hubAfter(cmd)`** is a special function you can define in the logic class, which executed with every command from every children logic **after** the command will be executed. And it is extremely useful for handling child logic in the parrent one. There is also `hubBefore` for catching commands **before** execution. The function should return a command or a list of commands which should be executed next.
 
 **`if (cmd.is(logicOf(this.model.form).Search)) {`** in the example we are catching a command `Search` of `SearchForm` logic to execute a `Search` command of `SearchResults` logic. `SearchResults` and `SearchForm` known nothing about each other, which make them completely separated. True scalability.
 
