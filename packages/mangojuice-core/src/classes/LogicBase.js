@@ -61,7 +61,7 @@ extend(LogicBase.prototype, /** @lends LogicBase.prototype */{
    * Could return an object with the fields:
    * - `initCommands` which could be an array or a single Command,
    *   that will be executed every time when the logic instance created
-   *   and associated with some model
+   *   and associated with some model (when {@link Process#run} invoked)
    * - `meta` which could be an object with some internal state of
    *   the logic
    *

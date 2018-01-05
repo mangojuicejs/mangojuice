@@ -1,14 +1,20 @@
 import procOf from './procOf';
 
+
 /**
- * Returns a Logic instqnce of given model object. Only if
- * it was binded to some logic. Otherwise it throws an exception.
- * If the optional second argument passed, then the function also
- * will check that the instance of logic is `instanceof` given
- * class.
- * @param  {Object} model
- * @param  {Class?} logicClass
- * @return {Process}
+ * Returns a Logic instance attached to a given model object. The logic
+ * instance stored in attached {@link Process} instance, so it execute
+ * {@link procOf} for the model to get a {@link Process} instance and then
+ * get the logic instance form a Process and return it.
+ *
+ * If Process is not attached to the model, then an Error will be throwed.
+ * If the second argument passed then it will also check that the logic
+ * instance is instance of some particular class.
+ *
+ * @param  {Object} model        A model with attached {@link Process}
+ * @param  {Class?} logicClass   Optional logic class to check that the logic
+ *                               instance is instance of the class
+ * @return {LogicBase} Returns a logic instance
  */
 function logicOf(model, logicClass) {
   const proc = procOf(model);

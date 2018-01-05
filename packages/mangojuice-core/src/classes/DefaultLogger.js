@@ -21,7 +21,7 @@ import { extend } from '../core/utils';
  *   }
  * }
  *
- * // Pass instance of the Logger to {@link run}
+ * // Pass instance of the Logger to `run` options object.
  * run(MainBlock, { logger: new SetnryLogger() });
  */
 function DefaultLogger() {

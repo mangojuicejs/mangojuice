@@ -3,7 +3,8 @@ import ensureCommand from '../core/cmd/ensureCommand';
 
 
 /**
- * Class for declaring an async task.
+ * Class for declaring an async task. An instance of this object returned
+ * from {@link taks} function.
  *
  * @class TaskMeta
  * @param {function} taskFn

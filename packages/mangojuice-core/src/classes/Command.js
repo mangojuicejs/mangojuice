@@ -7,7 +7,7 @@ const EMPTY_OBJECT = {};
 
 /**
  * Class which declares a command that will be executed in the
- * future by some Process. It contains a function that will be
+ * future by some {@link Process#exec}. It contains a function that will be
  * executed, arguments that should be passed to the function
  * and command name.
  *
@@ -25,16 +25,16 @@ const EMPTY_OBJECT = {};
  *                              to execute the fucntion.
  * @param {Function} func
  * @param {Array<any>} args
- * @param {String} name [description]
+ * @param {String} name
  */
-function Command(func, args, name, nonhandlable, options) {
+function Command(func, args, name, options) {
   this.id = (func && func.__cmdId) || nextId();
-  this.funcName = name;
   this.func = func;
   this.args = args || EMPTY_ARRAY;
-  this.name = name;
-  this.handlable = !nonhandlable;
   this.options = options || EMPTY_OBJECT;
+  this.handlable = !this.options.internal;
+  this.funcName = this.options.name || name;
+  this.name = this.funcName;
 }
 
 extend(Command.prototype, /** @lends Command.prototype */{
@@ -57,7 +57,6 @@ extend(Command.prototype, /** @lends Command.prototype */{
       this.func,
       this.args,
       this.funcName,
-      !this.handlable,
       this.options
     );
     newCmd.id = this.id;

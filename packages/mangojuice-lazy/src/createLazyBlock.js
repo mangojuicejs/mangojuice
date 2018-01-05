@@ -1,4 +1,4 @@
-import { utils, cmd, defineCommand, procOf } from 'mangojuice-core';
+import { LogicBase, utils, cmd, defineCommand, procOf } from 'mangojuice-core';
 
 function appendUsedChunk(proc, chunkName) {
   if (chunkName) {
@@ -82,15 +82,7 @@ function createBlockResolver(asyncRequire, resolveState) {
 function createLazyLogic(resolveState, lazyCommands) {
   // Basic lazy block
   function LazyBlock() {}
-  utils.extend(LazyBlock.prototype, {
-    config: utils.noop,
-    children: utils.noop,
-    hub: utils.noop,
-    hubAfter: utils.noop,
-    hubBefore: utils.noop,
-    port: utils.noop,
-    computed: utils.noop
-  });
+  utils.extend(LazyBlock.prototype, LogicBase.prototype);
 
   // Define all exported lazy commands
   const lazyProto = LazyBlock.prototype;
@@ -99,7 +91,7 @@ function createLazyLogic(resolveState, lazyCommands) {
       resolveState.cmds.push({ args, name });
       resolveState.resolver(this.model);
     };
-    defineCommand(lazyProto, name, cmd, true, `${name}.Lazy`);
+    defineCommand(lazyProto, name, cmd({ internal: true, name: `${name}.Lazy` }));
   });
 
   resolveState.lazyLogic = LazyBlock;
@@ -129,6 +121,7 @@ function createLazyModel(resolveState, initModel) {
  * which will be returned by `resolver` function provided in the
  * options object. `resolver` can also return a promise which should
  * resolve and actual block.
+ *
  * @param  {function} options.resolver
  * @param  {string} options.chunkName
  * @param  {string} options.initModel
