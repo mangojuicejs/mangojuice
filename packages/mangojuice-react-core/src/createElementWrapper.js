@@ -1,5 +1,7 @@
-import { getContext } from './ViewRenderContext';
-import injectLogic from './injectLogic';
+import { procOf } from 'mangojuice-core';
+import { getContext } from './runInContext';
+import { injectLogic } from './injectLogic';
+import createViewWrapper from './createViewWrapper';
 
 
 /**
@@ -14,11 +16,14 @@ import injectLogic from './injectLogic';
  * @param  {Object} reactImpl
  * @return {Fuction}
  */
-function wrapReactCreateElement(reactImpl) {
+function createElementWrapper(reactImpl) {
   // Check if already wrapped
   if (reactImpl.createElement.__wrapped) {
     return reactImpl.createElement;
   }
+
+  // Vew wrapper component
+  const ViewWrapper = createViewWrapper(reactImpl);
 
   // Patching createElement fuction to support
   // commands and command creators as a prop
@@ -26,21 +31,31 @@ function wrapReactCreateElement(reactImpl) {
     const context = getContext();
     let ActualView = View;
 
-    if (props && context) {
+    if (props) {
       // Convert commands to handler functions, which will
       // execute command in current context
-      for (let k in props) {
-        const cmd = props[k];
-        if (cmd && cmd.id && cmd.func) {
-          props[k] = context.exec(cmd);
+      if (context) {
+        for (let k in props) {
+          const cmd = props[k];
+          if (cmd && cmd.id && cmd.func) {
+            props[k] = context.exec(cmd);
+          }
         }
       }
 
       // Nest views for current or child models
-      if (props.model && props.model.__proc) {
-        ActualView = injectLogic(View);
-        if (context.model && props.model.__proc.id !== context.model.__proc.id) {
-          return context.nest(props.model, ActualView, props);
+      if (props.model) {
+        const modelProc = procOf(props.model, true);
+        const contextProc = procOf(context && context.model, true);
+        ActualView = modelProc ? injectLogic(View) : View;
+
+        if (modelProc && (!contextProc || contextProc.id !== modelProc.id)) {
+          return reactImpl.createElement(ViewWrapper, {
+            key: modelProc.id,
+            View: ActualView,
+            model: props.model,
+            props
+          });
         }
       }
     }
@@ -52,4 +67,4 @@ function wrapReactCreateElement(reactImpl) {
 };
 
 
-export default wrapReactCreateElement;
+export default createElementWrapper;

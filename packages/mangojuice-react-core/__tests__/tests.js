@@ -41,7 +41,7 @@ export default (React, MounterClass, implName) => {
         </span>
       );
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       const buttonElem = document.getElementById('button');
       buttonElem.click();
@@ -63,9 +63,9 @@ export default (React, MounterClass, implName) => {
         </span>
       );
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
-      expect(ChildView.__wrapperFunc.name).toEqual('Logic(ChildView)');
+      expect(ChildView.__wrapperFunc.name).toEqual('ChildView');
     });
 
     it('shuold render a statefull view of a block', async () => {
@@ -79,7 +79,7 @@ export default (React, MounterClass, implName) => {
         }
       }
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       const buttonElem = document.getElementById('button');
       buttonElem.click();
@@ -101,7 +101,7 @@ export default (React, MounterClass, implName) => {
         </span>
       );
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       const buttonElem = document.getElementById('button');
       buttonElem.click();
@@ -123,7 +123,7 @@ export default (React, MounterClass, implName) => {
         </span>
       );
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       const buttonElem = document.getElementById('button');
       buttonElem.click();
@@ -156,7 +156,7 @@ export default (React, MounterClass, implName) => {
         </span>
       );
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       const parentElem = document.getElementById('parent');
       parentElem.click();
@@ -179,7 +179,7 @@ export default (React, MounterClass, implName) => {
         </span>
       );
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       let buttonElem = document.getElementById('button');
       expect(buttonElem.innerHTML).toEqual('test');
@@ -202,7 +202,7 @@ export default (React, MounterClass, implName) => {
         }
       }
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       let buttonElem = document.getElementById('button');
       expect(buttonElem.innerHTML).toEqual('test');
@@ -221,7 +221,7 @@ export default (React, MounterClass, implName) => {
         </span>
       );
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       const buttonElem = document.getElementById('button');
       buttonElem.click();
@@ -243,7 +243,7 @@ export default (React, MounterClass, implName) => {
         }
       }
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       const buttonElem = document.getElementById('button');
       buttonElem.click();
@@ -265,19 +265,19 @@ export default (React, MounterClass, implName) => {
         );
       };
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj, expectErrors: true });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       let buttonElem = document.getElementById('button');
       expect(buttonElem.innerHTML).toEqual('test');
 
       const oldContext = { a: 'b' };
-      MounterCore.ViewRenderContext.setContext(oldContext);
+      MounterCore.runInContext.setContext(oldContext);
       buttonElem.click();
       await delay(0);
 
       expect(buttonElem).toBeDefined();
       expect(commandNames).toEqual([ 'AppBlock.UpdateModel' ]);
-      expect(MounterCore.ViewRenderContext.getContext()).toEqual(oldContext);
+      expect(MounterCore.runInContext.getContext()).toEqual(oldContext);
     });
 
     it('should render view for nested block', async () => {
@@ -294,7 +294,7 @@ export default (React, MounterClass, implName) => {
         </span>
       ));
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       await app.proc.exec(logicOf(app.model).UpdateModel('nested', AppBlockObj.createModel({ b: 'nested' })));
       const nestedElem = document.getElementById('nested');
@@ -323,7 +323,7 @@ export default (React, MounterClass, implName) => {
         </span>
       ));
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       await app.proc.exec(logicOf(app.model).UpdateModel('nested', AppBlockObj.createModel({ b: 'nested' })));
 
@@ -369,7 +369,7 @@ export default (React, MounterClass, implName) => {
         </span>
       );
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       await app.proc.exec(logicOf(app.model).UpdateModel('a', 'test2'));
       await app.proc.exec(logicOf(app.model).UpdateModel('a', 'test3'));
@@ -395,7 +395,7 @@ export default (React, MounterClass, implName) => {
         </span>
       );
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       const buttonElem = document.getElementById('button');
       buttonElem.click();
@@ -405,7 +405,7 @@ export default (React, MounterClass, implName) => {
       expect(OrgExternalComponent).toEqual(ExternalComponent);
     });
 
-    it('shuold provide a way to inject a logic manually', async () => {
+    it('should provide a way to inject a logic manually', async () => {
       const ExternalComponent = React.injectLogic(({ children }, { Logic }) => (
         <div><span>{children}</span><span>{typeof Logic.TestAction}</span></div>
       ));
@@ -415,7 +415,7 @@ export default (React, MounterClass, implName) => {
         </span>
       );
       const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.proc, SimpleView);
+      const res = mounter.mount(app.model, SimpleView);
 
       const buttonElem = document.getElementById('button');
       buttonElem.click();
