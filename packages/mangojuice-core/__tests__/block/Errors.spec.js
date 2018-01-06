@@ -190,7 +190,7 @@ describe('Errors handling', () => {
           children() {
             return { child: ChildBlock.Logic };
           }
-          hub(cmd) {
+          hubBefore(cmd) {
             if (cmd.is(logicOf(this.model.child).HubError)) {
               throw testError;
             } else {

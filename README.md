@@ -24,7 +24,7 @@ You can play with the search app explained in this README here:
 [![Edit multipage](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/mangojuicejs/mangojuice-example-app/tree/master/)
 
 ## Quick start
-MangoJuice (MJS) consists of three main parts:
+MangoJuice (MJ) consists of three main parts:
 * **Model** – plain function `const createModel = () => ({ ... })`, which defines the initial model state of your logical block.
 * **Logic** - `class MyLogic { ... };` with a set of command factories
 * **View** – plain function `const View = ({ model }, { Logic }) => { ... }`, which should display something based on the current state of a model. If your favorite View library is React, then View is a plain-function component.
@@ -33,15 +33,15 @@ All these three parts are together called `Block`.
 
 For example, let's say you have a page with a very complicated search form and a results list. In this case you will probably have three logical Blocks: (1) Search form, (2) Results list and (3) Block that manage search form and results (parent for 1 and 2).
 
-But before we will show some example code, let's learn a bit more theory about MJS to have a better understanding what is going on!
+But before we will show some example code, let's learn a bit more theory about MJ to have a better understanding what is going on!
 
 #### The App is "three trees"
-The app in MJS represented as a tree. And each part of the block have completely separated tree. For instance, to nest Search form to the Main block you should nest the Seach form's model to the Main block's model, nest the Search form's logic to the Main block's logic and the Search form's view to the Main block's view.
+The app in MJ represented as a tree. And each part of the block have completely separated tree. For instance, to nest Search form to the Main block you should nest the Seach form's model to the Main block's model, nest the Search form's logic to the Main block's logic and the Search form's view to the Main block's view.
 
 #### The Logic class is a commands factory
-MJS implements a so called `Command pattern`. The main idea of this pattern is that logical operation is not executed instantly as you call it, instead you create an object called `Command` which defines what function should be executed with what arguments and pass it to a "processor" which will take care of the execution.
-Logic class in MJS is just a set of command factories (functions which returns a `Command` object). To convert a regular class method to a command factory you should decorate it with `@cmd` decorator.
-There is three type of commands in MJS, differentiated by the type of returned value:
+MJ implements a so called `Command pattern`. The main idea of this pattern is that logical operation is not executed instantly as you call it, instead you create an object called `Command` which defines what function should be executed with what arguments and pass it to a "processor" which will take care of the execution.
+Logic class in MJ is just a set of command factories (functions which returns a `Command` object). To convert a regular class method to a command factory you should decorate it with `@cmd` decorator.
+There is three type of commands in MJ, differentiated by the type of returned value:
 
 * command for updating a model – should return a plain "update" object
 * command for executing another commands – should return a command or an array of commands
@@ -50,7 +50,7 @@ There is three type of commands in MJS, differentiated by the type of returned v
 #### The Process put everything together
 There is one thing that makes everything to work, called `Process`. It is an internal class and you won't interact with it directly. But you should understand that the instance of this class created for every Model of every Block of your app and it actually executes commands and it takes care of View updates when model of a Block changed. The instance of the Process initially created during the run of the up.
 
-Now you have very basic understanding what MJS is and how it works. Let's implement the search page mentioned above to see MJS in action.
+Now you have very basic understanding what MJ is and how it works. Let's implement the search page mentioned above to see MJ in action.
 
 ### Search Form Block
 ```js
@@ -84,7 +84,7 @@ export const View = ({ model }, { Logic }) => (
   </div>
 );
 ```
-Module `SearchForm.js` is a `Block`. It exports `createModel`, `View` and `Logic`. Only this kind of modules can be called `Block` in MJS. Let's break down the code above and examine all the pieces in more detail.
+Module `SearchForm.js` is a `Block`. It exports `createModel`, `View` and `Logic`. Only this kind of modules can be called `Block` in MJ. Let's break down the code above and examine all the pieces in more detail.
 
 **`const createModel = () =>`** is a function (factory) that returns the initial state of the block.
 
@@ -94,7 +94,7 @@ Module `SearchForm.js` is a `Block`. It exports `createModel`, `View` and `Logic
 
 In the example we have two commands: `SetQuery` and `Search`. `SetQuery` is a command which updates a model, because it returns a plain object. `Search` returns nothing and hence do nothing. But it is still useful for reacting on the execution of this command in parent blocks, we will see later.
 
-**`const View = ({ model }, { Logic }) =>`** is just a pure-functional React component, which renders the form. MJS passes a `props` object  with the model and `context` object with a `Logic` class instance.
+**`const View = ({ model }, { Logic }) =>`** is just a pure-functional React component, which renders the form. MJ passes a `props` object  with the model and `context` object with a `Logic` class instance.
 
 ### Runing the Block
 ```js
@@ -110,7 +110,7 @@ mount(new Mounter('#container'), run(SearchForm));
 
 **`mount`** accept a Mounter instance as a first argument and the result of `run` as a second argument. It renders a `View` of a block used in `run` to render a model.
 
-**`new Mounter('#container')`** contains a logic for mapping a model to DOM changes via a View function. Mounter actually defines how View functions should be writtern, what they should return, what arguments they should accept, etc. Actual mounters are not a part of the MJS core. In a core you can find just an interface for a mounter. In the example above we are using React for writing Views and hence we are using Mounter.
+**`new Mounter('#container')`** contains a logic for mapping a model to DOM changes via a View function. Mounter actually defines how View functions should be writtern, what they should return, what arguments they should accept, etc. Actual mounters are not a part of the MJ core. In a core you can find just an interface for a mounter. In the example above we are using React for writing Views and hence we are using Mounter.
 
 ### Search Results Block
 ```js
@@ -222,7 +222,7 @@ The main block contains the Form and Results blocks and ties them together.
 
 **`children()`** helps to define what logic should be associated with what model. In the example above we are saying that the block have two child logical blocks.
 
-**`hub(cmd)`** is a special function you can define in the logic class, which executed with every command from every children logic **before** the command will be executed. And it is extremely useful for handling child logic in the parrent one. There is also `hubAfter` for catching commands **after** execution and `hubBefore` which is an alias for `hub`. The function should return a command or a list of commands which should be executed next.
+**`hub(cmd)`** is a special function you can define in the logic class, which executed with every command from every children logic **after** the command will be executed. And it is extremely useful for handling child logic in the parrent one. There is also `hubBefore` for catching commands **before** execution and `hubAfter` which is an alias for `hub`. The function should return a command or a list of commands which should be executed next.
 
 **`if (cmd.is(logicOf(this.model.form).Search)) {`** in the example we are catching a command `Search` of `SearchForm` logic to execute a `Search` command of `SearchResults` logic. `SearchResults` and `SearchForm` known nothing about each other, which make them completely separated. True scalability.
 
@@ -232,7 +232,7 @@ As you can see, to nest one block to another you have to nest all three parts of
 
 
 ### Multiple counter problem
-What if each item should have some specific logic, like a counter? In MJS that is not a problem. Let's create a separate Block for result item with counter logic and then use it in `SearchResults`:
+What if each item should have some specific logic, like a counter? In MJ that is not a problem. Let's create a separate Block for result item with counter logic and then use it in `SearchResults`:
 ```js
 // ResultItem.js
 import React from 'mangojuice-react';
@@ -294,12 +294,12 @@ export const View = ({ model }) => (
 
 **`<ResultItem.View model={x} />`** in the View shows View of `ResultItem` block for each result item.
 
-As you can see, MJS understands two types of child model: object and array. If child model is an object then the Logic will be associated with this object. If an array – with each element of the array. MJS do not support primitives as child model. If child model becomes `null` then Logic for the child will be destroyed.
+As you can see, MJ understands two types of child model: object and array. If child model is an object then the Logic will be associated with this object. If an array – with each element of the array. MJ do not support primitives as child model. If child model becomes `null` then Logic for the child will be destroyed.
 
 ## Going deeper
-What if you would need to add a user to your app? Obviously the user model should be easily accessable from anywhere in the app. For example to check if the user is authorized or not, or to check a role of the user. For these cases, when you need to have a widely used model, MJS provides the so called `shared` model. Shared model could be any object, but your `shared` will be a model of MJS block, then you will get more benefits of it, for example commands tracking in `hub`.
+What if you would need to add a user to your app? Obviously the user model should be easily accessable from anywhere in the app. For example to check if the user is authorized or not, or to check a role of the user. For these cases, when you need to have a widely used model, MJ provides the so called `shared` model. Shared model could be any object, but if your `shared` object will be a model of MJ block, then you will get some benifits. For example model changes obeserving, or commands handling.
 
-As you probably already noticed, an application in MJS is a tree of blocks. The key diffeerence of a shared tree is that blocks from a shared tree do not have a View. Let's cerate a Shared block for storing a user.
+As you probably already know, an application in MJ is a tree of blocks. The key diffeerence of a shared tree is that blocks from a shared tree do not have a View. Let's cerate a Shared block for storing a user.
 
 ```js
 // Shared.js
@@ -349,20 +349,19 @@ const appRun = run(Main, { shared: sharedRun.model });
 mount(new Mounter('#container'), appRun);
 ```
 
-**`const sharedRun = run(Shared)`** we are running `Shared` block, which as you know creates a model, creates logic instance and returns run result.
+**`const sharedRun = run(Shared)`** we are running `Shared` block, which as you know creates a model, creates logic instance and returns run results – model, process instance.
 
 **`const appRun = run(Main, { shared: sharedRun.model })`** then we are running app main block but with one addition – we are providing a `shared` model. Now, in any logic of the app tree you will be able to access the shared model by `this.shared`.
 
 ```js
 // Main.js
-import { depends, cmd, logicOf } from 'mangojuice-core';
+import { depends, cmd, logicOf, handleAfter } from 'mangojuice-core';
 
 class Main {
   ...
   computed() {
     return {
-      user: depends(this.shared.user)
-        .compute(() => this.shared.user)
+      user: depends(this.shared.user).compute(() => this.shared.user)
     };
   }
   @cmd Login() {
@@ -382,9 +381,9 @@ export const View = ({ model }, { Logic }) => (
 )
 ```
 
-In MJS defined some very strict rules:
-* View can render (own) only one model
-* View updated only when rendered model (without child models) updated.
+In MJ defined some very strict rules:
+* View can render(own) only one model
+* View updated only when the rendered model (without child models) updated.
 
 These rules means, that you can't access `shared` model in the View. Also it means that the View won't update if shared model changed. And that is where `computed()` part of the logic starts to be extremely useful.
 
@@ -393,7 +392,7 @@ These rules means, that you can't access `shared` model in the View. Also it mea
 You can define more than one dependent models in `depends` function as next arguments. You can even define child model as a dependency. And it might be useful, because sometimes parent View should show some part of child models and because of rule one above, the View of `Main` won't be updated when, for example, child model of `SearchForm` will be updated.
 
 ### Dealing with the real world
-We showed above how to handle events from a View. But complex applications could have to handle not only view events, but some more, like WebSocket messages, or presses to `esc` in the window scope, or execute someting in the interval. The good news is that MJS also provides a way to handle this kind of events.
+We showed above how to handle events from a View. But complex applications could have to handle not only view events, but some more, like WebSocket messages, or presses to `esc` in the window scope, or execute someting in the interval. The good news is that MJ also provides a way to handle this kind of events.
 
 ```js
 // SearchResults.js
@@ -405,7 +404,14 @@ class SearchResults {
       exec(this.Search(this.model.query));
     }, 10000);
 
+    const stopHandler = handleAfter(this.shared.user, (cmd) => {
+      // it is like `hubAfter` but invoked only for "own" commands,
+      // not for commands from children logics. You can react on command
+      // here however you want, most comman case – run another command
+    });
+
     destroyed.then(() => clearInterval(timer));
+    destroyed.then(stopHandler);
   }
   ...
 }
@@ -415,7 +421,7 @@ class SearchResults {
 **`destroyed.then(() => clearInterval(timer));`** subscribes to the destroy Promise, which will be resolved when the block is destroyed. For example when model of the `SearchResults` will be removed – set to `null` – in parent `Main` block.
 
 ## Conclusion
-These are the basics of MJS. It was inspired by many existing frameworks/languages that the author used for a while. So probably there is not anything extremely new. MJS is all about defining a scalable, flexible way of implementing logic of your app in following the MVC pattern with the help of the Command Pattern and of the latest available ES6/ES7 features, like decorators or async/await. Enjoy!
+These are the basics of MJ. It was inspired by many existing frameworks/languages that the author used for a while. So probably there is not anything extremely new. MJ is all about defining a scalable, flexible way of implementing logic of your app in following the MVC pattern with the help of the Command Pattern and of the latest available ES6/ES7 features, like decorators or async/await. Enjoy!
 
 ## API Reference
 TODO

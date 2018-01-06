@@ -10,6 +10,7 @@ import ensureCommand from './core/cmd/ensureCommand';
 import child from './core/logic/child';
 import depends from './core/logic/depends';
 import observe from './core/logic/observe';
+import { handle, handleAfter, handleBefore } from './core/logic/handle';
 import logicOf from './core/logic/logicOf';
 import procOf from './core/logic/procOf';
 import decorateLogic from './core/logic/decorateLogic';
@@ -42,6 +43,9 @@ export {
   child,
   depends,
   observe,
+  handle,
+  handleAfter,
+  handleBefore,
   logicOf,
   procOf,
   decorateLogic,

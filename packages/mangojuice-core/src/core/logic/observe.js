@@ -13,9 +13,6 @@ let execCounter = 0;
  * @return {Promise}
  */
 function enqueueNotifyObserver(observer) {
-  if (!observer.id) {
-    throw new Error('Observer should have an "id"!');
-  }
   observersToNotify[observer.id] = observer;
 }
 
@@ -63,31 +60,27 @@ export function decExecCounter() {
  */
 export function observe(model, handler, options) {
   const modelProc = procOf(model);
-  if (!modelProc.observers) return;
+  const type = (options && options.type) || 'observers';
+  if (!modelProc[type]) return;
 
-  // Wrap original handler with batch wrapper if needed
-  let realHandler = handler;
+  // Wrap original handler to execute with error logger
+  let finalHandler = (arg) => safeExecFunction(modelProc.logger,
+    () => handler(arg));
+
+  // Wrap again to execute at the end of the commands stack
   if (options && options.batched) {
-    const observerWrapper = () =>
-      safeExecFunction(modelProc.logger, handler);
-    observerWrapper.id = nextId();
-    realHandler = function batchedObserver() {
-      enqueueNotifyObserver(observerWrapper);
+    const originalHandler = finalHandler;
+    originalHandler.id = nextId();
+    finalHandler = function batchedObserver() {
+      enqueueNotifyObserver(originalHandler);
     };
   }
 
-  // Add destroy handler which will be called when process
-  // attached to the model will be destroyed (and hence the
-  // observer will ber removed and no longer used)
-  if (options && options.destroyHandler) {
-    modelProc.destroyPromise.then(destroyHandler);
-  }
-
-  modelProc.observers.push(realHandler);
+  modelProc[type].push(finalHandler);
 
   return function removeObserver() {
-    if (modelProc.observers) {
-      modelProc.observers = modelProc.observers.filter(x => x !== realHandler);
+    if (modelProc[type]) {
+      modelProc[type] = modelProc[type].filter(x => x !== finalHandler);
     }
   };
 }
