@@ -424,4 +424,5 @@ class SearchResults {
 These are the basics of MJ. It was inspired by many existing frameworks/languages that the author used for a while. So probably there is not anything extremely new. MJ is all about defining a scalable, flexible way of implementing logic of your app in following the MVC pattern with the help of the Command Pattern and of the latest available ES6/ES7 features, like decorators or async/await. Enjoy!
 
 ## API Reference
-TODO
+[packages/mangojuice-core/README.md](mangojuice-core)
+...other packages documentation coming soon...
