@@ -22,7 +22,7 @@ module.exports = {
   ],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json"],
   moduleNameMapper: {
-    "^mangojuice-core": "<rootDir>/packages/mangojuice-core/src",
+    "^mangojuice-core(.*)": "<rootDir>/packages/mangojuice-core/src$1",
     "^mangojuice-lazy": "<rootDir>/packages/mangojuice-lazy/src",
     "^mangojuice-preact": "<rootDir>/packages/mangojuice-preact/src",
     "^mangojuice-inferno": "<rootDir>/packages/mangojuice-inferno/src",

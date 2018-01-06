@@ -39,8 +39,6 @@ declare module "mangojuice-core" {
     +shared: SharedType;
     +meta: MetaType;
 
-    hub(cmd: Command): any;
-
     hubBefore(cmd: Command): any;
 
     hubAfter(cmd: Command): any;

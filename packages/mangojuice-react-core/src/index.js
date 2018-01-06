@@ -1,7 +1,7 @@
 import ReactMounter from './ReactMounter';
 import createElementWrapper from './createElementWrapper';
 import injectLogic from './injectLogic';
-import * as ViewRenderContext from './ViewRenderContext';
+import * as runInContext from './runInContext';
 
-export { ReactMounter, createElementWrapper, ViewRenderContext, injectLogic };
-export default { ReactMounter, createElementWrapper, ViewRenderContext, injectLogic };
+export { ReactMounter, createElementWrapper, runInContext, injectLogic };
+export default { ReactMounter, createElementWrapper, runInContext, injectLogic };

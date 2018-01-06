@@ -1,0 +1,37 @@
+toc:
+  - name: Basic
+    description: |
+      The most common APIs that you will work with most of the time
+    children:
+      - Block
+      - LogicBase
+      - cmd
+      - run
+      - mount
+      - task
+      - cancel
+      - child
+      - depends
+  - name: Extras
+    description: |
+      Other pieces of MangoJuice
+    children:
+      - Process
+      - Command
+      - TaskMeta
+      - DefaultLogger
+      - ComputedField
+      - Mounter
+      - defineCommand
+      - ensureCommand
+      - decorateLogic
+      - handleBefore
+      - handleAfter
+      - handle
+      - call
+      - logicOf
+      - observe
+      - procOf
+      - bind
+      - hydrate
+      - delay

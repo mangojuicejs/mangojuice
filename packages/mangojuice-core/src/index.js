@@ -2,7 +2,6 @@ import Process from './classes/Process';
 import Command from './classes/Command';
 import LogicBase from './classes/LogicBase';
 import DefaultLogger from './classes/DefaultLogger';
-import SimpleStackLogger from './classes/SimpleStackLogger';
 import cmd from './core/cmd/cmd';
 import cancel from './core/cmd/cancel';
 import defineCommand from './core/cmd/defineCommand';
@@ -16,8 +15,6 @@ import procOf from './core/logic/procOf';
 import decorateLogic from './core/logic/decorateLogic';
 import delay from './core/task/delay';
 import task from './core/task/task';
-import callTask from './core/task/callTask';
-import { CANCEL } from './classes/TaskCall';
 import run from './core/run/run';
 import bind from './core/run/bind';
 import mount from './core/run/mount';
@@ -27,14 +24,11 @@ import * as config from './config';
 
 
 export {
-  // Constants
-  CANCEL,
   // Classes
   Process,
   Command,
   LogicBase,
   DefaultLogger,
-  SimpleStackLogger,
   // Core
   cmd,
   cancel,
@@ -51,7 +45,6 @@ export {
   decorateLogic,
   delay,
   task,
-  callTask,
   run,
   bind,
   mount,

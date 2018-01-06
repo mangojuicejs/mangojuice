@@ -1,13 +1,13 @@
-import Task from './Task';
+import TaskMeta from './TaskMeta';
 import Command from './Command';
-import DelayedExec from './DelayedExec';
+import ThrottleTask from './ThrottleTask';
 import DefaultLogger from './DefaultLogger';
 import ensureCommand from '../core/cmd/ensureCommand';
 import createCmd from '../core/cmd/cmd';
 import observe, { incExecCounter, decExecCounter } from '../core/logic/observe';
 import procOf from '../core/logic/procOf';
 import delay from '../core/task/delay';
-import { cancelTask } from '../core/cmd/cancel';
+import { cancelTask, cancelAllTasks } from '../core/cmd/cancel';
 import {
   nextId,
   is,
@@ -32,6 +32,8 @@ const DELAY_TASK = 'DELAY';
  * Go from current proc to the root of the proc tree
  * and run iterator function if handler of given type
  * exists in the process instance.
+ *
+ * @private
  * @param  {Process} proc
  * @param  {string} type
  * @param  {function} iterator
@@ -49,6 +51,8 @@ function mapParents(proc, iterator) {
 /**
  * By given Process instance find some parent process
  * in the tree without parents (tree root)
+ *
+ * @private
  * @param  {Process} proc
  * @return {Process}
  */
@@ -66,15 +70,12 @@ function findRootProc(proc) {
 /**
  * Run `children` and `config` methods of the logic object
  * and create `config` object in the Process based on the result.
+ * @private
  */
 function prepareConfig(proc) {
   const { logicClass, configArgs } = proc;
   const logic = new logicClass();
   proc.logic = logic;
-
-  if (!logic.hubAfter && logic.hub) {
-    logic.hubAfter = logic.hub;
-  }
 
   let config = { children: EMPTY_OBJECT, childrenKeys: EMPTY_ARRAY, meta: {} };
   config = (logic.config && logic.config(...configArgs)) || config;
@@ -89,6 +90,8 @@ function prepareConfig(proc) {
  * If model already binded to some model do nothing.
  * Return true if model sucessfully binded to the process.
  * Othersise returns false
+ *
+ * @private
  * @param  {Object} childModel
  * @param  {String} fieldName
  * @return {Boolean}
@@ -116,6 +119,8 @@ function bindChild(proc, childModel, fieldName) {
 /**
  * Go throught all children fields and bind each child
  * model to appropreate logic
+ *
+ * @private
  * @param  {Process} proc
  */
 function bindChildren(proc) {
@@ -131,6 +136,8 @@ function bindChildren(proc) {
 
 /**
  * Stop all running observers for all existing computed fields
+ *
+ * @private
  * @param  {Process} proc
  */
 function stopComputedObservers(proc) {
@@ -146,6 +153,7 @@ function stopComputedObservers(proc) {
  * Provide a way to define computed field with object block models
  * dependencies. So the field will be invalidated and re-computed
  * when one of dependent models will be changed.
+ * @private
  */
 function bindComputed(proc) {
   if (proc.destroyed) return;
@@ -170,9 +178,11 @@ function bindComputed(proc) {
 /**
  * Bind field in the model with given computed function or dependency
  * object.
+ *
+ * @private
  * @param  {Process} proc
  * @param  {string} fieldName
- * @param  {function|DependsDef} computeVal
+ * @param  {function|ComputedField} computeVal
  * @return {Memoize}
  */
 function bindComputedField(proc, fieldName, computeVal) {
@@ -207,6 +217,8 @@ function bindComputedField(proc, fieldName, computeVal) {
 /**
  * Associate instance of the Process with given model by setting
  * hidden `__proc` field in the model. Also set model and shared model,
+ *
+ * @private
  * @param  {Process} proc
  * @param  {Object} model
  */
@@ -228,6 +240,8 @@ function bindModel(proc, model) {
  * and run binded process. Returns a Promise which will be
  * resolved when all inicialisation of all children logics
  * will be finished.
+ *
+ * @private
  * @param  {Process} proc
  * @return {Promise}
  */
@@ -240,6 +254,8 @@ function runChildren(proc) {
  * Execute `port` method of the logic, if provided. Returns a Promise
  * which will be resolved when returend by `port` promise will be resolved.
  * If `port` returns not a Promise then it will be resolved instantly.
+ *
+ * @private
  * @param  {Process} proc
  * @return {Promise}
  */
@@ -254,6 +270,8 @@ function runPorts(proc) {
  * Execute init commands which could be defined in `config` method
  * of the object. Returns a Promise which will be resolved when
  * all init commands will be fully executed.
+ *
+ * @private
  * @param  {Process} proc
  * @return {Promise}
  */
@@ -269,6 +287,8 @@ function runInitCommands(proc) {
  * Ren all model observers and returns a Promise which will
  * be resolved when all handlers executed and returned promises
  * is also resolved
+ *
+ * @private
  * @param  {Process} proc
  * @return {Promise}
  */
@@ -280,6 +300,8 @@ function runAllObservers(proc) {
 /**
  * Resolve destroy promise which will notify `port` that it should
  * cleanup and stop execution.
+ *
+ * @private
  * @param  {Process} proc
  */
 function stopPorts(proc) {
@@ -296,6 +318,8 @@ function stopPorts(proc) {
  * iterator function.
  * Returns a Promise which resolves with a list with data
  * returned by each call to iterator function.
+ *
+ * @private
  * @param  {Process} proc
  * @param  {Object} model
  * @param  {Function} iterator
@@ -318,20 +342,12 @@ function forEachChildren(proc, model, iterator, iterKeys) {
 }
 
 /**
- * Cancel all executing tasks of the process
- * @param  {Process} proc
- */
-function cancelAllTasks(proc) {
-  for (const taskId in proc.tasks) {
-    cancelTask(proc, taskId);
-  }
-}
-
-/**
  * Execute given task object in scope of given Process.
  * Returns a Promise which will be resolved when task will
  * be resolved or reject with with a command, which should
  * be executed next.
+ *
+ * @private
  * @param  {Process} proc
  * @param  {Task} taskObj
  * @return {Promise}
@@ -364,7 +380,7 @@ function execTask(proc, taskObj, cmd) {
     }
     if (error) {
       if (error.cancelled) {
-        return new Command(null, null, `${cmd.funcName}.Cancelled`, true);
+        return new Command(null, null, `${cmd.funcName}.Cancelled`, { internal: true });
       } else {
         const actualFailCmd = failCmd && failCmd.appendArgs([error]);
         if (!actualFailCmd) logger.onCatchError(error);
@@ -402,6 +418,7 @@ function execTask(proc, taskObj, cmd) {
  * Also while updating process destryoy/create processes for
  * removed/added models.
  *
+ * @private
  * @param  {?Object} updateObj
  * @return {Boolean}
  */
@@ -450,6 +467,8 @@ function updateModel(proc, updateObj) {
  * Run all parent handler from parent processes to handle
  * executed command. Returns a promise which will be resolved
  * when all handlers will be fully executed.
+ *
+ * @private
  * @param  {Object} model
  * @param  {Object} cmd
  * @return {Promise}
@@ -482,6 +501,7 @@ function handleCommand(proc, cmd, isAfter) {
  * Returns a promise which will be resolved when a command
  * will be fully executed (command + all handlers).
  *
+ * @private
  * @param  {Object} cmd
  */
 function doExecCmd(proc, rawCmd) {
@@ -498,7 +518,7 @@ function doExecCmd(proc, rawCmd) {
   const safeExecCmd = () => cmd.exec();
   const result = safeExecFunction(logger, safeExecCmd, cmd);
   if (result) {
-    if (result instanceof Task) {
+    if (result instanceof TaskMeta) {
       const taskPromise = execTask(proc, result, cmd);
       taskPromise.then(exec, exec);
     } else if (result && (is.array(result) || (result.func && result.id))) {
@@ -516,7 +536,7 @@ function doExecCmd(proc, rawCmd) {
   // Run after handlers
   logger.onExecuted(cmd, result);
   handleCommand(proc, cmd, true);
-  logger.onEndExec(cmd, result);
+  logger.onEndExec(cmd);
   decExecCounter();
 }
 
@@ -524,6 +544,8 @@ function doExecCmd(proc, rawCmd) {
 /**
  * Handle delayed command execution. Decide when to execute the
  * command and when delay it, etc.
+ *
+ * @private
  * @param  {Process} proc
  * @param  {Command} cmd
  */
@@ -536,15 +558,52 @@ function doDelayExecCmd(proc, cmd) {
   if (!taskObj) {
     const executor = (finalCmd) => doExecCmd(proc, finalCmd);
     const cleanup = () => delete tasksObj[DELAY_TASK];
-    taskObj = tasksObj[DELAY_TASK] = new DelayedExec(executor, cleanup, cmd.options);
+    taskObj = tasksObj[DELAY_TASK] = new ThrottleTask(executor, cleanup, cmd.options);
   }
 
   taskObj.exec(cmd);
 }
 
-
 /**
- * Main logic execution class
+ * The main class of MangoJuice that ties model, logic and view together.
+ *
+ * It works in the following way:
+ * - You create a model for your app (object) using `createModel` of
+ *   the root block. The result is a plain object.
+ * - Then you need to create an instance of Process and pass logic class
+ *   in the options object.
+ * - Then you `bind` the Process instance to the model object you created on step one.
+ *   "To bind Process to a model" means that in the model will be created a hidden
+ *   field `__proc` with a reference to the Process instance.
+ * - After that you can `run` the Process, which will execute init commands, port.
+ *
+ * `bind` and `run` also look at the object returned from {@link LogicBase#children}
+ * and create/run Process instances for children models.
+ *
+ * Most of the time you do not need to care about all of these and just use
+ * {@link run} and {@link mount}. These small functions do everything described
+ * above for you.
+ *
+ * @class Process
+ * @example
+ * import { Process, logicOf } from 'mangojuice-core';
+ *
+ * const ExampleBlock = {
+ *   createModel() {
+ *     return { a: 10 };
+ *   },
+ *   Logic: class Example {
+ *     \@cmd Increment(amount = 1) {
+ *       return { a: this.model.a + amount };
+ *     }
+ *   }
+ * };
+ *
+ * const model = ExampleBlock.createModel();
+ * const proc = new Process({ logic: ExampleBlock.Logic });
+ * proc.bind(model);
+ * proc.run();
+ * proc.exec(logicOf(model).Increment(23));
  */
 export function Process(opts) {
   const { parent, sharedModel, logger, logic, configArgs, context } = opts;
@@ -564,11 +623,17 @@ export function Process(opts) {
   this.exec = this.exec.bind(this);
 }
 
-extend(Process.prototype, {
+extend(Process.prototype, /** @lends Process.prototype */{
   /**
-   * Bind given model to a process instance and appropreate
-   * logic instance.
-   * @param  {Object} model
+   * Bind the process instance to a given model, which means that hidden
+   * `__proc` field will be created in the model with a reference to the
+   * Process instance.
+   *
+   * Also bind all children models – go through children definition returned
+   * by {@link LogicBase#children}, create Process for each child and bind
+   * it to an appropreat child model object.
+   *
+   * @param  {Object} model  A model object that you want to bind to the Process.
    */
   bind(model) {
     prepareConfig(this);
@@ -580,9 +645,7 @@ extend(Process.prototype, {
   /**
    * Run the process – run children processes, then run port and
    * init commands defined in config.
-   * Returns a Promise which resolves when all commands will be
-   * executed.
-   * @return {Promise}
+   * Also run all model observers created by {@link observe}
    */
   run() {
     runChildren(this);
@@ -593,9 +656,12 @@ extend(Process.prototype, {
 
   /**
    * Destroy the process with unbinding from the model and cleaning
-   * up all the parts of the process (stop ports, computed
-   * fields).
-   * @param  {Boolean} deep If true then all children blocks will be destroyed
+   * up all the parts of the process (stop ports, computed fields).
+   * `__proc` field will be removed from the model object and all
+   * children objects.
+   *
+   * @param  {Boolean} deep   If true then all children blocks will be destroyed.
+   *                          By default, if not provided then considered as true.
    */
   destroy(deep) {
     delete this.model.__proc;
@@ -617,14 +683,46 @@ extend(Process.prototype, {
   /**
    * Exec a command in scope of the Process instance.
    * It will use binded model and logic object to run the
-   * command. The command could be function (command creator)
-   * or object (command instance).
-   * If command is undefined or `Process` instance not binded
-   * to any model it will return resolved promise.
-   * Otherwise it will return a promise that will be resolved
-   * when the commend will be fully executed (command + handlers)
+   * command. The command could be function (command factory)
+   * or object ({@link Command} instance).
    *
-   * @param  {Function|Object} cmd [description]
+   * A command origin function could return three types of things:
+   * - Another {@link Command}/command factory or an array of commands
+   *   (an element of the array also could be another array with commands
+   *   or null/undefined/false). All commands will be execute in provided order.
+   * - An instance of {@link TaskMeta} (which is usually created by {@link task}
+   *   helper function). The returned task will be started and do not block
+   *   execution of next commands in the stack.
+   * - A plain object which is a model update object. The object will be merged
+   *   with current model.
+   *
+   * If command is undefined or `Process` instance not binded
+   * to any model it will do nothing.
+   *
+   * @example
+   * class MyLogic {
+   *   \@cmd BatchCommand() {
+   *     return [
+   *       1 > 2 && this.SomeCoomand,
+   *       this.AnotheCommand(123),
+   *       2 > 1 && [
+   *         this.AndSomeOtherCommand,
+   *         this.FinalCommand()
+   *       ]
+   *     ];
+   *   }
+   *   \@cmd TaskCommand() {
+   *     return task(Tasks.SomeTask)
+   *       .success(this.SuccessCommand)
+   *       .fail(this.FailCommand)
+   *   }
+   *   \@cmd ModelUpdateCommand() {
+   *     if (Math.random() > 0.6) {
+   *       return { field: Date.now() };
+   *     }
+   *   }
+   * }
+   * @param  {Function|Object} cmd  Command factory or Command instance
    */
   exec(cmd) {
     if (!cmd || this.destroyed) return;

@@ -1,4 +1,5 @@
-import ViewWrapperCreator from './ViewWrapper';
+import { procOf } from 'mangojuice-core';
+import createElementWrapper from './createElementWrapper';
 import injectLogic from './injectLogic';
 
 
@@ -6,40 +7,35 @@ import injectLogic from './injectLogic';
  * By given react implementation object create a react mounter class
  * that should be used to mount view for a model
  * @param  {Object} reactImpl
+ * @param  {Function} createElement
  * @return {Class}
  */
 function createReactMounter(reactImpl) {
-  const ViewWrapper = ViewWrapperCreator(reactImpl);
-  const { createElement, unmountComponentAtNode, render } = reactImpl;
+  const {
+    render,
+    unmountComponentAtNode,
+    wrappedCreateElement
+  } = reactImpl;
 
   class ReactMounter {
     constructor(containerSelector) {
       if (containerSelector) {
         this.container = document.querySelector(containerSelector);
+        if (!this.container) {
+          throw new Error(`Given container "${containerSelector}" doesn't exist in DOM`);
+        }
       }
     }
 
-    execView(proc, View, props) {
-      const nest = (model, nestView, nestProps) => {
-        return this.execView(model.__proc, nestView, nestProps);
-      };
-      const viewProps = {
-        key: proc.id,
-        View: injectLogic(View),
-        proc, nest, props
-      };
-      return createElement(ViewWrapper, viewProps);
-    }
-
-    mount(proc, view) {
+    mount(model, View) {
       this.unmount();
-      const element = this.execView(proc, view);
-
-      if (this.container) {
+      const element = wrappedCreateElement(View, { model });
+      if (!this.container) {
+        return element;
+      } else {
         this.mounted = true;
         return render(element, this.container);
       }
-      return element;
     }
 
     unmount() {

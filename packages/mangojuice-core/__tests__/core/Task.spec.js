@@ -1,4 +1,5 @@
-import { callTask, delay, CANCEL } from 'mangojuice-core';
+import { delay, task } from 'mangojuice-core';
+import callTask from 'mangojuice-core/core/task/callTask'
 
 
 describe('Task', () => {
@@ -86,7 +87,7 @@ describe('Task', () => {
     async function simpleTask() {
       const func = () => {
         const promise = new Promise(r => setTimeout(r, 10));
-        promise[CANCEL] = cancleHandler;
+        promise[task.CANCEL] = cancleHandler;
         return promise;
       };
       await this.call(func);

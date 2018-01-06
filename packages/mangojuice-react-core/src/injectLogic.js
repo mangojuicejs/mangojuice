@@ -1,16 +1,19 @@
-import { contextInjector } from './ViewRenderContext';
-import { childContextTypes } from './ViewWrapper';
+import { utils } from 'mangojuice-core';
+import { runInContext } from './runInContext';
+import { childContextTypes } from './createViewWrapper';
 
 
 /**
- * Inject currently active Logic to context of given component.
- * For class components add logic fields to `contextType` and
- * override render method. For functional components wrap the
- * compnent with another function.
+ * The goal of this injector is to replace render function
+ * of a component to get a context and set in module level variable
+ * to be able to access it from custom `createElement` that can process
+ * Commands and command creators and autowrap children components with
+ * ViewWrapper component.
+ *
  * @param  {React.Component} View
  * @return {React.Component}
  */
-function injectLogic(View) {
+export function injectLogic(View) {
   if (!View || typeof View === 'string') return View;
 
   // Inject to statefull compoent
@@ -20,7 +23,7 @@ function injectLogic(View) {
 
     const orgRender = View.prototype.render;
     View.prototype.render = function(...args) {
-      return contextInjector.call(this, this.context, orgRender, args);
+      return runInContext.call(this, this.context, orgRender, args);
     };
     View.contextTypes = {
       ...View.contextTypes,
@@ -30,12 +33,12 @@ function injectLogic(View) {
   }
 
   // Inject to stateless function
-  if (typeof View === 'function') {
+  if (utils.is.func(View)) {
     if (View.__wrapperFunc) return View.__wrapperFunc;
     if (View.__isWrapper) return View;
 
     const WrapperViewFunc = function(props, context) {
-      return contextInjector.call(this, context, View, [props, context]);
+      return runInContext.call(this, context, View, [props, context]);
     };
     WrapperViewFunc.__isWrapper = true;
     WrapperViewFunc.contextTypes = {
@@ -43,7 +46,8 @@ function injectLogic(View) {
       ...childContextTypes
     };
     View.__wrapperFunc = WrapperViewFunc;
-    Object.defineProperty(WrapperViewFunc, 'name', { value: `Logic(${View.name || 'View'})` });
+    const nameDescr = { value: View.name || 'View' };
+    Object.defineProperty(WrapperViewFunc, 'name', nameDescr);
     return WrapperViewFunc;
   }
 

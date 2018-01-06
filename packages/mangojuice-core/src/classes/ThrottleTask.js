@@ -7,8 +7,10 @@ import { ZERO_DELAY } from '../config';
  * delayed (throttle/debounce) command execution.
  * Supports to run in "debounce" and "throttle" mode,
  * with instant init call or without.
+ *
+ * @private
  */
-function DelayedExec(executor, cleanup, options) {
+function ThrottleTask(executor, cleanup, options) {
   this.finish = noop;
   this.executor = executor || noop;
   this.cleanup = cleanup || noop;
@@ -18,7 +20,7 @@ function DelayedExec(executor, cleanup, options) {
   this.doExec = this.doExec.bind(this);
 }
 
-extend(DelayedExec.prototype, {
+extend(ThrottleTask.prototype, {
   exec(cmd) {
     if (this.isThrottled) {
       this.lastCmd = cmd;
@@ -76,4 +78,4 @@ extend(DelayedExec.prototype, {
   }
 });
 
-export default DelayedExec;
+export default ThrottleTask;
