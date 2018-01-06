@@ -58,7 +58,7 @@ describe('Init commands execution', () => {
           return this.HandleB_2;
         }
       }
-      hub(cmd) {
+      hubAfter(cmd) {
         if (cmd.is(BlockB.Logic.prototype.FromInitOneCmd, this.model.b_1)) {
           return this.HandleB_11;
         } else if (
