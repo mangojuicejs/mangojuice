@@ -7,6 +7,7 @@ import { sym, is, fastTry, ensureError, extend, noop } from '../core/utils';
  * should be executed when some task canceled. Like for
  * `delay` function you can clear a timer
  * (see `delay` sources below).
+ * @private
  * @type {string}
  */
 export const CANCEL = sym('CANCEL_PROMISE');

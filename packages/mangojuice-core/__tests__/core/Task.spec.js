@@ -1,4 +1,5 @@
-import { callTask, delay, CANCEL } from 'mangojuice-core';
+import { delay, CANCEL } from 'mangojuice-core';
+import callTask from 'mangojuice-core/core/task/callTask'
 
 
 describe('Task', () => {

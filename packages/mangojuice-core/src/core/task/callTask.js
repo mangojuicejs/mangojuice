@@ -11,11 +11,13 @@ import AsyncTask from '../../classes/AsyncTask';
  *
  * If you will call `cancel` function execution of the
  * function will be stopped at point of some `call` execution.
+ *
+ * @private
  * @param  {Function}  fn
  * @return {Promise}
  */
-function call(fn, ...args) {
+function callTask(fn, ...args) {
   return new AsyncTask(this, fn, args);
 }
 
-export default call;
+export default callTask;

@@ -3,9 +3,13 @@ import { ZERO_DELAY } from '../../config';
 
 
 /**
- * Wait some time. Support cancellation in the `call`.
- * @param  {number}  ms
- * @return {Promise}
+ * A helper function for delaying execution. Returns a Promise
+ * which will be resolved in given amount of milliseconds. You can
+ * use it in {@link task} to implement some delay in execution, for
+ * debouncing for example.
+ *
+ * @param  {number}  ms  An amount of milliseconds to wait
+ * @return {Promise} A promise that resolved after given amount of milliseconds
  */
 export function delay(ms) {
   const actualMs = ZERO_DELAY ? 0 : ms;

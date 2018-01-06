@@ -15,8 +15,6 @@ import procOf from './core/logic/procOf';
 import decorateLogic from './core/logic/decorateLogic';
 import delay from './core/task/delay';
 import task from './core/task/task';
-import callTask from './core/task/callTask';
-import { CANCEL } from './classes/AsyncTask';
 import run from './core/run/run';
 import bind from './core/run/bind';
 import mount from './core/run/mount';
@@ -26,8 +24,6 @@ import * as config from './config';
 
 
 export {
-  // Constants
-  CANCEL,
   // Classes
   Process,
   Command,
@@ -49,7 +45,6 @@ export {
   decorateLogic,
   delay,
   task,
-  callTask,
   run,
   bind,
   mount,
