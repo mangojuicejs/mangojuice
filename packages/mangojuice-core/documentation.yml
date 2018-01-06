@@ -14,13 +14,14 @@ toc:
       - depends
   - name: Extras
     description: |
-      Other pieces of MangoJuice that you can use
+      Other pieces of MangoJuice
     children:
       - Process
       - Command
       - TaskMeta
       - DefaultLogger
       - ComputedField
+      - Mounter
       - defineCommand
       - ensureCommand
       - decorateLogic
@@ -34,4 +35,3 @@ toc:
       - bind
       - hydrate
       - delay
-      - CANCEL
