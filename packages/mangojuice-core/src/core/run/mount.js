@@ -79,9 +79,9 @@
  *                  unmount a view using {@link Mounter#unmount}
  */
 function mount(mounter, runRes, ...otherBlocks) {
-  const view = mounter.mount(mountBlock.model, mountBlock.block.View);
+  const view = mounter.mount(runRes.model, runRes.block.View);
   const stop = () => {
-    mountBlock.proc.destroy();
+    runRes.proc.destroy();
     otherBlocks.forEach(x => x.proc.destroy());
     mounter.unmount();
   };
