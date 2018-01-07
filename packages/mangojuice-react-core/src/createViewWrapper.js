@@ -1,5 +1,6 @@
 import { procOf, logicOf, utils, ensureCommand, observe } from 'mangojuice-core';
 import { setContext, getContext } from './runInContext';
+import injectLogic from './injectLogic';
 
 
 // Utils
@@ -92,7 +93,9 @@ export function createViewWrapper(reactImpl) {
     render() {
       const { View, children, props, model } = this.props;
       if (!procOf(model, true)) return null;
-      return createElement(View, props, children);
+
+      const ViewWithContext = injectLogic(View);
+      return createElement(ViewWithContext, props, children);
     }
   }
   ViewWrapper.childContextTypes = childContextTypes;
