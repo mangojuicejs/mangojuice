@@ -185,10 +185,10 @@ describe('Errors handling', () => {
     });
   });
 
-  describe('On init stage', () => {
+  describe('In special logic functions', () => {
     const testError = new Error('Ooops!');
 
-    it('should throw an error while running if config have error', async () => {
+    it('should log an error form config', async () => {
       const AppBlock = {
         createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
         Logic: class TestLogic {
@@ -198,19 +198,33 @@ describe('Errors handling', () => {
         }
       };
 
-      await expect(
-        runWithTracking({
-          app: AppBlock,
-          expectErrors: true
-        })
-      ).rejects.toBe(testError);
+      const { errors } = await runWithTracking({
+        app: AppBlock,
+        expectErrors: true
+      });
+
+      expect(errors[0]).toEqual(testError);
     });
-  });
 
-  describe('In special logic functions', () => {
-    const testError = new Error('Ooops!');
+    it('should log an error form children', async () => {
+      const AppBlock = {
+        createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
+        Logic: class TestLogic {
+          children() {
+            throw testError;
+          }
+        }
+      };
 
-    it('should log an error from model obaerver', async () => {
+      const { errors } = await runWithTracking({
+        app: AppBlock,
+        expectErrors: true
+      });
+
+      expect(errors[0]).toEqual(testError);
+    });
+
+    it('should log an error from model observer', async () => {
       const ChildBlock = {
         createModel: () => ({}),
         Logic: class ChildBlock {

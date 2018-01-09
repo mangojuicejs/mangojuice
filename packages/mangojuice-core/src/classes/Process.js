@@ -73,12 +73,15 @@ function findRootProc(proc) {
  * @private
  */
 function prepareConfig(proc) {
-  const { logicClass, configArgs } = proc;
+  const { logicClass, configArgs, logger } = proc;
+  let config = { children: EMPTY_OBJECT, childrenKeys: EMPTY_ARRAY, meta: {} };
   const logic = new logicClass();
   proc.logic = logic;
 
-  let config = { children: EMPTY_OBJECT, childrenKeys: EMPTY_ARRAY, meta: {} };
-  config = (logic.config && logic.config(...configArgs)) || config;
+  const safeExecConfig = () => logic.config && logic.config(...configArgs);
+  const configRes = safeExecFunction(logger, safeExecConfig);
+
+  config = configRes || config;
   config.meta = config.meta || {};
   logic.meta = config.meta;
   proc.config = config;
@@ -124,9 +127,10 @@ function bindChild(proc, childModel, fieldName) {
  * @param  {Process} proc
  */
 function bindChildren(proc) {
-  const { logic, config } = proc;
+  const { logic, logger, config } = proc;
   if (logic.children) {
-    config.children = logic.children() || {};
+    const safeExecChildren = () => logic.children();
+    config.children = safeExecFunction(logger, safeExecChildren) || {};
     config.childrenKeys = Object.keys(config.children);
   }
 
