@@ -186,13 +186,14 @@ function bindComputed(proc) {
  * @return {Memoize}
  */
 function bindComputedField(proc, fieldName, computeVal) {
+  const { logger } = proc;
   let get = noop;
 
   if (is.func(computeVal)) {
-    get = memoize(computeVal);
+    get = memoize(() => safeExecFunction(logger, computeVal));
   } else if (is.object(computeVal)) {
     const computeWithDeps = () => computeVal.computeFn(...computeVal.deps)
-    get = memoize(computeWithDeps);
+    get = memoize(() => safeExecFunction(logger, computeWithDeps));
 
     const updateHandler = () => {
       if (get.computed()) {

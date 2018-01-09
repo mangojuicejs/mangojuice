@@ -68,6 +68,71 @@ describe('Errors handling', () => {
     });
   });
 
+  describe('While computed field execution', () => {
+    const testError = new Error('Ooops!');
+
+    it('shuold notify computed execution error', async () => {
+      const AppBlock = {
+        createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
+        Logic: class AppBlock {
+          computed() {
+            throw testError;
+          }
+        }
+      };
+      const { app, errors } = await runWithTracking({
+        app: AppBlock,
+        expectErrors: true
+      });
+
+      expect(errors[0]).toEqual(testError);
+    });
+
+    it('shuold notify error in computed field', async () => {
+      const AppBlock = {
+        createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
+        Logic: class AppBlock {
+          computed() {
+            return {
+              comp: () => {
+                throw testError
+              }
+            }
+          }
+        }
+      };
+      const { app, errors } = await runWithTracking({
+        app: AppBlock,
+        expectErrors: true
+      });
+
+      const test = app.model.comp;
+      expect(errors[0]).toEqual(testError);
+    });
+
+    it('shuold notify error in computed field with dependencies', async () => {
+      const AppBlock = {
+        createModel: () => ({ a: 1, b: 2, c: 0, d: 0 }),
+        Logic: class AppBlock {
+          computed() {
+            return {
+              comp: depends().compute(() => {
+                throw testError
+              })
+            }
+          }
+        }
+      };
+      const { app, errors } = await runWithTracking({
+        app: AppBlock,
+        expectErrors: true
+      });
+
+      const test = app.model.comp;
+      expect(errors[0]).toEqual(testError);
+    });
+  });
+
   describe('While asynnc command execution (in task)', () => {
     const testError = new Error('Ooops!');
     const AppBlock = {
