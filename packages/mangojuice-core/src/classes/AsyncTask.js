@@ -58,23 +58,27 @@ extend(AsyncTask.prototype, /** @lends AsyncTask.prototype */{
       return this.execution;
     }
 
-    const handleTaskFinish = (result) => {
+    const handleTaskFailed = (err) => {
+      return handleTaskFinish(null, err);
+    };
+
+    const handleTaskFinish = (result, error) => {
       if (this.done || this.cancelled) return;
 
-      if (result instanceof Error) {
-        if (result.cancelled) {
-          this.cancelled = true;
-          const runCancelHandlers = () => {
-            if (task.result && task.result[CANCEL]) task.result[CANCEL]();
-            if (this.cancelHandler) this.cancelHandler();
-          };
-          const { error } = fastTry(runCancelHandlers);
-          const ret = { result: null, error: error || result };
-          return result.task === this ? ret : Promise.reject(ret);
-        }
-
+      if (error) {
         this.cancel();
-        return { result: null, error: result };
+        return { result: null, error };
+      }
+
+      if (result instanceof Error && result.cancelled) {
+        this.cancelled = true;
+        const runCancelHandlers = () => {
+          if (task.result && task.result[CANCEL]) task.result[CANCEL]();
+          if (this.cancelHandler) this.cancelHandler();
+        };
+        const { error: cancelError } = fastTry(runCancelHandlers);
+        const ret = { result: null, error: cancelError || result };
+        return result.task === this ? ret : Promise.reject(ret);
       }
 
       if (this.subtasks.length > 0) {
@@ -83,7 +87,7 @@ extend(AsyncTask.prototype, /** @lends AsyncTask.prototype */{
           .then(resProxy, resProxy);
         const finalRace = Promise
           .race([ this.cancelPromise, subtasksWaitPromise ])
-          .then(handleTaskFinish, handleTaskFinish);
+          .then(handleTaskFinish, handleTaskFailed);
 
         this.subtasks = [];
         return finalRace;
@@ -95,7 +99,7 @@ extend(AsyncTask.prototype, /** @lends AsyncTask.prototype */{
 
     this.execution = Promise
       .race([ this.cancelPromise, task.result ])
-      .then(handleTaskFinish, handleTaskFinish);
+      .then(handleTaskFinish, handleTaskFailed);
 
     return this.execution;
   },

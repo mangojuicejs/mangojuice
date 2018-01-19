@@ -97,6 +97,35 @@ describe('Exec tasks', () => {
     expect(commandNames).toEqual(['Block.FailTask', 'Block.FailHandler']);
   });
 
+  it('should call fail command if the error object is not an instance of Error', async () => {
+    const error = { type: 'error', message: 'oops' };
+    const Block = {
+      createModel: () => ({}),
+      Logic: class Block {
+        @cmd
+        FailTask() {
+          return task(async function() {
+            throw error;
+            return { test: 123 };
+          })
+            .success(this.SuccessHandler)
+            .fail(this.FailHandler);
+        }
+        @cmd
+        SuccessHandler() {}
+        @cmd
+        FailHandler(e) {
+          return { error: e };
+        }
+      }
+    };
+    const { app, commandNames } = await runWithTracking({ app: Block });
+    await app.proc.exec(logicOf(app.model).FailTask);
+
+    expect(app.model).toEqual({ error });
+    expect(commandNames).toEqual(['Block.FailTask', 'Block.FailHandler']);
+  })
+
   it('should provide a way to cancel a task', async () => {
     const Block = {
       createModel: () => ({}),

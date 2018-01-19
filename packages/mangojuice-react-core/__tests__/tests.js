@@ -51,23 +51,6 @@ export default (React, MounterClass, implName) => {
       expect(commandNames).toEqual([ 'AppBlock.TestAction' ]);
     });
 
-    it('should set name of wrapper stateless view same as org view name', async () => {
-      const ChildView = ({ model, prop }, { Logic }) => (
-        <span id="button" onClick={Logic.TestAction}>
-          <span>{model.a}</span><span>{prop}</span>
-        </span>
-      );
-      const SimpleView = ({ model }) => (
-        <span>
-          <ChildView model={model} prop="test" />
-        </span>
-      );
-      const { app, commandNames } = await runWithTracking({ app: AppBlockObj });
-      const res = mounter.mount(app.model, SimpleView);
-
-      expect(ChildView.__wrapperFunc.name).toEqual('ChildView');
-    });
-
     it('shuold render a statefull view of a block', async () => {
       class SimpleView extends React.Component {
         render() {
