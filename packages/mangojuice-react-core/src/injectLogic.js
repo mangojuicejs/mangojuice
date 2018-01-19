@@ -46,8 +46,6 @@ export function injectLogic(View) {
       ...childContextTypes
     };
     View.__wrapperFunc = WrapperViewFunc;
-    const nameDescr = { value: View.name || 'View' };
-    Object.defineProperty(WrapperViewFunc, 'name', nameDescr);
     return WrapperViewFunc;
   }
 
