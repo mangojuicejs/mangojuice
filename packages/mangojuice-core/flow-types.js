@@ -45,7 +45,7 @@ declare module "mangojuice-core" {
 
     port(exec: (cmd: any) => Promise<any>, destroyed: Promise<any>): ?Promise<any>;
 
-    children(): {[k: $Enum<ModelType>]: Class<*> | ConfiguredLogic};
+    children(...args: any): {[k: $Enum<ModelType>]: Class<*> | ConfiguredLogic};
 
     computed(): {[k: $Enum<ModelType>]: (() => any) | DependsType};
 
@@ -68,7 +68,10 @@ declare module "mangojuice-core" {
 
   declare export function procOf(model: Object): any;
 
-  declare export function child<T>(logicClass: Class<{ +config?: (...args: T) => any }>, ...args: T): ConfiguredLogic;
+  declare export function child<T>(logicClass: Class<{
+    +config?: (...args: T) => any,
+    +children?: (...args: T) => any
+  }>, ...args: T): ConfiguredLogic;
 
   declare export function depends(...args: any): DependsType;
 

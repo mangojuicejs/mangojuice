@@ -127,9 +127,9 @@ function bindChild(proc, childModel, fieldName) {
  * @param  {Process} proc
  */
 function bindChildren(proc) {
-  const { logic, logger, config } = proc;
+  const { logic, logger, config, configArgs } = proc;
   if (logic.children) {
-    const safeExecChildren = () => logic.children();
+    const safeExecChildren = () => logic.children(...configArgs);
     config.children = safeExecFunction(logger, safeExecChildren) || {};
     config.childrenKeys = Object.keys(config.children);
   }

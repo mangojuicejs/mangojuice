@@ -240,4 +240,33 @@ describe('Nesting', () => {
       'ChildBlock.InitSuccess'
     ]);
   });
+
+  it('should pass config arguments to children method as well', async () => {
+    const handler = jest.fn();
+    const ChildBlock = {
+      createModel: () => ({}),
+      Logic: class ChildBlock {
+        children(...args) {
+          handler(...args);
+        }
+      }
+    };
+    const ParentBlock = {
+      createModel: () => ({
+        child: ChildBlock.createModel()
+      }),
+      Logic: class ParentBlock {
+        children() {
+          return {
+            child: child(ChildBlock.Logic, 1, 2, 3)
+          };
+        }
+      }
+    };
+
+    const { app, commands } = await runWithTracking({ app: ParentBlock });
+
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect(handler.mock.calls).toEqual([[1,2,3]]);
+  });
 });
