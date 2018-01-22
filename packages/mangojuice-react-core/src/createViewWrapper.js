@@ -14,7 +14,7 @@ export function getCmdHash(cmd) {
 
 export const childContextTypes = {
   model: () => null,
-  nest: () => null,
+  shared: () => null,
   exec: () => null,
   Logic: () => null
 };
@@ -36,9 +36,10 @@ export function createViewWrapper(reactImpl) {
     prevExecsMap = {};
 
     getChildContext() {
-      const { model, execCommand } = this.props;
+      const { model, shared, execCommand } = this.props;
       return {
         model,
+        shared,
         exec: this.execCommand,
         Logic: logicOf(model)
       };

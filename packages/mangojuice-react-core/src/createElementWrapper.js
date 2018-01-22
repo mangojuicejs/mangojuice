@@ -54,6 +54,7 @@ function createElementWrapper(reactImpl) {
             key: modelProc.id,
             View: ActualView,
             model: props.model,
+            shared: modelProc.sharedModel,
             props
           });
         }

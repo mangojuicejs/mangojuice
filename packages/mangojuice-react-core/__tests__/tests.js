@@ -406,5 +406,19 @@ export default (React, MounterClass, implName) => {
       expect(buttonElem).toBeDefined();
       expect(buttonElem.innerHTML).toEqual('<div><span>test</span><span>function</span></div>');
     });
+
+    it('should inject shared model to context object', async () => {
+      const SimpleView = ({ model }, { Logic, shared }) => (
+        <span id="button">{shared.a}</span>
+      );
+      const { app, shared, commandNames } = await runWithTracking({ app: AppBlockObj, shared: AppBlockObj });
+      await shared.proc.exec(logicOf(shared.model).UpdateModel('a', 'shared'));
+      const res = mounter.mount(app.model, SimpleView);
+
+      const buttonElem = document.getElementById('button');
+
+      expect(buttonElem).toBeDefined();
+      expect(buttonElem.innerHTML).toEqual('shared');
+    });
   });
 };
