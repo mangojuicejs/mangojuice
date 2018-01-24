@@ -50,6 +50,12 @@ There is three type of commands in MJ, differentiated by the type of returned va
 #### The Process put everything together
 There is one thing that makes everything to work, called `Process`. It is an internal class and you won't interact with it directly. But you should understand that the instance of this class created for every Model of every Block of your app and it actually executes commands and it takes care of View updates when model of a Block changed. The instance of the Process initially created during the run of the up.
 
+#### Model shouldn't be changed directly
+You shouldn't update a model directly in the logic or anywhere else, like `this.model.something = 123`, because it won't tell to a View that the model was changed. The only valid way to update the model is to use command which returns model updated object.
+
+#### Logic class and commands only for sync operations
+You shouldn't do any async code, like Promises and or setTimeout in commands or in any Logic helper functions/methods, because then you won't be able to call success/fail commands at the end of the async operation. Use async task commands for any async operation, or if you need to subscribe or do something with external event sources – use special `port` method of the logic to do this.
+
 Now you have very basic understanding what MJ is and how it works. Let's implement the search page mentioned above to see MJ in action.
 
 ### Search Form Block
