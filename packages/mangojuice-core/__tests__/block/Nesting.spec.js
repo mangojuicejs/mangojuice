@@ -269,4 +269,33 @@ describe('Nesting', () => {
     expect(handler).toHaveBeenCalledTimes(1);
     expect(handler.mock.calls).toEqual([[1,2,3]]);
   });
+
+  it('should provide a way to override shared model in specific child logic', async () => {
+    const handler = jest.fn();
+    const ChildBlock = {
+      createModel: () => ({}),
+      Logic: class ChildBlock {
+        config() {
+          handler(this.shared);
+        }
+      }
+    };
+    const ParentBlock = {
+      createModel: () => ({
+        child: ChildBlock.createModel()
+      }),
+      Logic: class ParentBlock {
+        children() {
+          return {
+            child: child(ChildBlock.Logic).shared({ a: 1 })
+          };
+        }
+      }
+    };
+
+    const { app, commands } = await runWithTracking({ app: ParentBlock });
+
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect(handler.mock.calls).toEqual([[{ a: 1 }]]);
+  });
 });

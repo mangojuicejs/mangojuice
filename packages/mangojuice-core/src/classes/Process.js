@@ -73,9 +73,11 @@ function findRootProc(proc) {
  * @private
  */
 function prepareConfig(proc) {
-  const { logicClass, configArgs, logger } = proc;
+  const { logicClass, configArgs, logger, sharedModel, model } = proc;
   let config = { children: EMPTY_OBJECT, childrenKeys: EMPTY_ARRAY, meta: {} };
-  const logic = new logicClass();
+  const logic = new logicClass(model, sharedModel);
+  logic.model = model;
+  logic.shared = sharedModel;
   proc.logic = logic;
 
   const safeExecConfig = () => logic.config && logic.config(...configArgs);
@@ -102,15 +104,16 @@ function prepareConfig(proc) {
 function bindChild(proc, childModel, fieldName) {
   if (childModel && !procOf(childModel, true)) {
     const childDef = proc.config.children[fieldName];
-    const logic = is.func(childDef) ? childDef : childDef.logic;
+    const logic = is.func(childDef) ? childDef : childDef.logicClass;
     const configArgs = is.func(childDef) ? EMPTY_ARRAY : childDef.args;
+    const childShared = is.func(childDef) ? proc.sharedModel : childDef.sharedModel;
 
     const subProc = new proc.constructor({
       logic,
       configArgs,
       parent: proc,
       context: proc.context,
-      sharedModel: proc.sharedModel,
+      sharedModel: childShared || proc.sharedModel,
       logger: proc.logger
     });
     subProc.bind(childModel);
@@ -228,11 +231,7 @@ function bindComputedField(proc, fieldName, computeVal) {
  * @param  {Object} model
  */
 function bindModel(proc, model) {
-  const { logic, sharedModel } = proc;
   proc.model = model;
-  logic.model = model;
-  logic.shared = sharedModel;
-
   Object.defineProperty(model, '__proc', {
     value: proc,
     enumerable: false,
@@ -641,8 +640,8 @@ extend(Process.prototype, /** @lends Process.prototype */{
    * @param  {Object} model  A model object that you want to bind to the Process.
    */
   bind(model) {
-    prepareConfig(this);
     bindModel(this, model);
+    prepareConfig(this);
     bindChildren(this);
     bindComputed(this);
   },

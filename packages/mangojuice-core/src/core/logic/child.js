@@ -1,3 +1,6 @@
+import ChildLogic from '../../classes/ChildLogic';
+
+
 /**
  * Creates an object which describes child logic which will be attached
  * to some model field. Should be used in {@link LogicBase#children} to
@@ -24,7 +27,7 @@
  *                  should be used to invoke `config` method of provided logic class.
  */
 export function child(logicClass, ...args) {
-  return { logic: logicClass, args };
+  return new ChildLogic(logicClass, args);
 }
 
 export default child;
