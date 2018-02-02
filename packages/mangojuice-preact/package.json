@@ -1,6 +1,6 @@
 {
   "name": "mangojuice-preact",
-  "version": "1.2.10",
+  "version": "1.2.11",
   "description": "",
   "author": {
     "name": "Artem Artemev",
@@ -22,8 +22,8 @@
     }
   },
   "dependencies": {
-    "mangojuice-core": "1.2.10",
-    "mangojuice-react-core": "1.2.10"
+    "mangojuice-core": "1.2.11",
+    "mangojuice-react-core": "1.2.11"
   },
   "peerDependencies": {
     "preact": "x.x.x"
