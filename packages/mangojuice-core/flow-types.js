@@ -20,6 +20,7 @@ declare module "mangojuice-core" {
   };
 
   declare type ConfiguredLogic = {
+    shared: (sharedModel: any) => ConfiguredLogic
   };
 
   declare type BlockType = {
