@@ -34,34 +34,6 @@ function ChildLogic(logicClass, args) {
 }
 
 extend(ChildLogic.prototype, /** @lends ChildLogic.prototype */{
-  /**
-   * Creates a new instance of the child declaration and set shared model
-   * which will be available in the logic. It overrides the shared model used
-   * in current logic instance.
-   *
-   * @example
-   * class MyLogic {
-   *   children() {
-   *     return {
-   *       // An instance of `ChildBlock.Logic` will be attached to
-   *       // `childModel` field of the model and `this.shared` in the
-   *       // instance will be equal to `{ a: 1 }`
-   *       childModel: child(ChildBlock.Logic).shared({ a: 1 })
-   *     }
-   *   }
-   * }
-   * @param  {Function} func  A compute function that should return a value that
-   *                          will be used as a value for some computed field in
-   *                          a model. This function will be invoked with all
-   *                          dependency models as arguments
-   * @return {ComputedField}  New instance of the ComputedField with `computeFn`
-   *                          set to given function.
-   */
-  shared(sharedModel) {
-    const nextChild = new ChildLogic(this.logicClass, this.args);
-    nextChild.sharedModel = sharedModel;
-    return nextChild;
-  }
 });
 
 export default ChildLogic;

@@ -39,7 +39,7 @@ function bind(block, opts = {}) {
   const proc = new ProcessClass({
     logic: block.Logic,
     logger: opts.logger,
-    sharedModel: opts.shared || model,
+    sharedModel: opts.shared,
     configArgs: opts.args || []
   });
   proc.bind(model);
