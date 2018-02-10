@@ -6,7 +6,7 @@ import ContextLogic from './ContextLogic';
 import ChildCmd from './ChildCmd';
 import ThrottleTask from './ThrottleTask';
 import DefaultLogger from './DefaultLogger';
-import observe, { incExecCounter, decExecCounter } from '../core/logic/observe';
+import observe, { incExecCounter, decExecCounter } from '../core/observe';
 import procOf from '../core/procOf';
 import handle from '../core/handle';
 import child from '../core/child';
@@ -54,7 +54,7 @@ function forEachChildren(proc, iterator) {
   }
 }
 
-function updateChildLogic(proc, model, childDef) {
+function updateChildLogic(proc, model, childCmd) {
   const { logicClass, updateMsg, createArgs } = childCmd;
   let currProc = procOf(model);
 
@@ -70,7 +70,7 @@ function updateChildLogic(proc, model, childDef) {
       currProc.destroy();
       currProc = null;
     } else {
-      runLogicUpdate(proc, updateMsg);
+      runLogicUpdate(currProc, updateMsg);
     }
   }
 
@@ -203,7 +203,7 @@ function runLogicFunc(proc, name, args) {
 }
 
 function runLogicCreate(proc) {
-  runLogicFunc(proc, 'create', proc.configArgs);
+  runLogicFunc(proc, 'create', proc.createArgs);
 }
 
 function runLogicUpdate(proc, msg) {
@@ -238,7 +238,7 @@ function stopComputedObservers(proc) {
 }
 
 function destroyAllProcesses(model) {
-  const currProc = procOf(x);
+  const currProc = procOf(model);
   if (currProc) {
     maybeForEach(currProc, p => p.destroy());
   }
@@ -359,7 +359,7 @@ function updateModelField(proc, model, key, update) {
     bindContext(proc, model, key, update);
   } else if (update instanceof ComputedFieldCmd || is.func(update)) {
     bindComputedFieldCmd(proc, model, key, update);
-  } else if else if (is.array(update)) {
+  } else if (is.array(update)) {
     const nextModel = model[key] || [];
     fastForEach(update, (nextUpdate, nextKey) => {
       doUpdateModel(proc, nextModel, nextKey, nextUpdate);
@@ -426,7 +426,7 @@ function updateContext(proc, contextCmd) {
 
 function sendMessageToParents(proc, msg) {
   const updateLogic = (p) => runLogicUpdate(p, msg);
-  const notifyHandler (h) => h(msg);
+  const notifyHandler = (h) => h(msg);
   let currParent = proc.parent;
 
   while (currParent) {
@@ -561,7 +561,8 @@ export function Process(opts) {
   this.children = {};
   this.handlers = [];
   this.contextSubs = [];
-  this.contexts = [].concat(contexts, this.ownContext);
+  this.ownContext = {};
+  this.contexts = !contexts ? [this.ownContext] : [].concat(contexts, this.ownContext);
   this.exec = this.exec.bind(this);
 }
 

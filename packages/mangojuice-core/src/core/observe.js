@@ -1,5 +1,5 @@
 import procOf from './procOf';
-import { nextId, fastForEach, safeExecFunction } from '../utils';
+import { nextId, fastForEach, safeExecFunction } from './utils';
 
 
 // Internals

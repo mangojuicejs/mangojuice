@@ -142,7 +142,7 @@ extend(TaskCmd.prototype, /** @lends TaskCmd.prototype */{
   args(...args) {
     this.customArgs = args;
     return this;
-  }
+  },
 
   cancel() {
     this.cancelTask = true;

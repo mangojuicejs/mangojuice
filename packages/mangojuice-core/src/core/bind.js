@@ -37,8 +37,8 @@ function bind(block, opts = {}) {
   const ProcessClass = opts.Process || Process;
   const model = opts.model || {};
   const proc = new ProcessClass({
-    logic: block.Logic,
     logger: opts.logger,
+    logicClass: block.Logic,
     createArgs: opts.args || []
   });
   proc.bind(model);

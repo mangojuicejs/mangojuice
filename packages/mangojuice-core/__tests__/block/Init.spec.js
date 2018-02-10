@@ -1,22 +1,30 @@
-import { update, depends, child, task, delay, event, context } from 'mangojuice-core';
+import { update, depends, child, task, delay, msg, context } from 'mangojuice-core';
 import { runWithTracking } from 'mangojuice-test';
+
 
 describe('Init commands execution', () => {
   const AsyncTaskDelayed = function() {
     return this.call(delay, 50);
   };
+  const TEST_CONTEXT = () => ({
+    some: child(SharedBlock.Logic)
+  });
   const SharedBlock = {
     Events: {
-      UpdateShared: event()
+      UpdateShared: msg(),
+      SharedUpdated: msg()
     },
     Logic: class SharedBlockLogic {
-      prepare() {
+      create() {
         return this.FromInitOneCmd();
       }
-      hub(event) {
-        if (event.is(SharedBlock.Events.UpdateShared)) {
-          return { SharedUpdated: { ...event } };
-        }
+      update(event) {
+        return [
+          event.when(SharedBlock.Events.UpdateShared, () => [
+            { SharedUpdated: { ...event } },
+            SharedBlock.Events.SharedUpdated('a')
+          ])
+        ];
       }
       FromPortAsync() {
         return task(AsyncTaskDelayed).success(this.FromPortAsync_Success);
@@ -31,64 +39,79 @@ describe('Init commands execution', () => {
   };
   const BlockB = {
     Events: {
-      SomeUpdate: event()
+      SomeUpdate: msg()
     },
     Logic: class BlockBLogic {
-      prepare() {
+      create() {
         return [
-          { sharedDump: JSON.stringify(this.shared) },
+          context(TEST_CONTEXT).subscribe(),
+          context(TEST_CONTEXT).get(ctx => ({
+            sharedDump: JSON.stringify(ctx)
+          })),
           this.FromInitOneCmd
         ];
       }
-      hub(event) {
-        if (event.is(BlockB.Events.SomeUpdate)) {
-          return { SomeEventUpdated: { ...event } };
-        }
+      update(event) {
+        return [
+          event.when(BlockB.Events.SomeUpdate, () => ({
+            SomeEventUpdated: { ...event }
+          })),
+          event.when(SharedBlock.Events.SharedUpdated, () => ({
+            ReactOnUpdateShared: { ...event }
+          }))
+        ];
       }
       FromInitOneCmd() {
         return [
           { FromInitOneCmd: true },
-          SharedBlock.Events.UpdateShared(3,2,1)
+          context(TEST_CONTEXT).update({
+            some: child(SharedBlock.Logic).update(SharedBlock.Events.UpdateShared(3,2,1))
+          })
         ];
       }
     }
   };
   const BlockA = {
     Logic: class BlockALogic {
-      prepare() {
+      create() {
         return [
-          context({
-            some: child(SharedBlock.Logic)
-          }),
           {
-            b_1: child(BlockB.Logic),
-            b_2: child(BlockB.Logic)
+            ctx: context(TEST_CONTEXT).create(),
+            b_1: child(BlockB.Logic).create(),
+            b_2: child(BlockB.Logic).create()
           },
           this.FromInitOneCmd,
+          this.FromPortAsync,
           this.FromInitTwoCmd(1, 2, 3)
         ];
       }
-      hub(event, fromChildren) {
-        if (event.is(SharedBlock.Events.UpdateShared) && fromChildren) {
-          return { ReactOnUpdateShared: { ...event } };
-        }
+      update(event) {
+        return [
+          event.when(SharedBlock.Events.SharedUpdated, () => ({
+            ReactOnUpdateShared: { ...event }
+          }))
+        ];
       }
       FromPortCmd() {
-        return [ this.FromPortCmd_1, this.FromPortCmd_2() ];
+        return [ this.FromPortCmd_1, this.FromSubCmd, this.FromPortCmd_2() ];
       }
       FromPortAsync() {
-        return task(AsyncTaskDelayed)
-          .success(this.FromPortAsync_Success);
+        return [
+          this.FromPortCmd,
+          task(AsyncTaskDelayed).success(this.FromPortAsync_Success)
+        ];
       }
       FromPortCmd_1() { return { FromPortCmd_1: true }; }
       FromPortCmd_2() { return { FromPortCmd_2: true }; }
       FromPortAsync_Success() { return { FromPortAsync_Success: true } }
       FromInitOneCmd() { return { FromInitOneCmd: true } }
       FromInitTwoCmd() { return { FromInitTwoCmd: true } }
-      FromSubCmd() { return [
-        { b_1: update(BlockB.Logic, BlockB.Events.SomeUpdate(1,2,3)) },
-        { FromSubCmd: true }
-      ] }
+      FromSubCmd() {
+        return [
+          { b_1: child(BlockB.Logic).update(BlockB.Events.SomeUpdate(1,2,3)) },
+          { FromSubCmd: true }
+        ]
+      }
       HandleB_1() { return { HandleB_1: true } }
       HandleB_11() { return { HandleB_11: true } }
       HandleB_2() { return { HandleB_2: true } }

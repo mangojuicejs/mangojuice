@@ -1,7 +1,7 @@
 import observe from './observe';
 
 
-function handle(type, model, handler) {
+function handle(model, handler) {
   return observe(model, handler, { type: 'handlers' });
 }
 

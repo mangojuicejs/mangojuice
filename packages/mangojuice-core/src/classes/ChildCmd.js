@@ -41,7 +41,7 @@ extend(ChildCmd.prototype, /** @lends ChildCmd.prototype */{
     }
     this.updateMsg = msg;
     return this;
-  }
+  },
 
   create(...args) {
     this.createArgs = args;

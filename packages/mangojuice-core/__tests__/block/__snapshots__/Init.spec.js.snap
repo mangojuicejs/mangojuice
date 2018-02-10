@@ -11,12 +11,13 @@ Object {
   "FromPortCmd_2": true,
   "FromSubCmd": true,
   "ReactOnUpdateShared": Object {
-    "0": 3,
-    "1": 2,
-    "2": 1,
+    "0": "a",
   },
   "b_1": Object {
     "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
     "SomeEventUpdated": Object {
       "0": 1,
       "1": 2,
@@ -26,7 +27,20 @@ Object {
   },
   "b_2": Object {
     "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
     "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+  },
+  "ctx": Object {
+    "some": Object {
+      "FromInitOneCmd": true,
+      "SharedUpdated": Object {
+        "0": 3,
+        "1": 2,
+        "2": 1,
+      },
+    },
   },
 }
 `;
@@ -35,185 +49,1004 @@ exports[`Init commands execution should execute init commands in correct order a
 Array [
   Object {
     "FromInitOneCmd": true,
-  },
-  TaskMeta {
-    "executor": [Function],
-    "successCmd": [Function],
-    "task": [Function],
-  },
-  Array [
-    Object {
-      "b_1": ChildLogic {
-        "args": Array [],
-        "logicClass": [Function],
-      },
-      "b_2": ChildLogic {
-        "args": Array [],
-        "logicClass": [Function],
-      },
-    },
-    [Function],
-    Object {
-      "FromInitTwoCmd": true,
-    },
-  ],
-  Object {
-    "b_1": ChildLogic {
-      "args": Array [],
-      "logicClass": [Function],
-    },
-    "b_2": ChildLogic {
-      "args": Array [],
-      "logicClass": [Function],
-    },
-  },
-  Array [
-    Object {
-      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
-    },
-    [Function],
-  ],
-  Object {
-    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
-  },
-  Array [
-    Object {
-      "FromInitOneCmd": true,
-    },
-    Event {
-      "0": 3,
-      "1": 2,
-      "2": 1,
-    },
-  ],
-  Object {
-    "FromInitOneCmd": true,
-  },
-  Event {
-    "0": 3,
-    "1": 2,
-    "2": 1,
-  },
-  Object {
-    "ReactOnUpdateShared": Object {
-      "0": 3,
-      "1": 2,
-      "2": 1,
-    },
-  },
-  Object {
-    "SharedUpdated": Object {
-      "0": 3,
-      "1": 2,
-      "2": 1,
-    },
-  },
-  Array [
-    Object {
-      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
-    },
-    [Function],
-  ],
-  Object {
-    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
-  },
-  Array [
-    Object {
-      "FromInitOneCmd": true,
-    },
-    Event {
-      "0": 3,
-      "1": 2,
-      "2": 1,
-    },
-  ],
-  Object {
-    "FromInitOneCmd": true,
-  },
-  Event {
-    "0": 3,
-    "1": 2,
-    "2": 1,
-  },
-  Object {
-    "ReactOnUpdateShared": Object {
-      "0": 3,
-      "1": 2,
-      "2": 1,
-    },
-  },
-  Object {
-    "SharedUpdated": Object {
-      "0": 3,
-      "1": 2,
-      "2": 1,
-    },
-  },
-  Object {
-    "FromInitOneCmd": true,
-  },
-  Object {
     "FromInitTwoCmd": true,
-  },
-  Array [
-    Object {
-      "b_1": ChildLogic {
-        "args": undefined,
-        "logicClass": [Function],
-        "updateEvent": Event {
-          "0": 1,
-          "1": 2,
-          "2": 3,
-        },
+    "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
       },
-    },
-    Object {
-      "FromSubCmd": true,
-    },
-  ],
-  Object {
-    "b_1": ChildLogic {
-      "args": undefined,
-      "logicClass": [Function],
-      "updateEvent": Event {
+      "SomeEventUpdated": Object {
         "0": 1,
         "1": 2,
         "2": 3,
       },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
     },
   },
   Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
+    "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
+  },
+  Object {
+    "some": Object {
+      "FromInitOneCmd": true,
+      "SharedUpdated": Object {
+        "0": 3,
+        "1": 2,
+        "2": 1,
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "SharedUpdated": Object {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
     "SomeEventUpdated": Object {
       "0": 1,
       "1": 2,
       "2": 3,
     },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
   },
   Object {
-    "FromSubCmd": true,
-  },
-  Array [
-    [Function],
-    Object {
-      "FromPortCmd_2": true,
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
     },
-  ],
+    "SomeEventUpdated": Object {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+  },
   Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "SomeEventUpdated": Object {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "SomeEventUpdated": Object {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "SomeEventUpdated": Object {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "SomeEventUpdated": Object {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "SomeEventUpdated": Object {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+  },
+  Object {
+    "some": Object {
+      "FromInitOneCmd": true,
+      "SharedUpdated": Object {
+        "0": 3,
+        "1": 2,
+        "2": 1,
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "SharedUpdated": Object {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "SharedUpdated": Object {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "SharedUpdated": Object {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "SharedUpdated": Object {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "SomeEventUpdated": Object {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "SomeEventUpdated": Object {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
+    "FromPortAsync_Success": true,
     "FromPortCmd_1": true,
-  },
-  Object {
     "FromPortCmd_2": true,
-  },
-  TaskMeta {
-    "executor": [Function],
-    "successCmd": [Function],
-    "task": [Function],
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
   },
   Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
     "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
   },
   Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+  },
+  Object {
+    "some": Object {
+      "FromInitOneCmd": true,
+      "SharedUpdated": Object {
+        "0": 3,
+        "1": 2,
+        "2": 1,
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "SharedUpdated": Object {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "SharedUpdated": Object {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "SharedUpdated": Object {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "SharedUpdated": Object {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "SomeEventUpdated": Object {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "SomeEventUpdated": Object {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
     "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
+    "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
+    "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
+    "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
+    "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
+    "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
+    "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
+    "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "SomeEventUpdated": Object {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "SomeEventUpdated": Object {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
+    "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
+    "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
+    "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
+    "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+    "FromInitTwoCmd": true,
+    "FromPortAsync_Success": true,
+    "FromPortCmd_1": true,
+    "FromPortCmd_2": true,
+    "FromSubCmd": true,
+    "ReactOnUpdateShared": Object {
+      "0": "a",
+    },
+    "b_1": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "SomeEventUpdated": Object {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    "b_2": Object {
+      "FromInitOneCmd": true,
+      "ReactOnUpdateShared": Object {
+        "0": "a",
+      },
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    "ctx": Object {
+      "some": Object {
+        "FromInitOneCmd": true,
+        "SharedUpdated": Object {
+          "0": 3,
+          "1": 2,
+          "2": 1,
+        },
+      },
+    },
   },
 ]
 `;
