@@ -1,4 +1,4 @@
-import ChildLogic from '../../classes/ChildLogic';
+import ChildCmd from '../classes/ChildCmd';
 
 
 /**
@@ -26,8 +26,8 @@ import ChildLogic from '../../classes/ChildLogic';
  * @return {Object} Object that contains a logic class and an arguments array that
  *                  should be used to invoke `config` method of provided logic class.
  */
-export function child(logicClass, ...args) {
-  return new ChildLogic(logicClass, args);
+export function child(logicClass) {
+  return new ChildCmd(logicClass);
 }
 
 export default child;

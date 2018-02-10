@@ -20,6 +20,13 @@ export function autoInc(seed = 1) {
 
 export const nextId = autoInc();
 
+export const idenitify = (val) => {
+  if (!val.__id) {
+    Object.definedProperty(val, '__id', { value: nextId() });
+  }
+  return val.__id;
+};
+
 export const fastForEach = (subject, iterator) => {
   const length = subject.length;
   for (let i = 0; i < length; i++) {

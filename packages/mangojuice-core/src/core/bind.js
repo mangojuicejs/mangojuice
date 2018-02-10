@@ -1,4 +1,4 @@
-import Process from '../../classes/Process';
+import Process from '../classes/Process';
 
 /**
  * This function do the following:
@@ -35,12 +35,11 @@ import Process from '../../classes/Process';
  */
 function bind(block, opts = {}) {
   const ProcessClass = opts.Process || Process;
-  const model = block.createModel();
+  const model = opts.model || {};
   const proc = new ProcessClass({
     logic: block.Logic,
     logger: opts.logger,
-    sharedModel: opts.shared,
-    configArgs: opts.args || []
+    createArgs: opts.args || []
   });
   proc.bind(model);
   return { proc, model, block };

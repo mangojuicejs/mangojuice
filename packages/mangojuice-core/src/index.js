@@ -1,12 +1,16 @@
 import Process from './classes/Process';
 import LogicBase from './classes/LogicBase';
 import DefaultLogger from './classes/DefaultLogger';
-import cancel from './core/cmd/cancel';
-import child from './core/logic/child';
-import depends from './core/logic/depends';
-import observe from './core/logic/observe';
-import logicOf from './core/logic/logicOf';
-import procOf from './core/logic/procOf';
+import child from './core/child';
+import msg from './core/msg';
+import update from './core/update';
+import depends from './core/depends';
+import context from './core/context';
+import observe from './core/observe';
+import debounce from './core/debounce';
+import throttle from './core/throttle';
+import logicOf from './core/logicOf';
+import procOf from './core/procOf';
 import delay from './core/task/delay';
 import task from './core/task/task';
 import run from './core/run/run';
@@ -22,10 +26,14 @@ export {
   LogicBase,
   DefaultLogger,
   // Core
-  cancel,
   child,
+  msg,
   depends,
+  context
   observe,
+  update,
+  debounce,
+  throttle,
   logicOf,
   procOf,
   delay,

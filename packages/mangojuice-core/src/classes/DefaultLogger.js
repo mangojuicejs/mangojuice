@@ -33,40 +33,14 @@ extend(DefaultLogger.prototype, /** @lends DefaultLogger.prototype */{
    * in {@link Process#exec}. Even before any {@link LogicBase#hubBefore}.
    * @param  {Command} cmd  Command that just started execution process
    */
-  onStartExec(cmd) {},
-
-  /**
-   * Invoked right before command will go through all {@link LogicBase#hubBefore} or {@link LogicBase#hubAfter}
-   * up in the blocks tree. The second argument indicates is it called for {@link LogicBase#hubBefore}
-   * or for {@link LogicBase#hubAfter}.
-   * @param  {Command}  cmd    Command that is going to go through hubs in parent blocks
-   * @param  {Boolean} isAfter If true then the command is going through "after" hubs, "before" otherwise
-   */
-  onStartHandling(cmd, isAfter) {},
-
-  /**
-   * Invoked when the command went through all hubs and when all sync commands
-   * returned from hubs was executed.
-   * @param  {Command}  cmd     Command that went through all hubs
-   * @param  {Boolean} isAfter  If true then the command going through "after" hubs, "before" otherwise
-   */
-  onEndHandling(cmd, isAfter) {},
-
-  /**
-   * Invoked when the command function executed and the return of the function processed –
-   * all returned commands executed, all async tasks started, the model updated.
-   * But it invoked before the command go through "after" hubs.
-   * @param  {Command} cmd  Command that was exectued and the return processed
-   * @param  {any} result   Returned object from the command's function
-   */
-  onExecuted(cmd, result) {},
+  onStartExec(model, cmd) {},
 
   /**
    * Invoked right after the command go throught "after" hubs. It is the final
    * stage of command execution.
    * @param  {Command} cmd  Command that was fully executed and handled by parent blocks
    */
-  onEndExec(cmd) {},
+  onEndExec(model, cmd) {},
 
   /**
    * Invoked if any uncaught error happened while execution of the command

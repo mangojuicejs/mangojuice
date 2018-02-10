@@ -1,4 +1,4 @@
-import { cmd, logicOf, depends, child, task, delay, handleBefore } from 'mangojuice-core';
+import { update, depends, child, task, delay, event, context } from 'mangojuice-core';
 import { runWithTracking } from 'mangojuice-test';
 
 describe('Init commands execution', () => {
@@ -6,134 +6,103 @@ describe('Init commands execution', () => {
     return this.call(delay, 50);
   };
   const SharedBlock = {
-    createModel: () => ({}),
-    Logic: class SharedBlock {
-      config() {
-        return { initCommands: [this.FromInitOneCmd()] };
+    Events: {
+      UpdateShared: event()
+    },
+    Logic: class SharedBlockLogic {
+      prepare() {
+        return this.FromInitOneCmd();
       }
-      port(exec) {
-        exec(this.FromPortAsync);
+      hub(event) {
+        if (event.is(SharedBlock.Events.UpdateShared)) {
+          return { SharedUpdated: { ...event } };
+        }
       }
-      @cmd
       FromPortAsync() {
         return task(AsyncTaskDelayed).success(this.FromPortAsync_Success);
       }
-      @cmd
-      FromInitOneCmd() {}
-      @cmd
-      FromPortAsync_Success() {}
+      FromInitOneCmd() {
+        return { FromInitOneCmd: true };
+      }
+      FromPortAsync_Success() {
+        return { FromPortAsync_Success: true };
+      }
     }
   };
   const BlockB = {
-    createModel: () => ({}),
-    Logic: class BlockB {
-      config() {
-        return { initCommands: [this.FromInitOneCmd] };
+    Events: {
+      SomeUpdate: event()
+    },
+    Logic: class BlockBLogic {
+      prepare() {
+        return [
+          { sharedDump: JSON.stringify(this.shared) },
+          this.FromInitOneCmd
+        ];
       }
-      @cmd
-      FromInitOneCmd() {}
+      hub(event) {
+        if (event.is(BlockB.Events.SomeUpdate)) {
+          return { SomeEventUpdated: { ...event } };
+        }
+      }
+      FromInitOneCmd() {
+        return [
+          { FromInitOneCmd: true },
+          SharedBlock.Events.UpdateShared(3,2,1)
+        ];
+      }
     }
   };
   const BlockA = {
-    createModel: () => ({
-      b_1: BlockB.createModel(),
-      b_2: BlockB.createModel()
-    }),
-    Logic: class BlockA {
-      config() {
-        return {
-          initCommands: [this.FromInitOneCmd, this.FromInitTwoCmd(1, 2, 3)]
-        };
+    Logic: class BlockALogic {
+      prepare() {
+        return [
+          context({
+            some: child(SharedBlock.Logic)
+          }),
+          {
+            b_1: child(BlockB.Logic),
+            b_2: child(BlockB.Logic)
+          },
+          this.FromInitOneCmd,
+          this.FromInitTwoCmd(1, 2, 3)
+        ];
       }
-      children() {
-        return {
-          b_1: child(BlockB.Logic),
-          b_2: child(BlockB.Logic)
-        };
-      }
-      hubBefore(cmd) {
-        if (cmd.is(logicOf(this.model.b_1).FromInitOneCmd)) {
-          return this.HandleB_1;
-        } else if (cmd.is(logicOf(this.model.b_2).FromInitOneCmd)) {
-          return this.HandleB_2;
+      hub(event, fromChildren) {
+        if (event.is(SharedBlock.Events.UpdateShared) && fromChildren) {
+          return { ReactOnUpdateShared: { ...event } };
         }
       }
-      hubAfter(cmd) {
-        if (cmd.is(BlockB.Logic.prototype.FromInitOneCmd, this.model.b_1)) {
-          return this.HandleB_11;
-        } else if (
-          cmd.is(BlockB.Logic.prototype.FromInitOneCmd, this.model.b_2)
-        ) {
-          return this.HandleB_22;
-        }
-      }
-      port(exec, destroyed) {
-        destroyed.then(handleBefore(this.shared, (cmd) => {
-          if (cmd.is('SharedBlock.FromPortAsync_Success')) {
-            exec(this.FromSubCmd);
-          }
-        }));
-        exec(this.FromSubCmd);
-        exec(this.FromPortCmd);
-        exec(this.FromPortAsync());
-      }
-      @cmd
       FromPortCmd() {
-        return [this.FromPortCmd_1, this.FromPortCmd_2()];
+        return [ this.FromPortCmd_1, this.FromPortCmd_2() ];
       }
-      @cmd
       FromPortAsync() {
-        return task(AsyncTaskDelayed).success(this.FromPortAsync_Success);
+        return task(AsyncTaskDelayed)
+          .success(this.FromPortAsync_Success);
       }
-      @cmd
-      FromPortCmd_1() {}
-      @cmd
-      FromPortCmd_2() {}
-      @cmd
-      FromPortAsync_Success() {}
-      @cmd
-      FromInitOneCmd() {}
-      @cmd
-      FromInitTwoCmd() {}
-      @cmd
-      FromSubCmd() {}
-      @cmd
-      HandleB_1() {}
-      @cmd
-      HandleB_11() {}
-      @cmd
-      HandleB_2() {}
-      @cmd
-      HandleB_22() {}
+      FromPortCmd_1() { return { FromPortCmd_1: true }; }
+      FromPortCmd_2() { return { FromPortCmd_2: true }; }
+      FromPortAsync_Success() { return { FromPortAsync_Success: true } }
+      FromInitOneCmd() { return { FromInitOneCmd: true } }
+      FromInitTwoCmd() { return { FromInitTwoCmd: true } }
+      FromSubCmd() { return [
+        { b_1: update(BlockB.Logic, BlockB.Events.SomeUpdate(1,2,3)) },
+        { FromSubCmd: true }
+      ] }
+      HandleB_1() { return { HandleB_1: true } }
+      HandleB_11() { return { HandleB_11: true } }
+      HandleB_2() { return { HandleB_2: true } }
+      HandleB_22() { return { HandleB_22: true } }
     }
   };
 
   it('should execute init commands in correct order and finish', async () => {
-    const { app, shared, commandNames, errors } = await runWithTracking({
-      app: BlockA,
-      shared: SharedBlock
+    const { app, commandNames, errors } = await runWithTracking({
+      app: BlockA
     });
 
-    expect(errors).toEqual([]);
-    expect(commandNames).toEqual([
-      'SharedBlock.FromPortAsync',
-      'SharedBlock.FromInitOneCmd',
-      'BlockB.FromInitOneCmd',
-      'BlockA.HandleB_1',
-      'BlockA.HandleB_11',
-      'BlockB.FromInitOneCmd',
-      'BlockA.HandleB_2',
-      'BlockA.HandleB_22',
-      'BlockA.FromSubCmd',
-      'BlockA.FromPortCmd',
-      'BlockA.FromPortCmd_1',
-      'BlockA.FromPortCmd_2',
-      'BlockA.FromPortAsync',
-      'BlockA.FromInitOneCmd',
-      'BlockA.FromInitTwoCmd',
-      'SharedBlock.FromPortAsync_Success',
-      'BlockA.FromSubCmd',
-      'BlockA.FromPortAsync_Success'
-    ]);
+    expect(errors).toMatchSnapshot();
+    expect(app.model).toMatchSnapshot();
+    expect(commandNames).toMatchSnapshot();
   });
 });

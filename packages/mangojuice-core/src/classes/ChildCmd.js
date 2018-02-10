@@ -1,4 +1,6 @@
 import { extend, noop } from '../core/utils';
+import Message from './Message';
+
 
 /**
  * Describes child logic which will be attached to some model field.
@@ -7,7 +9,7 @@ import { extend, noop } from '../core/utils';
  * to {@link LogicBase#config} and {@link LogicBase#children}.
  *
  * @example
- * class ChildLogic {
+ * class MetaChild {
  *   config(amount) {
  *     return { meta: { amount } };
  *   }
@@ -15,25 +17,36 @@ import { extend, noop } from '../core/utils';
  * class RootLogic {
  *   children() {
  *     return {
- *       modelField: child(ChildLogic, 10)
- *       // `config` of `ChildLogic` will be invoked with
+ *       modelField: child(MetaChild, 10)
+ *       // `config` of `MetaChild` will be invoked with
  *       // `10` as a first argument
  *     }
  *   }
  * }
- * @class ChildLogic
+ * @class MetaChild
  * @property {LogicBase} logicClass  A Logic class you want to attach to the model
  * @property {Array<any>} args  A list of arguments that should be passed to `config` and
  *                              `children` methods of the logic.
  * @param {Array<Object>} logicClass
  * @param {Array<Object>} args
  */
-function ChildLogic(logicClass, args) {
+function ChildCmd(logicClass) {
   this.logicClass = logicClass;
-  this.args = args;
 }
 
-extend(ChildLogic.prototype, /** @lends ChildLogic.prototype */{
+extend(ChildCmd.prototype, /** @lends ChildCmd.prototype */{
+  update(msg) {
+    if (!msg || !(msg instanceof Message)) {
+      throw new Error('You can only use Message instance to update a child model');
+    }
+    this.updateMsg = msg;
+    return this;
+  }
+
+  create(...args) {
+    this.createArgs = args;
+    return this;
+  }
 });
 
-export default ChildLogic;
+export default ChildCmd;

@@ -1,9 +1,9 @@
-import ComputedField from '../../classes/ComputedField';
+import ComputedFieldCmd from '../classes/ComputedFieldCmd';
 
 /**
  * Function that helps to describe a computed field with external
  * model dependncies. Should be used in {@link LogicBase#computed}.
- * It creates an instance of {@link ComputedField} with dependencies
+ * It creates an instance of {@link ComputedFieldCmd} with dependencies
  * passed as arguments.
  *
  * A compute field with external dependencies is a field that should
@@ -33,10 +33,10 @@ import ComputedField from '../../classes/ComputedField';
  *   }
  * }
  * @param  {...deps} deps  A list of models with attached logic
- * @return {ComputedField}
+ * @return {ComputedFieldCmd}
  */
 export function depends(...deps) {
-  return new ComputedField(deps);
+  return new ComputedFieldCmd(deps);
 }
 
 export default depends;

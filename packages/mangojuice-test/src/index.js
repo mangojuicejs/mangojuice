@@ -13,7 +13,7 @@ class TrackableProcess extends Process {
   }
 }
 
-export function runWithTracking({ expectErrors, app, shared } = {}) {
+export function runWithTracking({ expectErrors, app } = {}) {
   const commands = [];
   const commandNames = [];
   const execOrder = [];
@@ -28,54 +28,30 @@ export function runWithTracking({ expectErrors, app, shared } = {}) {
       errors.push(e);
     }
     onExecuted(cmd) {
-      execOrder.push(cmd.name);
+      execOrder.push(cmd);
     }
     onStartExec(cmd) {
       commands.push(cmd);
-      commandNames.push(cmd.name);
+      commandNames.push(cmd);
     }
   }
 
   try {
     const logger = new TrackerLogger();
-    let sharedBind, appBind;
-
-    if (shared) {
-      if (shared.Logic) {
-        sharedBind = bind(shared, {
-          Process: TrackableProcess,
-          logger
-        });
-      } else {
-        sharedBind = {
-          model: shared,
-          proc: { run: () => {} }
-        };
-      }
-    }
-
-    if (app) {
-      appBind = bind(app, {
-        Process: TrackableProcess,
-        shared: sharedBind && sharedBind.model,
-        logger
-      });
-    }
+    const appBind = bind(app, {
+      Process: TrackableProcess,
+      logger
+    });
 
     const result = {
       commandNames,
       execOrder,
       commands,
       errors,
-      app: appBind,
-      shared: sharedBind
+      app: appBind
     };
 
-    const promise = Promise.all([
-      sharedBind && sharedBind.proc.run(),
-      appBind && appBind.proc.run()
-    ]).then(() => result);
-
+    const promise = appBind.proc.run().then(() => result);
     utils.extend(promise, result);
     return promise;
   } catch (e) {

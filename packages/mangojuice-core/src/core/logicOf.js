@@ -16,14 +16,9 @@ import procOf from './procOf';
  *                               instance is instance of the class
  * @return {LogicBase} Returns a logic instance
  */
-function logicOf(model, logicClass) {
+function logicOf(model) {
   const proc = procOf(model);
-  if (logicClass && !(proc.logic instanceof logicClass)) {
-    throw new Error(
-      `Logic is not an instance of ${logicClass.constructor.name}`
-    );
-  }
-  return proc.logic;
+  return proc && proc.logic;
 }
 
 export default logicOf;

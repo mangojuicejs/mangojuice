@@ -1,0 +1,219 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Init commands execution should execute init commands in correct order and finish 1`] = `Array []`;
+
+exports[`Init commands execution should execute init commands in correct order and finish 2`] = `
+Object {
+  "FromInitOneCmd": true,
+  "FromInitTwoCmd": true,
+  "FromPortAsync_Success": true,
+  "FromPortCmd_1": true,
+  "FromPortCmd_2": true,
+  "FromSubCmd": true,
+  "ReactOnUpdateShared": Object {
+    "0": 3,
+    "1": 2,
+    "2": 1,
+  },
+  "b_1": Object {
+    "FromInitOneCmd": true,
+    "SomeEventUpdated": Object {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+    },
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+  },
+  "b_2": Object {
+    "FromInitOneCmd": true,
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+  },
+}
+`;
+
+exports[`Init commands execution should execute init commands in correct order and finish 3`] = `
+Array [
+  Object {
+    "FromInitOneCmd": true,
+  },
+  TaskMeta {
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  Array [
+    Object {
+      "b_1": ChildLogic {
+        "args": Array [],
+        "logicClass": [Function],
+      },
+      "b_2": ChildLogic {
+        "args": Array [],
+        "logicClass": [Function],
+      },
+    },
+    [Function],
+    Object {
+      "FromInitTwoCmd": true,
+    },
+  ],
+  Object {
+    "b_1": ChildLogic {
+      "args": Array [],
+      "logicClass": [Function],
+    },
+    "b_2": ChildLogic {
+      "args": Array [],
+      "logicClass": [Function],
+    },
+  },
+  Array [
+    Object {
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+    },
+    [Function],
+  ],
+  Object {
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true}}",
+  },
+  Array [
+    Object {
+      "FromInitOneCmd": true,
+    },
+    Event {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  ],
+  Object {
+    "FromInitOneCmd": true,
+  },
+  Event {
+    "0": 3,
+    "1": 2,
+    "2": 1,
+  },
+  Object {
+    "ReactOnUpdateShared": Object {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  },
+  Object {
+    "SharedUpdated": Object {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  },
+  Array [
+    Object {
+      "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+    },
+    [Function],
+  ],
+  Object {
+    "sharedDump": "{\\"some\\":{\\"FromInitOneCmd\\":true,\\"SharedUpdated\\":{\\"0\\":3,\\"1\\":2,\\"2\\":1}}}",
+  },
+  Array [
+    Object {
+      "FromInitOneCmd": true,
+    },
+    Event {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  ],
+  Object {
+    "FromInitOneCmd": true,
+  },
+  Event {
+    "0": 3,
+    "1": 2,
+    "2": 1,
+  },
+  Object {
+    "ReactOnUpdateShared": Object {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  },
+  Object {
+    "SharedUpdated": Object {
+      "0": 3,
+      "1": 2,
+      "2": 1,
+    },
+  },
+  Object {
+    "FromInitOneCmd": true,
+  },
+  Object {
+    "FromInitTwoCmd": true,
+  },
+  Array [
+    Object {
+      "b_1": ChildLogic {
+        "args": undefined,
+        "logicClass": [Function],
+        "updateEvent": Event {
+          "0": 1,
+          "1": 2,
+          "2": 3,
+        },
+      },
+    },
+    Object {
+      "FromSubCmd": true,
+    },
+  ],
+  Object {
+    "b_1": ChildLogic {
+      "args": undefined,
+      "logicClass": [Function],
+      "updateEvent": Event {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+      },
+    },
+  },
+  Object {
+    "SomeEventUpdated": Object {
+      "0": 1,
+      "1": 2,
+      "2": 3,
+    },
+  },
+  Object {
+    "FromSubCmd": true,
+  },
+  Array [
+    [Function],
+    Object {
+      "FromPortCmd_2": true,
+    },
+  ],
+  Object {
+    "FromPortCmd_1": true,
+  },
+  Object {
+    "FromPortCmd_2": true,
+  },
+  TaskMeta {
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "FromPortAsync_Success": true,
+  },
+  Object {
+    "FromPortAsync_Success": true,
+  },
+]
+`;

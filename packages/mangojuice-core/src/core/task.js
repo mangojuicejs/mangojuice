@@ -1,7 +1,10 @@
-import callTask from './callTask';
-import TaskMeta from '../../classes/TaskMeta';
-import { CANCEL } from '../../classes/AsyncTask';
+import TaskMeta from '../classes/TaskMeta';
+import AsyncTask, { CANCEL } from '../classes/AsyncTask';
 
+
+function defaultTaskEngine(fn, ...args) {
+  return new AsyncTask(this, fn, args);
+}
 
 /**
  * Creates a {@link TaskMeta} object that could be returned from
@@ -15,7 +18,7 @@ import { CANCEL } from '../../classes/AsyncTask';
  * @return {Object}
  */
 export function task(taskFn) {
-  return new TaskMeta(taskFn, callTask);
+  return new TaskMeta(taskFn, defaultTaskEngine);
 }
 
 // Export CANCEL symbol to be able to make cancellable promises

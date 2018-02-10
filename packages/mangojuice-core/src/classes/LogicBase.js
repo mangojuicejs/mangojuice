@@ -51,27 +51,9 @@ function LogicBase() {
 
 
 extend(LogicBase.prototype, /** @lends LogicBase.prototype */{
-  /**
-   * A function to handle global event, such as browser-level events,
-   * websocket, intervals. The main porpouse of the `port` is to subscribe
-   * to some global events, execute appropriate commands from the logic
-   * on the events and remove the handlers when the logic was destroyed.
-   *
-   * @example
-   * port(exec, destroyed) {
-   *   const timer = setInterval(() => {
-   *     exec(this.SecondPassed);
-   *   }, 1000);
-   *   destroyed.then(() => clearInterval(timer));
-   * }
-   * @param  {Function} exec      It is a function that execute a passed command
-   * @param  {Promise} destroyed  A promise that will be resolved when the logic destroyed
-   */
-  port(exec, destroyed) {},
+  create() {},
 
-  prepare() {},
-
-  hub() {}
+  update() {}
 });
 
 export default LogicBase;
