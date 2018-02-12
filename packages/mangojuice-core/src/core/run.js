@@ -1,4 +1,5 @@
-import bind from './bind';
+import Process from '../classes/Process';
+
 
 /**
  * Run given block. It is a short-hand function for running {@link bind}
@@ -15,8 +16,17 @@ import bind from './bind';
  *                  finished.
  */
 function run(block, opts = {}) {
-  const { proc, model } = bind(block, opts);
+  const ProcessClass = opts.Process || Process;
+  const model = opts.model || {};
+  const proc = new ProcessClass({
+    logger: opts.logger,
+    logicClass: block.Logic,
+    createArgs: opts.args || []
+  });
+
+  proc.bind(model);
   proc.run();
+
   return {
     proc,
     model,

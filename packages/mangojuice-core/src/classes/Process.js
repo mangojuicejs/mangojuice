@@ -237,10 +237,10 @@ function stopComputedObservers(proc) {
   });
 }
 
-function destroyAllProcesses(model) {
+function destroyAttachedProcess(model) {
   const currProc = procOf(model);
   if (currProc) {
-    maybeForEach(currProc, p => p.destroy());
+    p.destroy();
   }
 }
 
@@ -304,10 +304,11 @@ function cancelAllTasks(proc) {
  * @return {Promise}
  */
 function execTask(proc, taskObj) {
-  const execId = nextId();
   const { tasks, logger, model, sharedModel, config, logic } = proc;
   const { task, executor, notifyCmd, successCmd, failCmd,
-    customArgs, execEvery, id: taskId } = taskObj;
+    customArgs, execEvery, customExecId, id: taskId } = taskObj;
+  const execId = customExecId || nextId();
+  const executions = tasks[taskId] = tasks[taskId] || {};
 
   // If not in multi-thread mode or just need to cancel a tak –
   // cancel all running task with same identifier (command id)
@@ -316,12 +317,17 @@ function execTask(proc, taskObj) {
     if (taskObj.cancelTask) return;
   }
 
+  // Do not create any new task if the task with given exec id
+  // already exists. Usefull for throttle/debounce tasks
+  if (executions[execId]) {
+    executions[execId].exec(taskObj);
+    return;
+  }
+
   // Handle result of the execution of a task – returns
   // success command if error not defined, fail command otherwise
   const handleResult = ({ result, error }) => {
-    if (tasks[taskId]) {
-      delete tasks[taskId][execId];
-    }
+    delete executions[execId];
     if (error && !error.cancelled) {
       return failCmd
         ? () => failCmd.call(logic, error)
@@ -340,14 +346,13 @@ function execTask(proc, taskObj) {
 
   // Run the task function and wait for the result
   const context = { notify: handleNotify };
-  const args = customArgs || EMPTY_ARRAY;
-  const taskCall = executor.call(context, task, logic, ...args);
+  const taskCall = executor(context, taskObj, logic);
 
   // Track task execution
-  tasks[taskId] = tasks[taskId] || {};
-  tasks[taskId][execId] = taskCall;
-
-  return taskCall.exec().then(handleResult, handleResult);
+  executions[execId] = taskCall;
+  taskCall.exec(taskObj)
+    .then(handleResult, handleResult)
+    .then(proc.exec, proc.exec);
 }
 
 function updateModelField(proc, model, key, update) {
@@ -364,9 +369,9 @@ function updateModelField(proc, model, key, update) {
     fastForEach(update, (nextUpdate, nextKey) => {
       doUpdateModel(proc, nextModel, nextKey, nextUpdate);
     });
-    fastForEach(nextModel.slice(update.length), destroyAllProcesses);
+    fastForEach(nextModel.slice(update.length), destroyAttachedProcess);
   } else {
-    destroyAllProcesses(model[key]);
+    destroyAttachedProcess(model[key]);
     if (model[key] === update) return false;
     model[key] = update;
   }
@@ -456,8 +461,7 @@ function doExecCmd(proc, cmd) {
 
   // Execute command
   if (cmd instanceof TaskCmd) {
-    const taskPromise = execTask(proc, cmd);
-    taskPromise.then(exec, exec);
+    execTask(proc, cmd);
   } else if (cmd instanceof Message) {
     sendMessageToParents(proc, cmd);
   } else if (cmd instanceof ContextCmd) {
@@ -478,30 +482,6 @@ function doExecCmd(proc, cmd) {
   // Run after handlers
   logger.onEndExec(model, cmd);
   decExecCounter();
-}
-
-
-/**
- * Handle delayed command execution. Decide when to execute the
- * command and when delay it, etc.
- *
- * @private
- * @param  {Process} proc
- * @param  {Command} cmd
- */
-function doDelayExecCmd(proc, cmd) {
-  const { tasks } = proc;
-  const taskId = cmd.id;
-  const tasksObj = tasks[taskId] = tasks[taskId] || {};
-
-  let taskObj = tasksObj[DELAY_TASK];
-  if (!taskObj) {
-    const executor = (finalCmd) => doExecCmd(proc, finalCmd);
-    const cleanup = () => delete tasksObj[DELAY_TASK];
-    taskObj = tasksObj[DELAY_TASK] = new ThrottleTask(executor, cleanup, cmd.options);
-  }
-
-  taskObj.exec(cmd);
 }
 
 /**
@@ -676,13 +656,6 @@ extend(Process.prototype, /** @lends Process.prototype */{
     }
 
     doExecCmd(this, cmd);
-
-    // const opts = realCmd.options;
-    // if (opts.debounce > 0 || opts.throttle > 0) {
-    //   doDelayExecCmd(this, cmd)
-    // } else {
-    //   doExecCmd(this, cmd);
-    // }
   },
 
   /**

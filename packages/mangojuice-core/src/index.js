@@ -10,11 +10,8 @@ import debounce from './core/debounce';
 import throttle from './core/throttle';
 import logicOf from './core/logicOf';
 import procOf from './core/procOf';
-import delay from './core/delay';
 import task from './core/task';
 import run from './core/run';
-import bind from './core/bind';
-import mount from './core/mount';
 import * as utils from './core/utils';
 import * as config from './config';
 
@@ -34,11 +31,8 @@ export {
   throttle,
   logicOf,
   procOf,
-  delay,
   task,
   run,
-  bind,
-  mount,
   utils,
   config
 };

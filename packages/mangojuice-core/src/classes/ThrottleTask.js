@@ -10,46 +10,47 @@ import { ZERO_DELAY } from '../config';
  *
  * @private
  */
-function ThrottleTask(executor, cleanup, options) {
+function ThrottleTask(executor, options) {
   this.finish = noop;
   this.executor = executor || noop;
-  this.cleanup = cleanup || noop;
-  this.delay = ZERO_DELAY ? 0 : (options.throttle || options.debounce || 0);
+  this.wait = ZERO_DELAY ? 0 : (options.throttle || options.debounce || 0);
   this.debounce = options.debounce > 0;
-  this.noInitCall = !!options.noInitCall;
+  this.leading = 'leading' in options ? !!options.leading : false;
+  this.trailing = 'trailing' in options ? !!options.trailing : true;
   this.doExec = this.doExec.bind(this);
 }
 
 extend(ThrottleTask.prototype, {
-  exec(cmd) {
+  exec(taskObj) {
     if (this.isThrottled) {
-      this.lastCmd = cmd;
+      this.lastTask = taskObj;
       this.ensureExecution();
       if (this.debounce) this.restart();
-      return;
+      return this.execution;
     }
 
     this.isThrottled = true;
     this.restart();
 
-    if (this.noInitCall && !this.calledOnce) {
-      this.lastCmd = cmd;
+    if (!this.leading && !this.calledOnce) {
       this.ensureExecution();
+      this.lastTask = taskObj;
     } else {
-      this.executor(cmd);
+      this.executor(...taskObj.customArgs);
       this.finalize();
     }
+
+    return this.execution;
   },
 
   doExec() {
     this.isThrottled = false;
-    if (this.lastCmd) {
+    if (this.lastTask) {
       this.calledOnce = true;
-      const finalCmd = this.lastCmd;
-      this.lastCmd = null;
-      this.exec(finalCmd);
+      const finalTask = this.lastTask;
+      this.lastTask = null;
+      this.exec(finalTask);
     } else {
-      this.cleanup();
       this.finalize();
     }
   },
@@ -69,12 +70,11 @@ extend(ThrottleTask.prototype, {
   cancel() {
     clearInterval(this.timer);
     this.finalize();
-    this.cleanup();
   },
 
   restart() {
     clearInterval(this.timer);
-    this.timer = setTimeout(this.doExec, this.delay);
+    this.timer = setTimeout(this.doExec, this.wait);
   }
 });
 

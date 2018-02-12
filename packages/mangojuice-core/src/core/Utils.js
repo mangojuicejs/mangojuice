@@ -14,6 +14,17 @@ export const noop = () => null;
 
 export const sym = id => `@@mangojuice/${id}`;
 
+/**
+ * A symbol for setting custom promise cancel function.
+ * You can use it to specify some specific logic that
+ * should be executed when some task canceled. Like for
+ * `delay` function you can clear a timer
+ * (see `delay` sources below).
+ * @private
+ * @type {string}
+ */
+export const CANCEL = sym('CANCEL_PROMISE');
+
 export function autoInc(seed = 1) {
   return () => ++seed;
 }
@@ -112,3 +123,22 @@ export function safeExecFunction(logger, func, context) {
   }
   return result;
 }
+
+/**
+ * A helper function for delaying execution. Returns a Promise
+ * which will be resolved in given amount of milliseconds. You can
+ * use it in {@link task} to implement some delay in execution, for
+ * debouncing for example.
+ *
+ * @param  {number}  ms  An amount of milliseconds to wait
+ * @return {Promise} A promise that resolved after given amount of milliseconds
+ */
+export function delay(ms) {
+  let timeoutId;
+  const res = new Promise(resolve => {
+    timeoutId = setTimeout(() => resolve(), actualMs);
+  });
+  res[CANCEL] = () => clearTimeout(timeoutId);
+  return res;
+}
+

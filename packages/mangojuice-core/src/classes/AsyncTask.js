@@ -1,16 +1,4 @@
-import { sym, is, fastTry, ensureError, extend, noop } from '../core/utils';
-
-
-/**
- * A symbol for setting custom promise cancel function.
- * You can use it to specify some specific logic that
- * should be executed when some task canceled. Like for
- * `delay` function you can clear a timer
- * (see `delay` sources below).
- * @private
- * @type {string}
- */
-export const CANCEL = sym('CANCEL_PROMISE');
+import { sym, is, fastTry, ensureError, extend, noop, CANCEL } from '../core/utils';
 
 
 /**

@@ -147,6 +147,11 @@ extend(TaskCmd.prototype, /** @lends TaskCmd.prototype */{
   cancel() {
     this.cancelTask = true;
     return this;
+  },
+
+  execId(id) {
+    this.customExecId = id;
+    return this;
   }
 });
 
