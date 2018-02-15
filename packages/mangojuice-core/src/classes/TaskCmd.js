@@ -1,4 +1,4 @@
-import { extend, is, idenitify } from '../core/utils';
+import { extend, is, identify } from '../core/utils';
 
 
 /**
@@ -66,7 +66,7 @@ import { extend, is, idenitify } from '../core/utils';
 export function TaskCmd(taskFn, executor) {
   this.task = taskFn;
   this.executor = executor;
-  this.id = idenitify(taskFn);
+  this.id = identify(taskFn);
 }
 
 extend(TaskCmd.prototype, /** @lends TaskCmd.prototype */{

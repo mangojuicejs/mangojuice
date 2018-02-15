@@ -5,7 +5,7 @@ import ContextLogic from './ContextLogic';
 import ChildCmd from './ChildCmd';
 import ThrottleTask from './ThrottleTask';
 import DefaultLogger from './DefaultLogger';
-import observe, { incExecCounter, decExecCounter } from '../core/observe';
+import observe, { handleStackPush, handleStackPop } from '../core/observe';
 import procOf from '../core/procOf';
 import handle from '../core/handle';
 import child from '../core/child';
@@ -29,6 +29,14 @@ const EMPTY_OBJECT = {};
 const EMPTY_FINISHED = Promise.resolve();
 const DELAY_TASK = 'DELAY';
 
+
+function createInternalContext() {
+  return {
+    processes: {},
+    stackCounter: 0,
+    emptyStackHandlers: {},
+  };
+}
 
 /**
  * Iterate through all active processes in the app and
@@ -203,9 +211,12 @@ function runLogicUpdate(proc, msg) {
  * @param  {Process} proc
  * @return {Promise}
  */
-function runAllObservers(proc) {
+function runModelObservers(proc) {
   const observersIterator = (obs) => obs();
   maybeForEach(proc.observers, observersIterator);
+  if (proc.parent) {
+    maybeForEach(proc.childrenObservers, observersIterator);
+  }
 }
 
 /**
@@ -236,6 +247,32 @@ function findContext(proc, contextCmd) {
 
   return null;
 }
+
+function runEmptyStackHandlers(proc) {
+  const { internalContext } = proc;
+  const handlersObj = internalContext.emptyStackHandlers;
+  const handlerIds = Object.keys(handlersObj);
+  const queuedObserversIterator = (handlerId) => handlersObj[handlerId]();
+
+  internalContext.emptyStackHandlers = {};
+  fastForEach(handlerIds, queuedObserversIterator);
+}
+
+function handleStackPush(proc) {
+  const { internalContext } = proc;
+  internalContext.stackCounter += 1;
+}
+
+function handleStackPop(proc) {
+  const { internalContext } = proc;
+  internalContext.stackCounter -= 1;
+
+  if (internalContext.stackCounter <= 0) {
+    internalContext.stackCounter = 0;
+    runEmptyStackHandlers(proc);
+  }
+}
+
 
 /**
  * Cancel task with given id in the process if exists
@@ -431,7 +468,7 @@ function doExecCmd(proc, cmd) {
   let modelUpdated = false;
 
   // Prepare and run before handlers
-  incExecCounter();
+  handleStackPush(proc);
   logger.onStartExec(model, cmd);
 
   // Execute command
@@ -451,12 +488,12 @@ function doExecCmd(proc, cmd) {
 
   // Emit model update for view re-rendering
   if (modelUpdated) {
-    runAllObservers(proc);
+    runModelObservers(proc);
   }
 
   // Run after handlers
   logger.onEndExec(model, cmd);
-  decExecCounter();
+  handleStackPop(proc);
 }
 
 /**
@@ -507,12 +544,13 @@ export function Process(opts) {
   this.id = nextId();
   this.logic = new logicClass();
   this.parent = parent;
-  this.internalContext = internalContext || { processes: {} };
+  this.internalContext = internalContext || createInternalContext();
   this.logger = logger || new DefaultLogger();
   this.createArgs = createArgs || EMPTY_ARRAY;
   this.computedFields = {};
   this.tasks = {};
   this.observers = [];
+  this.childrenObservers = [];
   this.children = {};
   this.handlers = [];
   this.contextSubs = [];
@@ -545,7 +583,7 @@ extend(Process.prototype, /** @lends Process.prototype */{
   run() {
     this.internalContext.processes[this.id] = this;
     runLogicCreate(this);
-    runAllObservers(this);
+    runModelObservers(this);
   },
 
   /**
@@ -558,7 +596,10 @@ extend(Process.prototype, /** @lends Process.prototype */{
    *                          By default, if not provided then considered as true.
    */
   destroy(deep) {
+    this.computedFields = {};
     this.observers = [];
+    this.childrenObservers = [];
+    this.handlers = [];
     this.destroyed = true;
 
     delete this.model.__proc;
@@ -630,12 +671,6 @@ extend(Process.prototype, /** @lends Process.prototype */{
     }
 
     doExecCmd(this, cmd);
-  },
-
-  children() {
-    const children = [];
-    forEachChildren(this, (p) => children.push(p));
-    return children;
   },
 
   /**

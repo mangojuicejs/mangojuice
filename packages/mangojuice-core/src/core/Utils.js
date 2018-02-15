@@ -31,7 +31,7 @@ export function autoInc(seed = 1) {
 
 export const nextId = autoInc();
 
-export const idenitify = (val) => {
+export const identify = (val) => {
   if (!val.__id) {
     Object.defineProperty(val, '__id', { value: nextId() });
   }

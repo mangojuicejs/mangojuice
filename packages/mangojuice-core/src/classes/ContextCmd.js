@@ -1,10 +1,10 @@
-import { extend, noop, idenitify } from '../core/utils';
+import { extend, noop, identify } from '../core/utils';
 import ChildCmd from './ChildCmd';
 
 
 function ContextCmd(contextFn) {
   this.contextFn = contextFn;
-  this.id = idenitify(contextFn);
+  this.id = identify(contextFn);
 }
 
 extend(ContextCmd.prototype, ChildCmd.prototype);

@@ -1,10 +1,6 @@
 import procOf from './procOf';
-import { nextId, fastForEach, safeExecFunction } from './utils';
-
-
-// Internals
-let observersToNotify = {};
-let execCounter = 0;
+import context from './context';
+import { nextId, fastForEach, safeExecFunction, maybeMap, is, identify } from './utils';
 
 
 /**
@@ -14,44 +10,44 @@ let execCounter = 0;
  * @param  {Process} proc
  * @return {Promise}
  */
-function enqueueNotifyObserver(observer) {
-  observersToNotify[observer.id] = observer;
+function addEmptyStackHandler(proc, handler) {
+  proc.internalContext.emptyStackHandlers[handler.id] = handler;
 }
 
-/**
- * Go through all queued observers and run them. Empty
- * the queue before that.
- * @private
- * @return {Promise}
- */
-function notifyQueuedObservers() {
-  const list = observersToNotify;
-  const obsIds = Object.keys(list);
-  observersToNotify = {};
-  fastForEach(obsIds, function queuedObserversIterator(obsId) {
-    list[obsId]();
-  });
-}
+function observeModel(model, handler, options) {
+  const modelProc = procOf(model);
+  const type = options.type || 'observers';
+  if (!modelProc[type]) return;
 
-/**
- * Increase processing counter
- * @private
- */
-export function incExecCounter() {
-  execCounter += 1;
-}
+  // Wrap original handler to execute with error logger
+  let finalHandler = (arg) => safeExecFunction(modelProc.logger,
+    () => handler(arg));
 
-/**
- * Decrease processing counter. When hits zero – run all
- * pending observers
- * @private
- */
-export function decExecCounter() {
-  execCounter -= 1;
-  if (execCounter <= 0) {
-    execCounter = 0;
-    notifyQueuedObservers();
+  // Wrap again to execute at the end of the commands stack
+  if (options.batched) {
+    const originalHandler = finalHandler;
+    identify(originalHandler);
+    finalHandler = function batchedObserver() {
+      addEmptyStackHandler(modelProc, originalHandler);
+    };
   }
+
+  modelProc[type].push(finalHandler);
+
+  return function removeObserver() {
+    if (modelProc[type]) {
+      modelProc[type] = modelProc[type].filter(x => x !== finalHandler);
+    }
+  };
+}
+
+function observeContext(ctxFunc, handler, options) {
+  const { model: rootModel, batched } = options;
+  const modelProc = procOf(rootModel);
+  let ctxModel = null;
+
+  modelProc.exec(context(ctxFunc).get((m) => ctxModel = m));
+  return observeModel(ctxModel, handler, { batched, type: 'childrenObservers' });
 }
 
 /**
@@ -99,31 +95,10 @@ export function decExecCounter() {
  *                                 view re-renderings.
  * @return {Function}
  */
-export function observe(model, handler, options) {
-  const modelProc = procOf(model);
-  const type = (options && options.type) || 'observers';
-  if (!modelProc[type]) return;
-
-  // Wrap original handler to execute with error logger
-  let finalHandler = (arg) => safeExecFunction(modelProc.logger,
-    () => handler(arg));
-
-  // Wrap again to execute at the end of the commands stack
-  if (options && options.batched) {
-    const originalHandler = finalHandler;
-    originalHandler.id = nextId();
-    finalHandler = function batchedObserver() {
-      enqueueNotifyObserver(originalHandler);
-    };
-  }
-
-  modelProc[type].push(finalHandler);
-
-  return function removeObserver() {
-    if (modelProc[type]) {
-      modelProc[type] = modelProc[type].filter(x => x !== finalHandler);
-    }
-  };
+export function observe(model, handler, options = {}) {
+  return is.func(model)
+    ? observeContext(model, handler, options)
+    : observeModel(model, handler, options);
 }
 
 export default observe;
