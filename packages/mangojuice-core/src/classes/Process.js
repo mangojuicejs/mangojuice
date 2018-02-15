@@ -381,7 +381,7 @@ function updateModelField(proc, model, key, update) {
   } else if (is.array(update)) {
     const nextModel = model[key] || [];
     fastForEach(update, (nextUpdate, nextKey) => {
-      doUpdateModel(proc, nextModel, nextKey, nextUpdate);
+      updateModelField(proc, nextModel, nextKey, nextUpdate);
     });
     fastForEach(nextModel.slice(update.length), destroyAttachedProcess);
   } else {

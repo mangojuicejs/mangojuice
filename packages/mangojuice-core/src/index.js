@@ -2,9 +2,10 @@ import Process from './classes/Process';
 import LogicBase from './classes/LogicBase';
 import DefaultLogger from './classes/DefaultLogger';
 import child from './core/child';
-import msg from './core/msg';
+import message from './core/message';
 import context from './core/context';
 import observe from './core/observe';
+import observeContext from './core/observeContext';
 import debounce from './core/debounce';
 import throttle from './core/throttle';
 import logicOf from './core/logicOf';
@@ -27,8 +28,9 @@ export {
   throttle,
   task,
   // Core
-  msg,
+  message,
   observe,
+  observeContext,
   logicOf,
   procOf,
   run,

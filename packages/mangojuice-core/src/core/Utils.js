@@ -33,9 +33,22 @@ export const nextId = autoInc();
 
 export const identify = (val) => {
   if (!val.__id) {
-    Object.defineProperty(val, '__id', { value: nextId() });
+    Object.defineProperty(val, '__id', {
+      value: nextId(),
+      enumerable: false,
+      configurable: false
+    });
   }
   return val.__id;
+};
+
+export const fastFind = (subject, comparator) => {
+  const length = subject.length;
+  for (let i = 0; i < length; i++) {
+    if (comparator(subject[i], i)) {
+      return subject[i];
+    }
+  }
 };
 
 export const fastForEach = (subject, iterator) => {
@@ -65,19 +78,30 @@ export const fastTry = fn => {
   }
 };
 
-export const runOnMixed = (mapper, val, fn) => {
-  if (is.array(val)) {
-    return mapper(val, x => x && fn(x));
-  } else if (is.notUndef(val)) {
-    const res = fn(val);
-    return mapper === fastMap ? [res] : undefined;
+export const maybeMap = (subject, mapper) => {
+  if (is.array(subject)) {
+    return fastMap(subject, x => mapper(x));
+  } else if (is.notUndef(subject)) {
+    return [mapper(subject, 0)];
   }
-  return mapper === fastMap ? [] : undefined;
-};
+  return [];
+}
 
-export const maybeMap = runOnMixed.bind(null, fastMap);
+export const maybeForEach = (subject, iterator) => {
+  if (is.array(subject)) {
+    fastForEach(subject, x => iterator(x));
+  } else if (is.notUndef(subject)) {
+    iterator(subject, 0);
+  }
+}
 
-export const maybeForEach = runOnMixed.bind(null, fastForEach);
+export const maybeFind = (subject, comparator) => {
+  if (is.array(subject)) {
+    return fastFind(subject, comparator);
+  } else {
+    return comparator(subject, 0);
+  }
+}
 
 export const deepForEach = (vals, fn) => {
   maybeForEach(vals, function deepMapIterator(v) {

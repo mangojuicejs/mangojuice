@@ -1,5 +1,6 @@
-import { extend, noop } from '../core/utils';
 import Message from './Message';
+import { extend } from '../core/utils';
+import message from '../core/message';
 
 
 /**
@@ -35,11 +36,10 @@ function ChildCmd(logicClass) {
 }
 
 extend(ChildCmd.prototype, /** @lends ChildCmd.prototype */{
-  update(msg) {
-    if (!msg || !(msg instanceof Message)) {
-      throw new Error('You can only use Message instance to update a child model');
-    }
-    this.updateMsg = msg;
+  update(msgCreator, ...args) {
+    this.updateMsg = msgCreator instanceof Message
+      ? msgCreator
+      : message(msgCreator, ...args);
     return this;
   },
 

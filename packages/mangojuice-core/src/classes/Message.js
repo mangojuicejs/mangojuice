@@ -1,14 +1,18 @@
 import { extend, is } from '../core/utils';
 
 
-function Message(data, creator) {
-  extend(this, data);
-  Object.defineProperty(this, '__creator', { value: creator });
+function Message(msgCreator, args) {
+  extend(this, msgCreator(...args));
+  Object.defineProperty(this, '__creator', { value: msgCreator });
 }
 
 extend(Message.prototype, /** @lends LogicBase.prototype */{
-  when(eventCreator, func) {
-    if (this.__creator === eventCreator) {
+  is(msgCreator) {
+    const actualCreator = msgCreator && msgCreator.__creator || msgCreator;
+    return this.__creator === actualCreator;
+  },
+  when(msgCreator, func) {
+    if (this.is(msgCreator)) {
       return func(this);
     }
   }
