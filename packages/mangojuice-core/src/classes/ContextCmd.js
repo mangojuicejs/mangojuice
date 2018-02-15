@@ -1,4 +1,5 @@
 import { extend, noop, idenitify } from '../core/utils';
+import ChildCmd from './ChildCmd';
 
 
 function ContextCmd(contextFn) {
@@ -6,17 +7,8 @@ function ContextCmd(contextFn) {
   this.id = idenitify(contextFn);
 }
 
+extend(ContextCmd.prototype, ChildCmd.prototype);
 extend(ContextCmd.prototype, /** @lends ContextCmd.prototype */{
-  update(obj) {
-    this.updateObj = obj;
-    return this;
-  },
-
-  create(...args) {
-    this.createArgs = args;
-    return this;
-  },
-
   subscribe() {
     this.subscribeVal = true;
     return this;

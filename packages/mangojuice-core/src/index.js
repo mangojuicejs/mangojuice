@@ -3,7 +3,6 @@ import LogicBase from './classes/LogicBase';
 import DefaultLogger from './classes/DefaultLogger';
 import child from './core/child';
 import msg from './core/msg';
-import depends from './core/depends';
 import context from './core/context';
 import observe from './core/observe';
 import debounce from './core/debounce';
@@ -21,17 +20,17 @@ export {
   Process,
   LogicBase,
   DefaultLogger,
-  // Core
+  // Commands
   child,
-  msg,
-  depends,
   context,
-  observe,
   debounce,
   throttle,
+  task,
+  // Core
+  msg,
+  observe,
   logicOf,
   procOf,
-  task,
   run,
   utils,
   config

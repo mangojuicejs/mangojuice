@@ -27,12 +27,7 @@ function run(block, opts = {}) {
   proc.bind(model);
   proc.run();
 
-  return {
-    proc,
-    model,
-    block,
-    finished: proc.finished()
-  };
+  return model;
 }
 
 export default run;

@@ -1,6 +1,5 @@
 import TaskCmd from './TaskCmd';
 import Message from './Message';
-import ComputedFieldCmd from './ComputedFieldCmd';
 import ContextCmd from './ContextCmd';
 import ContextLogic from './ContextLogic';
 import ChildCmd from './ChildCmd';
@@ -117,28 +116,13 @@ function bindChild(proc, model, key, childCmd) {
  * @private
  * @param  {Process} proc
  * @param  {string} fieldName
- * @param  {function|ComputedFieldCmd} computeVal
+ * @param  {function} computeVal
  * @return {Memoize}
  */
 function bindComputedFieldCmd(proc, model, key, computeVal) {
   const { logger } = proc;
-  let get = noop;
-
-  if (is.func(computeVal)) {
-    get = memoize(() => safeExecFunction(logger, computeVal));
-  } else if (computeVal instanceof ComputedFieldCmd) {
-    const computeWithDeps = () => computeVal.computeFn(...computeVal.deps)
-    get = memoize(() => safeExecFunction(logger, computeWithDeps));
-
-    const updateHandler = () => {
-      if (get.computed()) {
-        get.reset();
-        runAllObservers(proc);
-      }
-    };
-    const observeDependency = (m) => observe(m, updateHandler);
-    get.observers = maybeMap(computeVal.deps, observeDependency);
-  }
+  const get = memoize(() => safeExecFunction(logger, computeVal));
+  proc.computedFields[key] = get;
 
   Object.defineProperty(model, key, {
     enumerable: true,
@@ -230,13 +214,6 @@ function runAllObservers(proc) {
  * @private
  * @param  {Process} proc
  */
-function stopComputedObservers(proc) {
-  const { computedFields } = proc;
-  maybeForEach(computedFields, (f) => {
-    maybeForEach(f.observers, (o) => o());
-  });
-}
-
 function destroyAttachedProcess(model) {
   const currProc = procOf(model);
   if (currProc) {
@@ -362,7 +339,7 @@ function updateModelField(proc, model, key, update) {
   } else if (update instanceof ContextCmd) {
     if (!update.createArgs) return false;
     bindContext(proc, model, key, update);
-  } else if (update instanceof ComputedFieldCmd || is.func(update)) {
+  } else if (is.func(update)) {
     bindComputedFieldCmd(proc, model, key, update);
   } else if (is.array(update)) {
     const nextModel = model[key] || [];
@@ -398,34 +375,32 @@ function updateModel(proc, updateObj) {
   });
 
   if (modelUpdated) {
-    maybeForEach(proc.computedFields, (f) => f.reset());
+    for (let k in proc.computedFields) {
+      proc.computedFields[k].reset();
+    }
   }
 
   return modelUpdated;
 }
 
 function updateContext(proc, contextCmd) {
-  const { logger, contexts, model } = proc;
-  const { updateObj, requestFn, subscribeVal } = contextCmd;
+  const { logger, contexts, model, logic } = proc;
+  const { updateMsg, requestFn, subscribeVal } = contextCmd;
 
   const ctxModel = findContext(proc, contextCmd);
-  if (!ctxModel) {
+  const ctxProc = procOf(ctxModel);
+  if (!ctxModel || !ctxProc) {
     throw new Error('Context of given type does not exist');
   }
 
   if (requestFn) {
-    proc.exec(requestFn(ctxModel));
-    return;
-  }
-
-  const ctxProc = procOf(ctxModel);
-  if (ctxProc) {
-    if (updateObj) {
-      ctxProc.exec(updateObj);
-    } else if (subscribeVal) {
-      const stopSub = handle(ctxModel, (msg) => runLogicUpdate(proc, msg));
-      proc.contextSubs.push(stopSub);
-    }
+    const safeExecReceiver = () => requestFn.call(logic, ctxModel);
+    proc.exec(safeExecReceiver);
+  } else if (updateMsg) {
+    forEachChildren(ctxProc, (p) =>  runLogicUpdate(p, updateMsg));
+  } else if (subscribeVal) {
+    const stopSub = handle(ctxModel, (msg) => runLogicUpdate(proc, msg));
+    proc.contextSubs.push(stopSub);
   }
 }
 
@@ -535,7 +510,7 @@ export function Process(opts) {
   this.internalContext = internalContext || { processes: {} };
   this.logger = logger || new DefaultLogger();
   this.createArgs = createArgs || EMPTY_ARRAY;
-  this.computedFields = EMPTY_ARRAY;
+  this.computedFields = {};
   this.tasks = {};
   this.observers = [];
   this.children = {};
@@ -593,7 +568,6 @@ extend(Process.prototype, /** @lends Process.prototype */{
     };
 
     unsubscribeContexts(this);
-    stopComputedObservers(this);
     cancelAllTasks(this);
 
     if (deep !== false) {
@@ -656,6 +630,12 @@ extend(Process.prototype, /** @lends Process.prototype */{
     }
 
     doExecCmd(this, cmd);
+  },
+
+  children() {
+    const children = [];
+    forEachChildren(this, (p) => children.push(p));
+    return children;
   },
 
   /**
