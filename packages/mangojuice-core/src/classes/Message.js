@@ -3,6 +3,7 @@ import { extend, is } from '../core/utils';
 
 function Message(msgCreator, args) {
   extend(this, msgCreator(...args));
+  Object.defineProperty(this, '__name', { value: msgCreator.name });
   Object.defineProperty(this, '__creator', { value: msgCreator });
 }
 

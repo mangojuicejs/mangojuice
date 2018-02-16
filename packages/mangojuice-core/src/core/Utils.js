@@ -140,10 +140,10 @@ export const memoize = func => {
   return momoizer;
 };
 
-export function safeExecFunction(logger, func, context) {
+export function safeExecFunction(logger, func, proc, cmd) {
   const { result, error } = fastTry(func);
   if (error && logger) {
-    logger.onCatchError(error, context);
+    logger.onCatchError(error, proc, cmd);
   }
   return result;
 }

@@ -5,7 +5,7 @@ import ContextLogic from './ContextLogic';
 import ChildCmd from './ChildCmd';
 import ThrottleTask from './ThrottleTask';
 import DefaultLogger from './DefaultLogger';
-import observe, { handleStackPush, handleStackPop } from '../core/observe';
+import observe from '../core/observe';
 import procOf from '../core/procOf';
 import handle from '../core/handle';
 import child from '../core/child';
@@ -61,13 +61,18 @@ function forEachChildren(proc, iterator) {
   }
 }
 
+function runProcessOnModel(proc, model, childCmd) {
+  const { logicClass, updateMsg, createArgs } = childCmd;
+}
+
 function updateChildLogic(proc, model, childCmd) {
   const { logicClass, updateMsg, createArgs } = childCmd;
   let currProc = procOf(model);
 
   // Protect update of the model of the same type
-  if (updateMsg && !currProc) {
-    throw new Error(`Child model "${key}" do not exists or have incorrect type`);
+  if (updateMsg && (!currProc || !(currProc.logic instanceof logicClass))) {
+    proc.logger.onCatchError(new Error('Child model does not exists or have incorrect type'), proc);
+    return;
   }
 
   // Re-run prepare with new config args if proc already running
@@ -113,8 +118,11 @@ function updateChildLogic(proc, model, childCmd) {
  * @return {Boolean}
  */
 function bindChild(proc, model, key, childCmd) {
-  const currModel = model[key] = model[key] || {};
-  return updateChildLogic(proc, currModel, childCmd);
+  const currModel = model[key] || {};
+  const nextProc = updateChildLogic(proc, currModel, childCmd);
+  if (nextProc) {
+    model[key] = currModel;
+  }
 }
 
 /**
@@ -164,20 +172,15 @@ function bindModel(proc, model) {
 }
 
 function bindContext(proc, model, key, contextCmd) {
+  const { logger } = proc;
   const { contextFn, createArgs, id } = contextCmd;
 
   if (!proc.ownContext[id]) {
     const childDef = child(ContextLogic).create(contextFn, createArgs);
     bindChild(proc, model, key, childDef);
     proc.ownContext[id] = model[key];
-  }
-}
-
-function bindParallelLogic(proc, childDef) {
-  const childProc = updateChildLogic(proc, proc.model, childDef);
-  if (childDef.createArgs) {
-    proc.handlers.push((msg) => runLogicUpdate(childProc, msg));
-    childProc.handlers.push((msg) => runLogicUpdate(proc, msg));
+  } else {
+    logger.onCatchError(new Error(`Context "${contextFn.name}" already created`));
   }
 }
 
@@ -228,7 +231,7 @@ function runModelObservers(proc) {
 function destroyAttachedProcess(model) {
   const currProc = procOf(model);
   if (currProc) {
-    p.destroy();
+    currProc.destroy();
   }
 }
 
@@ -345,7 +348,7 @@ function execTask(proc, taskObj) {
     if (error && !error.cancelled) {
       return failCmd
         ? () => failCmd.call(logic, error)
-        : logger.onCatchError(error);
+        : logger.onCatchError(error, proc, taskObj);
     } else if (successCmd) {
       return () => successCmd.call(logic, result);
     }
@@ -379,14 +382,19 @@ function updateModelField(proc, model, key, update) {
   } else if (is.func(update)) {
     bindComputedFieldCmd(proc, model, key, update);
   } else if (is.array(update)) {
-    const nextModel = model[key] || [];
+    const nextModel = model[key] && model[key].slice(0, update.length) || [];
     fastForEach(update, (nextUpdate, nextKey) => {
       updateModelField(proc, nextModel, nextKey, nextUpdate);
     });
-    fastForEach(nextModel.slice(update.length), destroyAttachedProcess);
+    if (model[key] && update.length !== model[key].length) {
+      for (let i = update.length - 1; i < model[key].length; i++) {
+        destroyAttachedProcess(model[key][i])
+      }
+    }
+    model[key] = nextModel;
   } else {
-    destroyAttachedProcess(model[key]);
     if (model[key] === update) return false;
+    destroyAttachedProcess(model[key]);
     model[key] = update;
   }
   return true;
@@ -427,7 +435,8 @@ function updateContext(proc, contextCmd) {
   const ctxModel = findContext(proc, contextCmd);
   const ctxProc = procOf(ctxModel);
   if (!ctxModel || !ctxProc) {
-    throw new Error('Context of given type does not exist');
+    logger.onCatchError(new Error('Context of given type does not exist'), proc);
+    return;
   }
 
   if (requestFn) {
@@ -478,8 +487,6 @@ function doExecCmd(proc, cmd) {
     sendMessageToParents(proc, cmd);
   } else if (cmd instanceof ContextCmd) {
     updateContext(proc, cmd);
-  } else if (cmd instanceof ChildCmd) {
-    bindParallelLogic(proc, cmd);
   } else if (cmd && (is.array(cmd) || is.func(cmd))) {
     fastForEach(cmd, x => exec(x));
   } else if (is.object(cmd)) {
@@ -555,7 +562,7 @@ export function Process(opts) {
   this.handlers = [];
   this.contextSubs = [];
   this.ownContext = {};
-  this.contexts = !contexts ? [this.ownContext] : [].concat(contexts, this.ownContext);
+  this.contexts = [this.ownContext].concat(contexts || EMPTY_ARRAY);
   this.exec = this.exec.bind(this);
 }
 

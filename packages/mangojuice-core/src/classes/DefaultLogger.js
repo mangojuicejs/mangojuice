@@ -33,14 +33,14 @@ extend(DefaultLogger.prototype, /** @lends DefaultLogger.prototype */{
    * in {@link Process#exec}. Even before any {@link LogicBase#hubBefore}.
    * @param  {Command} cmd  Command that just started execution process
    */
-  onStartExec(model, cmd) {},
+  onStartExec(proc, cmd) {},
 
   /**
    * Invoked right after the command go throught "after" hubs. It is the final
    * stage of command execution.
    * @param  {Command} cmd  Command that was fully executed and handled by parent blocks
    */
-  onEndExec(model, cmd) {},
+  onEndExec(proc, cmd) {},
 
   /**
    * Invoked if any uncaught error happened while execution of the command
@@ -49,7 +49,7 @@ extend(DefaultLogger.prototype, /** @lends DefaultLogger.prototype */{
    * @param  {Error} error  The error instance
    * @param  {?Command} cmd   Command that was executing while the error happened
    */
-  onCatchError(error, cmd) {
+  onCatchError(error, proc, cmd) {
     console.error(error);
   }
 });

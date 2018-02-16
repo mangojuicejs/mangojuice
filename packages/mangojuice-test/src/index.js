@@ -1,4 +1,4 @@
-import { bind, utils, DefaultLogger, Process } from 'mangojuice-core';
+import { run, utils, procOf, DefaultLogger, Process } from 'mangojuice-core';
 
 
 class TrackableProcess extends Process {
@@ -27,10 +27,10 @@ export function runWithTracking({ expectErrors, app } = {}) {
       }
       errors.push(e);
     }
-    onExecuted(cmd) {
+    onEndExec(proc, cmd) {
       execOrder.push(cmd);
     }
-    onStartExec(cmd) {
+    onStartExec(proc, cmd) {
       commands.push(cmd);
       commandNames.push(cmd);
     }
@@ -38,20 +38,22 @@ export function runWithTracking({ expectErrors, app } = {}) {
 
   try {
     const logger = new TrackerLogger();
-    const appBind = bind(app, {
+    const runOptions = {
       Process: TrackableProcess,
       logger
-    });
+    };
+    const model = run(app, runOptions);
+    const proc = procOf(model);
 
     const result = {
       commandNames,
       execOrder,
       commands,
       errors,
-      app: appBind
+      app: { model, proc }
     };
 
-    const promise = appBind.proc.run().then(() => result);
+    const promise = proc.finished().then(() => result);
     utils.extend(promise, result);
     return promise;
   } catch (e) {

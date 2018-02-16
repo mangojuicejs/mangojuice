@@ -33,10 +33,10 @@ module.exports = {
   },
   rootDir: __dirname,
   testMatch: [
-    "<rootDir>/packages/*/__tests__/**/*spec.js?(x)",
-    "<rootDir>/packages/*/__tests__/**/*spec.ts?(x)",
-    "<rootDir>/packages/*/__tests__/**/*spec.browser.js?(x)",
-    "<rootDir>/packages/*/__tests__/**/*spec.browser.ts?(x)"
+    "<rootDir>/packages/*/**/__tests__/**/*spec.js?(x)",
+    "<rootDir>/packages/*/**/__tests__/**/*spec.ts?(x)",
+    "<rootDir>/packages/*/**/__tests__/**/*spec.browser.js?(x)",
+    "<rootDir>/packages/*/**/__tests__/**/*spec.browser.ts?(x)"
   ],
   transformIgnorePatterns: ["<rootDir>/node_modules/(?!lodash-es)"]
 };
