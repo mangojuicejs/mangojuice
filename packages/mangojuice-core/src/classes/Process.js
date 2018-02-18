@@ -38,18 +38,6 @@ function createInternalContext() {
 }
 
 /**
- * Iterate through all active processes in the app and
- * run given iterator for every process
- * @param  {Process} proc
- */
-function forEachProcess(proc, iterator) {
-  const { processes } = proc.context;
-  for (let id in processes) {
-    iterator(processes[id]);
-  }
-}
-
-/**
  * Iterate through all active child processes and run
  * given iterator for every model.
  * @param  {Process} proc
@@ -58,10 +46,6 @@ function forEachChildren(proc, iterator) {
   for (let id in proc.children) {
     iterator(proc.children[id]);
   }
-}
-
-function runProcessOnModel(proc, model, childCmd) {
-  const { logicClass, updateMsg, createArgs } = childCmd;
 }
 
 function updateChildLogic(proc, model, childCmd) {
