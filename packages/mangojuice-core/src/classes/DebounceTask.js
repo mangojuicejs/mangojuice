@@ -9,7 +9,7 @@ import { ZERO_DELAY } from '../config';
  *
  * @private
  */
-function DebounceTask(executor, { wait, options }) {
+function DebounceTask(proc, { wait, options }) {
   this.lastTask = undefined;
   this.maxWait = undefined;
   this.timerId = undefined;
@@ -27,7 +27,7 @@ function DebounceTask(executor, { wait, options }) {
     this.trailing = 'trailing' in options ? !!options.trailing : this.trailing;
   }
 
-  this.executor = executor;
+  this.proc = proc;
   this.timerExpired = this.timerExpired.bind(this);
   this.finish = noop;
 }
@@ -57,10 +57,10 @@ extend(DebounceTask.prototype, {
   },
 
   invokeFunc(time) {
-    const lastTask = this.lastTask;
+    const { task, customArgs } = this.lastTask;
     this.lastTask = undefined;
     this.lastInvokeTime = time;
-    this.executor(...lastTask.customArgs);
+    this.proc.exec(() => task.apply(this.proc.logic, customArgs));
   },
 
   startTimer(pendingFunc, wait) {

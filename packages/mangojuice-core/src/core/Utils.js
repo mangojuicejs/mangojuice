@@ -7,7 +7,17 @@ export const is = {
   bool: s => s === true || s === false,
   array: Array.isArray,
   object: obj => obj && !is.array(obj) && typeof obj === 'object',
-  promise: p => p && is.func(p.then)
+  promise: p => p && is.func(p.then),
+  generator: obj => is.func(obj.next) && is.func(obj.throw),
+  generatorFunc: obj => {
+    var constructor = obj.constructor;
+    if (!constructor) return false;
+    if (
+      'GeneratorFunction' === constructor.name ||
+      'GeneratorFunction' === constructor.displayName
+    ) return true;
+    return is.generator(constructor.prototype);
+  }
 };
 
 export const noop = () => null;

@@ -1,0 +1,89 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`task should be able to cancel a task 1`] = `Object {}`;
+
+exports[`task should be able to cancel a task 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "failCmd": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  TaskCmd {
+    "cancelTask": true,
+    "executor": [Function],
+    "task": [Function],
+  },
+]
+`;
+
+exports[`task should call fail handler if provided 1`] = `
+Object {
+  "fail": Array [
+    [Error: ooops],
+  ],
+}
+`;
+
+exports[`task should call fail handler if provided 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "failCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "fail": Array [
+      [Error: ooops],
+    ],
+  },
+]
+`;
+
+exports[`task should call success handler if provided 1`] = `
+Object {
+  "success": Array [
+    Object {
+      "hello": "there!",
+    },
+  ],
+}
+`;
+
+exports[`task should call success handler if provided 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "success": Array [
+      Object {
+        "hello": "there!",
+      },
+    ],
+  },
+]
+`;
+
+exports[`task should emit update event yielded from subtask 1`] = `
+Array [
+  Array [
+    Message {
+      "hey": "there!",
+    },
+  ],
+]
+`;
+
+exports[`task should emit update event yielded from task 1`] = `
+Array [
+  Array [
+    Message {
+      "hey": "there!",
+    },
+  ],
+]
+`;

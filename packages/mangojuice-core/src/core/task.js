@@ -1,9 +1,10 @@
 import TaskCmd from '../classes/TaskCmd';
+import AsyncTask from '../classes/AsyncTask';
 import { CANCEL } from './utils';
 
 
-function defaultTaskEngine(notifyFn) {
-  return new AsyncTask(notifyFn);
+function defaultTaskEngine(proc, taskObj) {
+  return new AsyncTask(proc, taskObj);
 }
 
 /**

@@ -1,0 +1,40 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`message #when should compare with message creator and return result of the handler 1`] = `
+Array [
+  Message {
+    "args": Array [
+      1,
+      "test",
+      3,
+    ],
+    "hi": "there",
+  },
+]
+`;
+
+exports[`message #when should compare with message creator and return result of the handler 2`] = `
+Array [
+  Array [
+    Message {
+      "args": Array [
+        1,
+        "test",
+        3,
+      ],
+      "hi": "there",
+    },
+  ],
+]
+`;
+
+exports[`message create should create a message instance 1`] = `
+Message {
+  "args": Array [
+    1,
+    "test",
+    3,
+  ],
+  "hi": "there",
+}
+`;

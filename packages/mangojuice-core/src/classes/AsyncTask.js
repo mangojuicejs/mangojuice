@@ -1,3 +1,4 @@
+import Message from './Message';
 import { sym, is, fastTry, ensureError, extend, noop, CANCEL } from '../core/utils';
 
 
@@ -12,18 +13,10 @@ import { sym, is, fastTry, ensureError, extend, noop, CANCEL } from '../core/uti
  * @param {Function}          fn
  * @param {Array<any>}        args
  */
-function AsyncTask(notifyFn, parent) {
+function AsyncTask(proc, taskObj) {
+  this.taskObj = taskObj;
   this.execution = null;
-  this.parent = parent;
-  this.subtasks = [];
-  this.cancelResolve = noop;
-  this.cancelPromise = new Promise(r => this.cancelResolve = r);
-  this.done = false;
-  this.cancelled = false;
-
-  if (parent && parent.cancelPromise) {
-    parent.cancelPromise.then(this.cancelResolve);
-  }
+  this.proc = proc;
 }
 
 extend(AsyncTask.prototype, /** @lends AsyncTask.prototype */{
@@ -33,105 +26,151 @@ extend(AsyncTask.prototype, /** @lends AsyncTask.prototype */{
    * subtasks finished
    * @return {Promise}
    */
-  exec(taskObj) {
+  exec() {
     if (this.execution) {
       return this.execution;
     }
 
-    const task = fastTry(() => this.fn.apply(this, this.args));
-    if (task.error) {
-      this.execution = Promise.resolve(task);
+    const { task, customArgs } = this.taskObj;
+    const tryResult = fastTry(() => task.apply(this.proc.logic, customArgs));
+
+    if (tryResult.error) {
+      this.handleFail(tryResult.error);
+      return Promise.resolve();
+    } else if (!is.generator(tryResult.result)) {
+      this.handleSuccess(tryResult.result);
+      return Promise.resolve();
+    } else {
+      this.execution = this.iterate(tryResult.result)
+        .then(this.handleSuccess.bind(this), this.handleFail.bind(this));
       return this.execution;
     }
-
-    const handleTaskFailed = (err) => {
-      return handleTaskFinish(null, err);
-    };
-
-    const handleTaskFinish = (result, error) => {
-      if (this.done || this.cancelled) return;
-
-      if (error) {
-        this.cancel();
-        return { result: null, error };
-      }
-
-      if (result instanceof Error && result.cancelled) {
-        this.cancelled = true;
-        const runCancelHandlers = () => {
-          if (task.result && task.result[CANCEL]) task.result[CANCEL]();
-          if (this.cancelHandler) this.cancelHandler();
-        };
-        const { error: cancelError } = fastTry(runCancelHandlers);
-        const ret = { result: null, error: cancelError || result };
-        return result.task === this ? ret : Promise.reject(ret);
-      }
-
-      if (this.subtasks.length > 0) {
-        const resProxy = () => result;
-        const subtasksWaitPromise = Promise.all(this.subtasks)
-          .then(resProxy, resProxy);
-        const finalRace = Promise
-          .race([ this.cancelPromise, subtasksWaitPromise ])
-          .then(handleTaskFinish, handleTaskFailed);
-
-        this.subtasks = [];
-        return finalRace;
-      }
-
-      this.done = true;
-      return { result, error: null };
-    };
-
-    this.execution = Promise
-      .race([ this.cancelPromise, task.result ])
-      .then(handleTaskFinish, handleTaskFailed);
-
-    return this.execution;
-  },
-
-  /**
-   * Call some subtask. The parrent task will be finished only
-   * when all children tasks will be resolved
-   * @param  {Function}  fn
-   * @param  {...any} args
-   * @return {Promise}
-   */
-  call(fn, ...args) {
-    const task = new AsyncTask(this, fn, args);
-    const execPromise = task.exec()
-    this.subtasks.push(execPromise);
-    execPromise.task = task;
-    return execPromise;
   },
 
   /**
    * Cancel this task and all children subtasks
    */
   cancel() {
-    const err = new Error('Cancelled');
-    err.cancelled = true;
-    err.task = this;
-    this.cancelResolve(err);
-  },
-
-  /**
-   * Set a handler which will be executed when task cancelled
-   * @param  {Function} handler
-   */
-  onCancel(handler) {
-    this.cancelHandler = handler;
-  },
-
-  /**
-   * Run `notify` function of parent object/task with provided
-   * arguments if defined.
-   * @param  {...any} args
-   */
-  notify(...args) {
-    if (this.parent && this.parent.notify) {
-      return this.parent.notify(...args);
+    this.execution = null;
+    this.cancelled = true;
+    if (this.defer) {
+      this.defer.resolve();
     }
+  },
+
+  execCommand(cmdFn, arg) {
+    if (this.cancelled) return;
+    this.proc.exec(() => cmdFn && cmdFn.call(this.proc.logic, arg));
+  },
+
+  handleSuccess(result) {
+    this.execCommand(this.taskObj.successCmd, result);
+  },
+
+  handleFail(error) {
+    const { failCmd } = this.taskObj;
+    if (failCmd) {
+      this.execCommand(failCmd, error);
+    } else {
+      this.proc.logger.onCatchError(error, this.proc, this.taskObj);
+    }
+  },
+
+  iterate(gen) {
+    return new Promise((resolve, reject) => {
+      if (!this.defer) {
+        this.defer = { resolve, reject };
+      }
+      if (is.func(gen)) {
+        const tryResult = fastTry(() => gen.apply(this));
+        if (tryResult.error) return reject(tryResult.error);
+        gen = tryResult.result;
+      }
+      if (!gen || !is.generator(gen)) {
+        return resolve(gen);
+      }
+
+      const onFulfilled = (res) => {
+        if (this.cancelled) return;
+        const { error, result } = fastTry(() => gen.next(res));
+        if (error) return reject(error);
+        next(result);
+        return null;
+      };
+
+      const onRejected = (err) => {
+        if (this.cancelled) return;
+        const { error, result } = fastTry(() => gen.throw(err));
+        if (error) return reject(error);
+        next(result);
+      };
+
+      const next = (ret) => {
+        if (this.cancelled) return;
+        if (ret.done) return resolve(ret.value);
+        var value = this.toPromise(ret.value);
+        if (value && is.promise(value)) return value.then(onFulfilled, onRejected);
+        return onRejected(new TypeError('You may only yield a function, promise, generator, array, or object, '
+          + 'but the following object was passed: "' + String(ret.value) + '"'));
+      };
+
+      onFulfilled();
+    });
+  },
+
+  toPromise(obj) {
+    if (!obj) return obj;
+    if (is.promise(obj)) return obj;
+    if (is.generatorFunc(obj) || is.generator(obj)) return this.iterate(obj);
+    if (is.func(obj)) return this.thunkToPromise(obj);
+    if (is.array(obj)) return this.arrayToPromise(obj);
+    if (obj instanceof Message) return this.emitUpdateMessage(obj);
+    if (is.object(obj)) return this.objectToPromise(obj);
+    return obj;
+  },
+
+  emitUpdateMessage(msg) {
+    this.proc.update(msg);
+    return Promise.resolve();
+  },
+
+  thunkToPromise(fn) {
+    return new Promise((resolve, reject) => {
+      fn.call(this.proc.logic, (err, res) => {
+        if (err) return reject(err);
+        if (arguments.length > 2) res = slice.call(arguments, 1);
+        resolve(res);
+      });
+    });
+  },
+
+  arrayToPromise(obj) {
+    return Promise.all(obj.map(this.toPromise, this));
+  },
+
+  objectToPromise(obj) {
+    const results = new obj.constructor();
+    const keys = Object.keys(obj);
+    const promises = [];
+
+    const defer = (promise, key) => {
+      results[key] = undefined;
+      promises.push(promise.then((res) => {
+        results[key] = res;
+      }));
+    };
+
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      const promise = this.toPromise(obj[key]);
+      if (promise && is.promise(promise)) {
+        defer(promise, key);
+      } else {
+        results[key] = obj[key];
+      }
+    }
+
+    return Promise.all(promises).then(() => results);
   }
 });
 

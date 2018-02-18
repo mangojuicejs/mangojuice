@@ -334,42 +334,17 @@ function execTask(proc, taskObj) {
   // Define next execution id
   const execId = customExecId || nextId();
   const executions = tasks[taskId] = tasks[taskId] || {};
+  const cleanup = () => delete executions[execId];
 
   // Do not create any new task if the task with given exec id
   // already exists. Usefull for throttle/debounce tasks
   if (executions[execId]) {
     executions[execId].exec(taskObj);
-    return;
+  } else {
+    const taskCall = executor(proc, taskObj);
+    executions[execId] = taskCall;
+    taskCall.exec(taskObj).then(cleanup, cleanup);
   }
-
-  // Handle result of the execution of a task – returns
-  // success command if error not defined, fail command otherwise
-  const handleResult = ({ result, error }) => {
-    delete executions[execId];
-    if (error && !error.cancelled) {
-      return failCmd
-        ? () => failCmd.call(logic, error)
-        : logger.onCatchError(error, proc, taskObj);
-    } else if (successCmd) {
-      return () => successCmd.call(logic, result);
-    }
-  };
-
-  // Run notify command if presented
-  const handleNotify = (...args) => {
-    if (notifyCmd) {
-      proc.exec(() => notifyCmd.apply(logic, args));
-    };
-  };
-
-  // Run the task function and wait for the result
-  const taskCall = executor(handleNotify, taskObj, logic);
-
-  // Track task execution
-  executions[execId] = taskCall;
-  taskCall.exec(taskObj)
-    .then(handleResult, handleResult)
-    .then(proc.exec, proc.exec);
 }
 
 function updateModelField(proc, model, key, update) {
@@ -679,6 +654,10 @@ extend(Process.prototype, /** @lends Process.prototype */{
     }
 
     doExecCmd(this, cmd);
+  },
+
+  update(message) {
+    runLogicUpdate(this, message);
   },
 
   /**

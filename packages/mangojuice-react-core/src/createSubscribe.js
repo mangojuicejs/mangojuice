@@ -7,7 +7,7 @@ function createMessageEmitter(models, msgCreator) {
     utils.fastForEach(models, () => {
       const proc = procOf(model);
       if (proc) {
-        proc.exec(msgCmd);
+        proc.update(msgCmd);
       }
     });
   };

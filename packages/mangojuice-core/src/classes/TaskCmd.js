@@ -66,21 +66,10 @@ import { extend, is, identify } from '../core/utils';
 export function TaskCmd(taskFn, executor) {
   this.task = taskFn;
   this.executor = executor;
-  this.id = identify(taskFn);
+  Object.defineProperty(this, 'id', { value: identify(taskFn) });
 }
 
 extend(TaskCmd.prototype, /** @lends TaskCmd.prototype */{
-  /**
-   * Set a notify handler command. This command executed by call of `this.notify`
-   * inside a task with the same arguments as passed to `this.notify`
-   * @param  {Command} cmd
-   * @return {TaskCmd}
-   */
-  notify(cmd) {
-    this.notifyCmd = cmd;
-    return this;
-  },
-
   /**
    * Set a success handler command. Will be executed with a value returned
    * from the task, or if the task returned a Promise – with resovled value.

@@ -4,7 +4,7 @@ import ChildCmd from './ChildCmd';
 
 function ContextCmd(contextFn) {
   this.contextFn = contextFn;
-  this.id = identify(contextFn);
+  Object.defineProperty(this, 'id', { value: identify(contextFn) });
 }
 
 extend(ContextCmd.prototype, ChildCmd.prototype);
