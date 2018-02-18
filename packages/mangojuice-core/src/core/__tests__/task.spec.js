@@ -135,6 +135,47 @@ describe('task', () => {
     expect(handler.mock.calls).toMatchSnapshot();
   });
 
+  it('should support fast path with non-generator task function', async () => {
+    class TestLogic {
+      create() {
+        return task(this.testTask)
+          .success(this.successHandler)
+      }
+      testTask() {
+        return { hello: 'there!' };
+      }
+      successHandler(...args) {
+        return { success: args };
+      }
+    }
+
+    const { app, commands } = await runWithTracking({ app: { Logic: TestLogic } });
+
+    expect(app.model).toMatchSnapshot();
+    expect(commands).toMatchSnapshot();
+  });
+
+  it.only('should handle error in non-generator task function', async () => {
+    class TestLogic {
+      create() {
+        return task(this.testTask)
+          .fail(this.failHandler)
+      }
+      testTask() {
+        throw new Error('ooops');
+        return { hello: 'there!' };
+      }
+      failHandler(...args) {
+        return { fail: args };
+      }
+    }
+
+    const { app, commands } = await runWithTracking({ app: { Logic: TestLogic } });
+
+    expect(app.model).toMatchSnapshot();
+    expect(commands).toMatchSnapshot();
+  });
+
   describe('yeilded array', () => {
     it('should aggregate several promises', async () => {
       const handler = jest.fn();

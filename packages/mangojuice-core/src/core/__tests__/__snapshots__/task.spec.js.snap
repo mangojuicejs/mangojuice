@@ -104,6 +104,56 @@ Array [
 ]
 `;
 
+exports[`task should handle error in non-generator task function 1`] = `
+Object {
+  "fail": Array [
+    [Error: ooops],
+  ],
+}
+`;
+
+exports[`task should handle error in non-generator task function 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "failCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "fail": Array [
+      [Error: ooops],
+    ],
+  },
+]
+`;
+
+exports[`task should support fast path with non-generator task function 1`] = `
+Object {
+  "success": Array [
+    Object {
+      "hello": "there!",
+    },
+  ],
+}
+`;
+
+exports[`task should support fast path with non-generator task function 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "success": Array [
+      Object {
+        "hello": "there!",
+      },
+    ],
+  },
+]
+`;
+
 exports[`task yeilded array should aggregate several promises 1`] = `
 Array [
   Array [
