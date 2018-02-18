@@ -152,6 +152,11 @@ extend(TaskCmd.prototype, /** @lends TaskCmd.prototype */{
   execId(id) {
     this.customExecId = id;
     return this;
+  },
+
+  meta(metaObj) {
+    this.metaObj = metaObj;
+    return this;
   }
 });
 

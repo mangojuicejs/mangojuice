@@ -3,9 +3,8 @@ import Message from './Message';
 import ContextCmd from './ContextCmd';
 import ContextLogic from './ContextLogic';
 import ChildCmd from './ChildCmd';
-import ThrottleTask from './ThrottleTask';
+import DebounceTask from './DebounceTask';
 import DefaultLogger from './DefaultLogger';
-import observe from '../core/observe';
 import procOf from '../core/procOf';
 import handle from '../core/handle';
 import child from '../core/child';
@@ -324,8 +323,6 @@ function execTask(proc, taskObj) {
   const { tasks, logger, model, sharedModel, config, logic } = proc;
   const { task, executor, notifyCmd, successCmd, failCmd,
     customArgs, execEvery, customExecId, id: taskId } = taskObj;
-  const execId = customExecId || nextId();
-  const executions = tasks[taskId] = tasks[taskId] || {};
 
   // If not in multi-thread mode or just need to cancel a tak –
   // cancel all running task with same identifier (command id)
@@ -333,6 +330,10 @@ function execTask(proc, taskObj) {
     cancelTask(proc, taskId);
     if (taskObj.cancelTask) return;
   }
+
+  // Define next execution id
+  const execId = customExecId || nextId();
+  const executions = tasks[taskId] = tasks[taskId] || {};
 
   // Do not create any new task if the task with given exec id
   // already exists. Usefull for throttle/debounce tasks
@@ -362,8 +363,7 @@ function execTask(proc, taskObj) {
   };
 
   // Run the task function and wait for the result
-  const context = { notify: handleNotify };
-  const taskCall = executor(context, taskObj, logic);
+  const taskCall = executor(handleNotify, taskObj, logic);
 
   // Track task execution
   executions[execId] = taskCall;
@@ -445,8 +445,8 @@ function updateContext(proc, contextCmd) {
   } else if (updateMsg) {
     forEachChildren(ctxProc, (p) =>  runLogicUpdate(p, updateMsg));
   } else if (subscribeVal) {
-    const stopSub = handle(ctxModel, (msg) => runLogicUpdate(proc, msg));
-    proc.contextSubs.push(stopSub);
+    const { stopper } = handle(ctxModel, (msg) => runLogicUpdate(proc, msg));
+    proc.contextSubs.push(stopper);
   }
 }
 
@@ -455,6 +455,7 @@ function sendMessageToParents(proc, msg) {
   const notifyHandler = (h) => h(msg);
   let currParent = proc.parent;
 
+  fastForEach(proc.handlers, notifyHandler);
   while (currParent) {
     updateLogic(currParent);
     fastForEach(currParent.handlers, notifyHandler);

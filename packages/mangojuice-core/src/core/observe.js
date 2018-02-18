@@ -1,4 +1,5 @@
 import procOf from './procOf';
+import context from './context';
 import { nextId, fastForEach, safeExecFunction, maybeMap, is, identify } from './utils';
 
 
@@ -33,11 +34,24 @@ function observeModel(model, handler, options) {
 
   modelProc[type].push(finalHandler);
 
-  return function removeObserver() {
+  const stopper = function removeObserver() {
     if (modelProc[type]) {
       modelProc[type] = modelProc[type].filter(x => x !== finalHandler);
     }
   };
+
+  return { stopper, model };
+}
+
+function observeContext(ctxFunc, handler, options) {
+  const { model: rootModel, batched } = options;
+  const modelProc = procOf(rootModel);
+  let model = null;
+
+  modelProc.exec(context(ctxFunc).get((m) => model = m));
+  const stopper = observeModel(model, handler, { batched, type: 'childrenObservers' });
+
+  return { stopper, model };
 }
 
 /**

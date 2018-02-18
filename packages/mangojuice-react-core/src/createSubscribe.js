@@ -33,18 +33,12 @@ function observeModels(targets, handler) {
   const models = [];
 
   utils.maybeForEach(targets, (target) => {
-    if (utils.is.func(target)) {
-      const { stopper, model } = observeContext(target, handler, {
-        model: rootModel,
-        batched: true
-      });
-      stoppers.push(stopper);
-      models.push(model);
-    } else {
-      const stopper = observe(target, handler, { batched: true });
-      stoppers.push(stopper);
-      models.push(target);
-    }
+    const { stopper, model } = observe(target, handler, {
+      model: rootModel,
+      batched: true
+    });
+    stoppers.push(stopper);
+    models.push(model);
   });
 
   const stopper = () => utils.fastForEach(stoppers, (x) => x());

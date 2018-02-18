@@ -2,9 +2,8 @@ import TaskCmd from '../classes/TaskCmd';
 import { CANCEL } from './utils';
 
 
-function defaultTaskEngine(context, taskObj, logic) {
-  const args = [logic].concat(taskObj.customArgs || []);
-  return new AsyncTask(context, taskObj.task, args);
+function defaultTaskEngine(notifyFn) {
+  return new AsyncTask(notifyFn);
 }
 
 /**

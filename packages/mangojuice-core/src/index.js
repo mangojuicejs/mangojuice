@@ -5,7 +5,7 @@ import child from './core/child';
 import message from './core/message';
 import context from './core/context';
 import observe from './core/observe';
-import observeContext from './core/observeContext';
+import handle from './core/handle';
 import debounce from './core/debounce';
 import throttle from './core/throttle';
 import logicOf from './core/logicOf';
@@ -26,11 +26,11 @@ export {
   context,
   debounce,
   throttle,
+  message,
   task,
   // Core
-  message,
   observe,
-  observeContext,
+  handle,
   logicOf,
   procOf,
   run,

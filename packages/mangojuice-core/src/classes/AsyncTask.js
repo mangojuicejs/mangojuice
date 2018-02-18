@@ -12,14 +12,12 @@ import { sym, is, fastTry, ensureError, extend, noop, CANCEL } from '../core/uti
  * @param {Function}          fn
  * @param {Array<any>}        args
  */
-function AsyncTask(parent, fn, args) {
+function AsyncTask(notifyFn, parent) {
   this.execution = null;
   this.parent = parent;
   this.subtasks = [];
   this.cancelResolve = noop;
   this.cancelPromise = new Promise(r => this.cancelResolve = r);
-  this.args = args;
-  this.fn = fn;
   this.done = false;
   this.cancelled = false;
 
@@ -35,7 +33,7 @@ extend(AsyncTask.prototype, /** @lends AsyncTask.prototype */{
    * subtasks finished
    * @return {Promise}
    */
-  exec() {
+  exec(taskObj) {
     if (this.execution) {
       return this.execution;
     }

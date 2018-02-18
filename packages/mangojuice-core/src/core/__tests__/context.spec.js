@@ -96,6 +96,7 @@ describe('child', () => {
       expect(app.model).toMatchSnapshot();
       expect(processes.map(x => x.destroyed)).toMatchSnapshot();
     });
+
     it('should be able to create same context in different subtrees', () => {
       class ContextChildLogic {
         create(...args) { return { ctx: 'yeah', args } }
@@ -123,6 +124,7 @@ describe('child', () => {
 
       expect(app.model).toMatchSnapshot();
     });
+
     it('should throw an error if context already created - in root', () => {
       class ContextChildLogic {
         create(...args) { return { ctx: 'yeah', args } }
@@ -146,6 +148,7 @@ describe('child', () => {
       expect(app.model).toMatchSnapshot();
       expect(errors).toMatchSnapshot();
     })
+
     it('should override a parent context if same created in child', () => {
       class ContextChildLogic {
         create(...args) { return { ctx: 'yeah', args } }
@@ -191,6 +194,7 @@ describe('child', () => {
       expect(app.model).toMatchSnapshot();
       expect(errors).toMatchSnapshot();
     });
+
     it('should be able to create multiple contexts', () => {
       class ContextChildLogic {
         create(...args) { return { ctx: 'yeah', args } }
@@ -262,6 +266,7 @@ describe('child', () => {
 
       expect(app.model).toMatchSnapshot();
     });
+
     it('should send update context from child', () => {
       class ContextChildLogic {
         create(...args) { return { ctx: 'yeah', args } }

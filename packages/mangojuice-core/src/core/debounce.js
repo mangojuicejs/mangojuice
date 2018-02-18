@@ -1,28 +1,21 @@
 import { is } from './utils';
 import task from './task';
-import ThrottleTask from '../classes/ThrottleTask';
+import DebounceTask from '../classes/DebounceTask';
 
 
 const DELAY_EXEC_ID = 'DELAYED';
 
-function delayedExecTaskEngine(opts, context, taskObj, logic) {
-  return new ThrottleTask(context.notify, opts);
+function delayedExecTaskEngine(notifyFn, taskObj) {
+  return new DebounceTask(notifyFn, taskObj.metaObj);
 }
 
-export function delayedExec(type, func, rawOpts) {
-  const opts = is.object(rawOpts) ? rawOpts : { [type]: rawOpts };
-  if (!opts[type]) {
-    opts[type] = opts.wait || 0;
-  }
-
-  const delayedTask = task(func)
-    .engine(delayedExecTaskEngine.bind(null, opts))
+function debounce(wait, func, options) {
+  return task(func)
+    .notify(func)
+    .multithread()
+    .engine(delayedExecTaskEngine)
     .execId(DELAY_EXEC_ID)
-    .notify(func);
-}
-
-function debounce(opts, func) {
-  return delayedExec('debounce', func, opts);
+    .meta({ wait, options });
 }
 
 export default debounce;

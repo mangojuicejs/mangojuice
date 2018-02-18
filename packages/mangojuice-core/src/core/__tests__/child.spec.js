@@ -93,6 +93,7 @@ describe('child', () => {
 
       expect(app.model).toMatchSnapshot();
     });
+
     it('should rise an error if model does not exists', async () => {
       class Test {
         create() {
@@ -107,6 +108,7 @@ describe('child', () => {
       expect(app.model).toMatchSnapshot();
       expect(errors).toMatchSnapshot();
     });
+
     it('should rise an error if model does not exists', async () => {
       class DifferentChild {}
       class Test {

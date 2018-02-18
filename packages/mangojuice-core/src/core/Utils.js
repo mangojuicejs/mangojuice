@@ -160,7 +160,7 @@ export function safeExecFunction(logger, func, proc, cmd) {
 export function delay(ms) {
   let timeoutId;
   const res = new Promise(resolve => {
-    timeoutId = setTimeout(() => resolve(), actualMs);
+    timeoutId = setTimeout(() => resolve(), ms);
   });
   res[CANCEL] = () => clearTimeout(timeoutId);
   return res;
