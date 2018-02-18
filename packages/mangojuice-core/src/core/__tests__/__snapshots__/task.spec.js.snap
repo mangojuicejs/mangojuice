@@ -16,24 +16,6 @@ Array [
 ]
 `;
 
-exports[`task should be able to cancel a task 1`] = `Object {}`;
-
-exports[`task should be able to cancel a task 2`] = `
-Array [
-  TaskCmd {
-    "executor": [Function],
-    "failCmd": [Function],
-    "successCmd": [Function],
-    "task": [Function],
-  },
-  TaskCmd {
-    "cancelTask": true,
-    "executor": [Function],
-    "task": [Function],
-  },
-]
-`;
-
 exports[`task should call fail handler if provided 1`] = `
 Object {
   "fail": Array [
@@ -80,6 +62,42 @@ Array [
         "hello": "there!",
       },
     ],
+  },
+]
+`;
+
+exports[`task should cancel a task 1`] = `Object {}`;
+
+exports[`task should cancel a task 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "failCmd": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  TaskCmd {
+    "cancelTask": true,
+    "executor": [Function],
+    "task": [Function],
+  },
+]
+`;
+
+exports[`task should cancel a task with subtasks 1`] = `Object {}`;
+
+exports[`task should cancel a task with subtasks 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "failCmd": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  TaskCmd {
+    "cancelTask": true,
+    "executor": [Function],
+    "task": [Function],
   },
 ]
 `;

@@ -83,7 +83,7 @@ describe('task', () => {
     expect(logic.update.mock.calls).toMatchSnapshot();
   });
 
-  it('should be able to cancel a task', async () => {
+  it('should cancel a task', async () => {
     const handler = jest.fn();
     class TestLogic {
       create() {
@@ -96,6 +96,49 @@ describe('task', () => {
       }
       *testTask() {
         yield utils.delay(100);
+        handler();
+        return { hello: 'there!' };
+      }
+      successHandler(...args) {
+        return { success: args };
+      }
+      failHandler(...args) {
+        return { fail: args };
+      }
+    }
+
+    const res = runWithTracking({ app: { Logic: TestLogic } });
+    const { app, commands } = res;
+
+    app.proc.exec(logicOf(app.model).cancelTask);
+    await app.proc.finished();
+
+    expect(handler).toHaveBeenCalledTimes(0);
+    expect(app.model).toMatchSnapshot();
+    expect(commands).toMatchSnapshot();
+  });
+
+  it('should cancel a task with subtasks', async () => {
+    const handler = jest.fn();
+    class TestLogic {
+      create() {
+        return task(this.testTask)
+          .success(this.successHandler)
+          .fail(this.failHandler)
+      }
+      cancelTask() {
+        return task(this.testTask).cancel();
+      }
+      *subSubTask() {
+        yield utils.delay(100);
+        handler();
+      }
+      *subTask() {
+        yield this.subSubTask();
+        handler();
+      }
+      *testTask() {
+        yield this.subTask;
         handler();
         return { hello: 'there!' };
       }
@@ -155,7 +198,7 @@ describe('task', () => {
     expect(commands).toMatchSnapshot();
   });
 
-  it.only('should handle error in non-generator task function', async () => {
+  it('should handle error in non-generator task function', async () => {
     class TestLogic {
       create() {
         return task(this.testTask)
