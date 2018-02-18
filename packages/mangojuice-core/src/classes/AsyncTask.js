@@ -14,9 +14,9 @@ import { sym, is, fastTry, ensureError, extend, noop, CANCEL } from '../core/uti
  * @param {Array<any>}        args
  */
 function AsyncTask(proc, taskObj) {
+  this.proc = proc;
   this.taskObj = taskObj;
   this.execution = null;
-  this.proc = proc;
 }
 
 extend(AsyncTask.prototype, /** @lends AsyncTask.prototype */{
@@ -110,7 +110,7 @@ extend(AsyncTask.prototype, /** @lends AsyncTask.prototype */{
         if (ret.done) return resolve(ret.value);
         var value = this.toPromise(ret.value);
         if (value && is.promise(value)) return value.then(onFulfilled, onRejected);
-        return onRejected(new TypeError('You may only yield a function, promise, generator, array, or object, '
+        return onRejected(new TypeError('You may only yield a function, promise, generator, array, object or message '
           + 'but the following object was passed: "' + String(ret.value) + '"'));
       };
 
@@ -125,7 +125,7 @@ extend(AsyncTask.prototype, /** @lends AsyncTask.prototype */{
     if (is.func(obj)) return this.thunkToPromise(obj);
     if (is.array(obj)) return this.arrayToPromise(obj);
     if (obj instanceof Message) return this.emitUpdateMessage(obj);
-    if (is.object(obj)) return this.objectToPromise(obj);
+    if (obj.constructor === Object) return this.objectToPromise(obj);
     return obj;
   },
 
@@ -169,7 +169,6 @@ extend(AsyncTask.prototype, /** @lends AsyncTask.prototype */{
         results[key] = obj[key];
       }
     }
-
     return Promise.all(promises).then(() => results);
   }
 });

@@ -1,5 +1,21 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`task should accept arguments from a task 1`] = `
+Array [
+  Array [
+    42,
+    "forty-two",
+    Array [
+      42,
+    ],
+    Object {
+      "value": 42,
+    },
+    [Function],
+  ],
+]
+`;
+
 exports[`task should be able to cancel a task 1`] = `Object {}`;
 
 exports[`task should be able to cancel a task 2`] = `
@@ -83,6 +99,164 @@ Array [
   Array [
     Message {
       "hey": "there!",
+    },
+  ],
+]
+`;
+
+exports[`task yeilded array should aggregate several promises 1`] = `
+Array [
+  Array [
+    Array [
+      "a",
+      "b",
+      "c",
+    ],
+  ],
+]
+`;
+
+exports[`task yeilded array should noop with no args 1`] = `
+Array [
+  Array [
+    Array [],
+  ],
+]
+`;
+
+exports[`task yeilded array should support an array of generators 1`] = `
+Array [
+  Array [
+    Array [
+      1,
+    ],
+  ],
+]
+`;
+
+exports[`task yeilded generator should wrap children generators 1`] = `
+Array [
+  Array [
+    "yay",
+    "yay",
+    "yay",
+  ],
+  Array [
+    Array [
+      "yay",
+      "yay",
+      "yay",
+    ],
+  ],
+]
+`;
+
+exports[`task yeilded invalid shuold throw an error 1`] = `
+Array [
+  [TypeError: You may only yield a function, promise, generator, array, object or message but the following object was passed: "null"],
+]
+`;
+
+exports[`task yeilded object should aggregate several promises 1`] = `
+Array [
+  Array [
+    Object {
+      "a": "a",
+      "b": "b",
+      "c": "c",
+    },
+  ],
+]
+`;
+
+exports[`task yeilded object should ignore non-thunkable properties 1`] = `
+Array [
+  Array [
+    Object {
+      "address": "aaa",
+      "age": 2,
+      "falsey": false,
+      "name": Object {
+        "first": "tobi",
+      },
+      "now": 2017-03-01T19:00:00.000Z,
+      "nully": null,
+      "tobi": Pet {
+        "name": "tobi",
+        "something": [Function],
+      },
+      "undefiney": undefined,
+    },
+  ],
+]
+`;
+
+exports[`task yeilded object should noop with no args 1`] = `
+Array [
+  Array [
+    Object {},
+  ],
+]
+`;
+
+exports[`task yeilded object should preserve key order 1`] = `
+Array [
+  Array [
+    "a,b,c",
+    "a,b,c",
+  ],
+]
+`;
+
+exports[`task yeilded promise when a promise is rejected should throw and resume 1`] = `
+Array [
+  Array [
+    [Error: boom],
+  ],
+]
+`;
+
+exports[`task yeilded promise with one promise yield should work 1`] = `
+Array [
+  Array [
+    1,
+  ],
+]
+`;
+
+exports[`task yeilded promise with several promise yields should work 1`] = `
+Array [
+  Array [
+    1,
+    2,
+    3,
+  ],
+]
+`;
+
+exports[`task yielded recsive object/array should aggregate arrays within arrays 1`] = `
+Array [
+  Array [
+    Array [
+      "a",
+      Array [
+        "b",
+        "c",
+      ],
+    ],
+  ],
+]
+`;
+
+exports[`task yielded recsive object/array should aggregate objects within objects 1`] = `
+Array [
+  Array [
+    Object {
+      "0": "a",
+      "1": Object {
+        "0": "b",
+        "1": "c",
+      },
     },
   ],
 ]
