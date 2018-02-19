@@ -377,6 +377,48 @@ Array [
 ]
 `;
 
+exports[`task yeilded thunk when an error is passed then thrown should only catch the first error only 1`] = `
+Object {
+  "fail": Array [
+    [Error: first],
+  ],
+}
+`;
+
+exports[`task yeilded thunk when the function throws should be caught 1`] = `
+Array [
+  Array [
+    [Error: boom],
+  ],
+]
+`;
+
+exports[`task yeilded thunk with many arguments should return an array 1`] = `
+Array [
+  Array [
+    "stdout",
+  ],
+]
+`;
+
+exports[`task yeilded thunk with one yield should work 1`] = `
+Array [
+  Array [
+    1,
+  ],
+]
+`;
+
+exports[`task yeilded thunk with several yields should work 1`] = `
+Array [
+  Array [
+    1,
+    2,
+    3,
+  ],
+]
+`;
+
 exports[`task yielded recsive object/array should aggregate arrays within arrays 1`] = `
 Array [
   Array [

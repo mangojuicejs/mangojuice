@@ -583,4 +583,121 @@ describe('task', () => {
       expect(handler.mock.calls).toMatchSnapshot();
     })
   });
+
+  describe('yeilded thunk', () => {
+    function get(val, err, error) {
+      return function(done){
+        if (error) throw error;
+        setTimeout(function(){
+          done(err, val);
+        }, 10);
+      }
+    }
+
+    describe('with one yield', () => {
+      it('should work', async () => {
+        const handler = jest.fn();
+        class TestLogic {
+          create() {
+            return task(this.testTask);
+          }
+          *testTask(...args) {
+            const a = yield get(1);
+            handler(a);
+          }
+        }
+
+        const { app, commands } = await runWithTracking({ app: { Logic: TestLogic } });
+        expect(handler.mock.calls).toMatchSnapshot();
+      })
+    })
+
+    describe('with several yields', () => {
+      it('should work', async () => {
+        const handler = jest.fn();
+        class TestLogic {
+          create() {
+            return task(this.testTask);
+          }
+          *testTask(...args) {
+            const a = yield get(1);
+            const b = yield get(2);
+            const c = yield get(3);
+            handler(a,b,c);
+          }
+        }
+
+        const { app, commands } = await runWithTracking({ app: { Logic: TestLogic } });
+        expect(handler.mock.calls).toMatchSnapshot();
+      })
+    })
+
+    describe('with many arguments', () => {
+      it('should return an array', async () => {
+        function exec(cmd) {
+          return function(done){
+            done(null, 'stdout', 'stderr');
+          }
+        }
+
+        const handler = jest.fn();
+        class TestLogic {
+          create() {
+            return task(this.testTask);
+          }
+          *testTask(...args) {
+            const out = yield exec('something');
+            handler(out);
+          }
+        }
+
+        const { app, commands } = await runWithTracking({ app: { Logic: TestLogic } });
+        expect(handler.mock.calls).toMatchSnapshot();
+      })
+    })
+
+    describe('when the function throws', () => {
+      it('should be caught', async () => {
+        const handler = jest.fn();
+        class TestLogic {
+          create() {
+            return task(this.testTask);
+          }
+          *testTask(...args) {
+            try {
+              var a = yield get(1, null, new Error('boom'));
+            } catch (err) {
+              handler(err);
+            }
+          }
+        }
+
+        const { app, commands } = await runWithTracking({ app: { Logic: TestLogic } });
+        expect(handler.mock.calls).toMatchSnapshot();
+      })
+    })
+
+    describe('when an error is passed then thrown', () => {
+      it('should only catch the first error only', async () => {
+        class TestLogic {
+          create() {
+            return task(this.testTask)
+              .fail(this.failHandler);
+          }
+          *testTask(...args) {
+            yield function (done){
+              done(new Error('first'));
+              throw new Error('second');
+            }
+          }
+          failHandler(...args) {
+            return { fail: args };
+          }
+        }
+
+        const { app, commands } = await runWithTracking({ app: { Logic: TestLogic } });
+        expect(app.model).toMatchSnapshot();
+      })
+    });
+  });
 });
