@@ -1,5 +1,43 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`task should NOT cancel prev executing task in multithread mode 1`] = `
+Object {
+  "hello": "there!there!there!",
+}
+`;
+
+exports[`task should NOT cancel prev executing task in multithread mode 2`] = `
+Array [
+  TaskCmd {
+    "execEvery": true,
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  TaskCmd {
+    "execEvery": true,
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "hello": "there!",
+  },
+  TaskCmd {
+    "execEvery": true,
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "hello": "there!there!",
+  },
+  Object {
+    "hello": "there!there!there!",
+  },
+]
+`;
+
 exports[`task should accept arguments from a task 1`] = `
 Array [
   Array [
@@ -98,6 +136,43 @@ Array [
     "cancelTask": true,
     "executor": [Function],
     "task": [Function],
+  },
+]
+`;
+
+exports[`task should cancel prev executing task by default 1`] = `
+Object {
+  "success": Array [
+    Object {
+      "hello": "there!",
+    },
+  ],
+}
+`;
+
+exports[`task should cancel prev executing task by default 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  TaskCmd {
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  TaskCmd {
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "success": Array [
+      Object {
+        "hello": "there!",
+      },
+    ],
   },
 ]
 `;

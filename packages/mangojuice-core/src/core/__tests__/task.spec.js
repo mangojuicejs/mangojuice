@@ -219,6 +219,59 @@ describe('task', () => {
     expect(commands).toMatchSnapshot();
   });
 
+  it('should cancel prev executing task by default', async () => {
+    class TestLogic {
+      create() {
+        return task(this.testTask)
+          .success(this.successHandler)
+      }
+      *testTask() {
+        yield utils.delay(50);
+        return { hello: (this.model.hello || '') + 'there!' };
+      }
+      successHandler(...args) {
+        return { success: args };
+      }
+    }
+
+    const { app, commands } = runWithTracking({ app: { Logic: TestLogic } });
+    await utils.delay(40);
+    app.proc.exec(logicOf(app.model).create);
+    await utils.delay(40);
+    app.proc.exec(logicOf(app.model).create);
+    await app.proc.finished();
+
+    expect(app.model).toMatchSnapshot();
+    expect(commands).toMatchSnapshot();
+  });
+
+  it('should NOT cancel prev executing task in multithread mode', async () => {
+    class TestLogic {
+      create() {
+        return task(this.testTask)
+          .multithread()
+          .success(this.successHandler)
+      }
+      *testTask() {
+        yield utils.delay(50);
+        return { hello: (this.model.hello || '') + 'there!' };
+      }
+      successHandler(result) {
+        return result;
+      }
+    }
+
+    const { app, commands } = runWithTracking({ app: { Logic: TestLogic } });
+    await utils.delay(40);
+    app.proc.exec(logicOf(app.model).create);
+    await utils.delay(40);
+    app.proc.exec(logicOf(app.model).create);
+    await app.proc.finished();
+
+    expect(app.model).toMatchSnapshot();
+    expect(commands).toMatchSnapshot();
+  });
+
   describe('yeilded array', () => {
     it('should aggregate several promises', async () => {
       const handler = jest.fn();
