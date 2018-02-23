@@ -5,7 +5,7 @@
  * @return {Array<string>}
  */
 function getUsedChunks(proc) {
-  const chunks = proc.context.chunks || {};
+  const chunks = proc.internalContext.chunks || {};
   return Object.keys(chunks);
 }
 
