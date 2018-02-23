@@ -4,7 +4,7 @@ import { procOf, logicOf, utils, observe, observeContext, message } from 'mangoj
 function createMessageEmitter(models, msgCreator) {
   return (...args) => {
     const msgCmd = message(msgCreator, ...args);
-    utils.fastForEach(models, () => {
+    utils.fastForEach(models, (model) => {
       const proc = procOf(model);
       if (proc) {
         proc.update(msgCmd);
@@ -45,6 +45,13 @@ function observeModels(targets, handler) {
   return { stopper, models };
 }
 
+function calculatePropsHash({ to, events }) {
+  let hash = '';
+  utils.maybeForEach(to, (m) => hash += utils.identify(m) + '.');
+  utils.maybeForEach(events, (e) => hash += utils.identify(e) + '.');
+  return hash;
+}
+
 
 function createSubscribe(reactImpl) {
   const { Component, createElement } = reactImpl;
@@ -54,6 +61,7 @@ function createSubscribe(reactImpl) {
       const { to, events } = this.props;
       const { stopper, models } = observeModels(to, this.updateView);
       const messageEmitters = bindMessages(models, events);
+      this.propsHash = calculatePropsHash(this.props);
       this.unmounted = false;
       this.stopper = stopper;
       this.viewArgs = [
@@ -62,10 +70,25 @@ function createSubscribe(reactImpl) {
       ];
     }
 
+    componentWillUpdateProps(nextProps) {
+      const nextPropsHash = calculatePropsHash(nextProps);
+      if (nextPropsHash !== this.propsHash) {
+        this.propsHash = nextPropsHash;
+        this.shouldUpdate = true;
+      }
+    }
+
     componentWillUnmount() {
       this.unmounted = true;
       if (this.stopper) {
         this.stopper();
+      }
+    }
+
+    shouldComponentUpdate() {
+      if (this.shouldUpdate) {
+        this.shouldUpdate = false;
+        return true;
       }
     }
 
@@ -77,20 +100,12 @@ function createSubscribe(reactImpl) {
 
     render() {
       const { children } = this.props;
-      return children[0](...this.viewArgs);
+      const renderProp = utils.is.array(children) ? children[0] : children;
+      return renderProp(...this.viewArgs);
     }
   }
 
-  class UpdateBlocker extends Component {
-    shouldComponentUpdate() {
-      return false;
-    }
-    render() {
-      return <Subscribe {...this.props} />
-    }
-  }
-
-  return UpdateBlocker;
+  return Subscribe;
 };
 
 export default createSubscribe;

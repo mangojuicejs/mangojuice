@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`React interface view renderer: Preact shuold render a stateless view of a block 1`] = `
+Array [
+  Object {
+    "a": "test",
+    "nested": null,
+  },
+  Array [
+    Object {
+      "a": "another",
+    },
+  ],
+  Object {
+    "a": "another",
+  },
+]
+`;

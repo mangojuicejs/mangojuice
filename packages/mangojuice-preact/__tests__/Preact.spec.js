@@ -1,4 +1,7 @@
 import AbstractTests from 'mangojuice-react-core/tests';
-import Preact from 'mangojuice-preact';
+import Preact from 'preact';
+import Subscribe from 'mangojuice-preact';
 
-AbstractTests(Preact, Preact.Mounter, 'Preact');
+const React = { createElement: Preact.h, Component: Preact.Component };
+const ReactDOM = { render: Preact.render };
+AbstractTests(React, ReactDOM, Subscribe, 'Preact');

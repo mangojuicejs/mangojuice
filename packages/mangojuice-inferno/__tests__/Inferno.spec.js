@@ -1,4 +1,10 @@
 import AbstractTests from 'mangojuice-react-core/tests';
-import Inferno from 'mangojuice-inferno';
+import Subscribe from 'mangojuice-inferno';
+import Component from 'inferno-component';
+import createElement from 'inferno-create-element';
+import { render } from 'inferno';
 
-AbstractTests(Inferno, Inferno.Mounter, 'Inferno');
+
+const React = { createElement, Component };
+const ReactDOM = { render };
+AbstractTests(React, ReactDOM, Subscribe, 'Inferno');
