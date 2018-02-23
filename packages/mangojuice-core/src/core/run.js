@@ -20,7 +20,7 @@ function run(block, opts = {}) {
   const model = opts.model || {};
   const proc = new ProcessClass({
     logger: opts.logger,
-    logicClass: block.Logic,
+    logicClass: block.Logic || block,
     createArgs: opts.args || []
   });
 

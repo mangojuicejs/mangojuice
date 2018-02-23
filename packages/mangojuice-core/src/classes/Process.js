@@ -185,7 +185,9 @@ function runLogicCreate(proc) {
 }
 
 function runLogicUpdate(proc, msg) {
-  runLogicFunc(proc, 'update', [msg]);
+  if (!msg.__ignore) {
+    runLogicFunc(proc, 'update', [msg]);
+  }
 }
 
 /**
@@ -438,7 +440,7 @@ function doExecCmd(proc, cmd) {
 
   // Prepare and run before handlers
   handleStackPush(proc);
-  logger.onStartExec(model, cmd);
+  logger.onStartExec(proc, cmd);
 
   // Execute command
   if (cmd instanceof TaskCmd) {
@@ -459,7 +461,7 @@ function doExecCmd(proc, cmd) {
   }
 
   // Run after handlers
-  logger.onEndExec(model, cmd);
+  logger.onEndExec(proc, cmd);
   handleStackPop(proc);
 }
 
