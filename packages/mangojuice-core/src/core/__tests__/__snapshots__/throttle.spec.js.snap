@@ -1,0 +1,476 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`throttle #cancel should cancel trailing invokation 1`] = `
+Array [
+  Object {
+    "a": 0,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      10,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": true,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  Object {
+    "a": 10,
+  },
+]
+`;
+
+exports[`throttle #create should delay trailing invoke after multiple calls 1`] = `
+Array [
+  Object {
+    "a": 0,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      10,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": false,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  TaskCmd {
+    "customArgs": Array [
+      43,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": false,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  Object {
+    "a": 43,
+  },
+]
+`;
+
+exports[`throttle #create should delay trailing invoke after multiple calls 2`] = `
+Array [
+  Object {
+    "a": 0,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      10,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": false,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  TaskCmd {
+    "customArgs": Array [
+      43,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": false,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  Object {
+    "a": 43,
+  },
+]
+`;
+
+exports[`throttle #create should have leading invokation and no trailing if invoked once 1`] = `
+Array [
+  Object {
+    "a": 0,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      10,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": true,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  Object {
+    "a": 10,
+  },
+]
+`;
+
+exports[`throttle #create should have only leading invokation 1`] = `
+Array [
+  Object {
+    "a": 0,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      10,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": true,
+        "maxWait": 100,
+        "trailing": false,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  Object {
+    "a": 10,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      43,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": true,
+        "maxWait": 100,
+        "trailing": false,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+]
+`;
+
+exports[`throttle #create should have only leading invokation 2`] = `
+Array [
+  Object {
+    "a": 0,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      10,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": true,
+        "maxWait": 100,
+        "trailing": false,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  Object {
+    "a": 10,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      43,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": true,
+        "maxWait": 100,
+        "trailing": false,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+]
+`;
+
+exports[`throttle #create should invoke only trailing 1`] = `
+Array [
+  Object {
+    "a": 0,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      10,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": false,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+]
+`;
+
+exports[`throttle #create should invoke only trailing 2`] = `
+Array [
+  Object {
+    "a": 0,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      10,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": false,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  Object {
+    "a": 10,
+  },
+]
+`;
+
+exports[`throttle #create should leading and trailing invokations 1`] = `
+Array [
+  Object {
+    "a": 0,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      10,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": true,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  Object {
+    "a": 10,
+  },
+]
+`;
+
+exports[`throttle #create should leading, middle and trailing invokations 1`] = `
+Array [
+  Object {
+    "a": 0,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      10,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": true,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  Object {
+    "a": 10,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      20,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": true,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  Object {
+    "a": 30,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      30,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": true,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  Object {
+    "a": 60,
+  },
+]
+`;
+
+exports[`throttle #create should resolve promise after trailing invokation 1`] = `
+Array [
+  Object {
+    "a": 0,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      10,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": false,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  TaskCmd {
+    "customArgs": Array [
+      43,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": false,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  Object {
+    "a": 43,
+  },
+]
+`;
+
+exports[`throttle #create should resolve promise after trailing invokation 2`] = `
+Array [
+  Object {
+    "a": 0,
+  },
+  TaskCmd {
+    "customArgs": Array [
+      10,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": false,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  TaskCmd {
+    "customArgs": Array [
+      43,
+    ],
+    "customExecId": "DELAYED",
+    "execEvery": true,
+    "executor": [Function],
+    "metaObj": Object {
+      "options": Object {
+        "leading": false,
+        "maxWait": 100,
+        "trailing": true,
+      },
+      "wait": 100,
+    },
+    "task": [Function],
+  },
+  Object {
+    "a": 43,
+  },
+]
+`;

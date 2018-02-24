@@ -58,22 +58,15 @@ function createSubscribe(reactImpl) {
 
   class Subscribe extends Component {
     componentWillMount() {
-      const { to, events } = this.props;
-      const { stopper, models } = observeModels(to, this.updateView);
-      const messageEmitters = bindMessages(models, events);
-      this.propsHash = calculatePropsHash(this.props);
-      this.unmounted = false;
-      this.stopper = stopper;
-      this.viewArgs = [
-        ...models,
-        ...messageEmitters
-      ];
+      const propsHash = calculatePropsHash(this.props);
+      this.setupObservers(this.props, propsHash);
     }
 
     componentWillUpdateProps(nextProps) {
       const nextPropsHash = calculatePropsHash(nextProps);
       if (nextPropsHash !== this.propsHash) {
-        this.propsHash = nextPropsHash;
+        this.stopper();
+        this.setupObservers(nextProps, nextPropsHash);
         this.shouldUpdate = true;
       }
     }
@@ -90,6 +83,19 @@ function createSubscribe(reactImpl) {
         this.shouldUpdate = false;
         return true;
       }
+    }
+
+    setupObservers(props, hash) {
+      const { to, events } = props;
+      const { stopper, models } = observeModels(to, this.updateView);
+      const messageEmitters = bindMessages(models, events);
+      this.propsHash = hash;
+      this.unmounted = false;
+      this.stopper = stopper;
+      this.viewArgs = [
+        ...models,
+        ...messageEmitters
+      ];
     }
 
     updateView = () => {

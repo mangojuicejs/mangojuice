@@ -1,4 +1,4 @@
-import { LogicBase, utils, cmd, defineCommand, procOf } from 'mangojuice-core';
+import { LogicBase, utils, message, procOf } from 'mangojuice-core';
 
 
 function appendUsedChunk(proc, chunkName) {
@@ -31,6 +31,7 @@ function createBlockResolver(asyncRequire, resolveState) {
     if (!model) return;
     const proc = model.__lazy && procOf(model);
     if (proc && !proc.destroyed) {
+      delete model.__lazy;
       proc.logic = new resolveState.lazyLogic();
       proc.bind(model);
       proc.run();
@@ -42,6 +43,9 @@ function createBlockResolver(asyncRequire, resolveState) {
       actualBlock && actualBlock.Logic ? actualBlock : actualBlock.default;
     resolveState.block = block;
     resolveState.lazyLogic.prototype = block.Logic.prototype;
+    resolveState.lazyLogic.constructor = block.Logic.constructor;
+    resolveState.lazyLogic = block.Logic;
+    utils.extend(resolveState.lazyMessages, block.Messages);
     resolveRequirePromise(block);
   };
 
@@ -82,7 +86,6 @@ function createLazyLogic(resolveState, initModel) {
       resolveState.resolver(this.model);
     }
   });
-
   resolveState.lazyLogic = LazyBlock;
   return LazyBlock;
 }
@@ -97,13 +100,17 @@ function createLazyView(resolveState, loadingView = utils.noop) {
   };
 }
 
-function createLazyMessages(resolveState, messages = {}) {
-  return Object.keys(messages).reduce((acc, k) => {
-    acc[k] = function LazyMessage(...args) {
-      return { name: k, args, __ignore: true };
+function createLazyMessages(resolveState, messages = []) {
+  const lazyMessages = messages.reduce((acc, name) => {
+    acc[name] = function LazyMessage(...args) {
+      return resolveState.block
+        ? resolveState.block.Messages[name](...args)
+        : { name, args };
     };
     return acc;
   }, {});
+  resolveState.lazyMessages = lazyMessages;
+  return lazyMessages;
 }
 
 /**

@@ -185,9 +185,7 @@ function runLogicCreate(proc) {
 }
 
 function runLogicUpdate(proc, msg) {
-  if (!msg.__ignore) {
-    runLogicFunc(proc, 'update', [msg]);
-  }
+  runLogicFunc(proc, 'update', [msg]);
 }
 
 /**

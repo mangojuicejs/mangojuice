@@ -2,7 +2,7 @@ import { is } from './utils';
 import debounce from './debounce';
 
 
-function throttle(func, wait, options) {
+function throttle(wait, func, options) {
   let leading = true;
   let trailing = true;
 
@@ -11,7 +11,7 @@ function throttle(func, wait, options) {
     trailing = 'trailing' in options ? !!options.trailing : trailing;
   }
 
-  return debounce(func, wait, { wait, leading, trailing });
+  return debounce(wait, func, { maxWait: wait, leading, trailing });
 }
 
 export default throttle;
