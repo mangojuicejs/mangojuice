@@ -47,8 +47,12 @@ function observeModels(targets, handler) {
 
 function calculatePropsHash({ to, events }) {
   let hash = '';
-  utils.maybeForEach(to, (m) => hash += utils.identify(m) + '.');
   utils.maybeForEach(events, (e) => hash += utils.identify(e) + '.');
+  utils.maybeForEach(to, (m) => {
+    const proc = procOf(m);
+    hash += utils.identify(m) + '.'
+    hash += (proc && proc.id + '.') || '';
+  });
   return hash;
 }
 

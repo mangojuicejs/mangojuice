@@ -52,6 +52,8 @@ export const identify = (val) => {
   return val.__id;
 };
 
+export const identity = (x) => x;
+
 export const fastFind = (subject, comparator) => {
   const length = subject.length;
   for (let i = 0; i < length; i++) {
