@@ -1,5 +1,5 @@
-import Component from 'inferno-component';
-import createElement from 'inferno-create-element';
+import { Component } from 'inferno-component';
+import { createElement } from 'inferno-create-element';
 import { createSubscribe } from 'mangojuice-react-core';
 
 const Subscribe = createSubscribe({
