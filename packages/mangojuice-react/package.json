@@ -1,6 +1,6 @@
 {
   "name": "mangojuice-react",
-  "version": "2.0.0-y.0",
+  "version": "2.0.0-2",
   "description": "",
   "author": {
     "name": "Artem Artemev",
@@ -23,8 +23,8 @@
     }
   },
   "dependencies": {
-    "mangojuice-core": "2.0.0-y.0",
-    "mangojuice-react-core": "2.0.0-y.0"
+    "mangojuice-core": "2.0.0-2",
+    "mangojuice-react-core": "2.0.0-2"
   },
   "peerDependencies": {
     "react": "x.x.x",
