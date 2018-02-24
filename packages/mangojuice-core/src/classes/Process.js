@@ -8,6 +8,7 @@ import DefaultLogger from './DefaultLogger';
 import procOf from '../core/procOf';
 import handle from '../core/handle';
 import child from '../core/child';
+import message from '../core/message';
 import {
   nextId,
   is,
@@ -647,8 +648,9 @@ extend(Process.prototype, /** @lends Process.prototype */{
     doExecCmd(this, cmd);
   },
 
-  update(message) {
-    runLogicUpdate(this, message);
+  update(msg, ...args) {
+    const actualMsg = msg instanceof Message ? msg : message(msg, ...args);
+    runLogicUpdate(this, actualMsg);
   },
 
   /**
