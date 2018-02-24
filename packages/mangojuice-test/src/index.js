@@ -11,6 +11,11 @@ class TrackableProcess extends Process {
     super.run(...args);
     return this.finished();
   }
+
+  update(...args) {
+    super.update(...args);
+    return this.finished();
+  }
 }
 
 export function runWithTracking({ expectErrors, app } = {}) {

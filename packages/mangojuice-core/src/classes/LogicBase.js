@@ -53,7 +53,9 @@ function LogicBase() {
 extend(LogicBase.prototype, /** @lends LogicBase.prototype */{
   create() {},
 
-  update() {}
+  update() {},
+
+  destroy() {}
 });
 
 export default LogicBase;

@@ -222,6 +222,12 @@ function unsubscribeContexts(proc) {
   fastForEach(proc.contextSubs, u => u());
 }
 
+function callLogicDestroy(proc) {
+  if (!proc.logic.destroy) return;
+  const safeDestroyLogic = () => proc.logic.destroy();
+  safeExecFunction(proc.logger, safeDestroyLogic);
+}
+
 function findContext(proc, contextCmd) {
   const { contexts } = proc;
   const { id } = contextCmd;
@@ -577,6 +583,7 @@ extend(Process.prototype, /** @lends Process.prototype */{
 
     unsubscribeContexts(this);
     cancelAllTasks(this);
+    callLogicDestroy(this);
 
     if (deep !== false) {
       const childDestroyer = proc => proc.destroy(true);
