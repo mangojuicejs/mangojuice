@@ -6,5 +6,8 @@ import { render } from 'inferno';
 
 
 const React = { createElement, Component };
-const ReactDOM = { render };
+const ReactDOM = {
+  render,
+  unmountComponentAtNode: render.bind(null, createElement(() => {}))
+};
 AbstractTests(React, ReactDOM, Subscribe, 'Inferno');

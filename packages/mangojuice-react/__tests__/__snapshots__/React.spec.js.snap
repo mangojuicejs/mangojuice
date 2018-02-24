@@ -4,7 +4,18 @@ exports[`React interface view renderer: React shuold render a stateless view of 
 Array [
   Object {
     "a": "test",
-    "nested": null,
+    "nested": ChildCmd {
+      "createArgs": Array [
+        Object {
+          "whoo": 123,
+        },
+      ],
+      "logicClass": [Function],
+    },
+  },
+  Object {
+    "isChild": true,
+    "whoo": 123,
   },
   Array [
     Object {
@@ -13,6 +24,48 @@ Array [
   ],
   Object {
     "a": "another",
+  },
+]
+`;
+
+exports[`React interface view renderer: React shuold subscribe to multiple models and bind multiple messages 1`] = `
+Array [
+  Object {
+    "a": "test",
+    "nested": ChildCmd {
+      "createArgs": Array [
+        Object {
+          "whoo": 123,
+        },
+      ],
+      "logicClass": [Function],
+    },
+  },
+  Object {
+    "isChild": true,
+    "whoo": 123,
+  },
+  Array [
+    Object {
+      "a": "another",
+    },
+  ],
+  Object {
+    "a": "another",
+  },
+  Array [
+    undefined,
+  ],
+  Array [
+    undefined,
+  ],
+  Array [
+    Object {
+      "a": "something",
+    },
+  ],
+  Object {
+    "a": "something",
   },
 ]
 `;

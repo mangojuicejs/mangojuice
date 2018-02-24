@@ -76,7 +76,7 @@ export default (React, ReactDOM, Subscribe, implName) => {
               appEvt.UpdateA('another');
               childEvt.UpdateChild('something');
             }}>
-              {model.a}{model.nested.a}
+              <span>{model.a}</span><span>{model.nested.a}</span>
             </span>
           )}
         </Subscribe>
@@ -89,7 +89,7 @@ export default (React, ReactDOM, Subscribe, implName) => {
 
       expect(commands).toMatchSnapshot();
       expect(buttonElem).toBeDefined();
-      expect(buttonElem.innerHTML).toEqual('anothersomething');
+      expect(buttonElem.innerHTML).toEqual('<span>another</span><span>something</span>');
     });
   });
 };

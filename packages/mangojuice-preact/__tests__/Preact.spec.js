@@ -8,6 +8,6 @@ const React = {
 };
 const ReactDOM = {
   render: Preact.render,
-  unmountComponentAtNode: Preact.render.bind(null, () => {})
+  unmountComponentAtNode: Preact.render.bind(null, Preact.h(() => {}))
 };
 AbstractTests(React, ReactDOM, Subscribe, 'Preact');
