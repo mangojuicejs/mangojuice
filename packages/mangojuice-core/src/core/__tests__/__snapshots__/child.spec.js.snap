@@ -1,0 +1,136 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`child #create should create child model 1`] = `
+Object {
+  "a": Object {
+    "args": Array [
+      1,
+      2,
+      3,
+    ],
+    "hello": "child",
+  },
+}
+`;
+
+exports[`child #create should create child model and replace existing one 1`] = `
+Object {
+  "a": Object {
+    "args": Array [
+      4,
+      5,
+      6,
+    ],
+    "hello": "child",
+  },
+}
+`;
+
+exports[`child #create should create child models in an array 1`] = `
+Object {
+  "a": Array [
+    Object {
+      "args": Array [
+        1,
+        2,
+        3,
+      ],
+      "hello": "child",
+    },
+    Object {
+      "args": Array [
+        4,
+        5,
+        6,
+      ],
+      "hello": "child",
+    },
+    Object {
+      "args": Array [
+        7,
+        8,
+        9,
+      ],
+      "hello": "child",
+    },
+    "asd",
+    12,
+  ],
+}
+`;
+
+exports[`child #create should replace child arrays in an array 1`] = `
+Object {
+  "a": Array [
+    Object {
+      "args": Array [
+        1,
+        1,
+        1,
+      ],
+      "hello": "child",
+    },
+    Object {
+      "args": Array [
+        2,
+        2,
+        2,
+      ],
+      "hello": "child",
+    },
+  ],
+}
+`;
+
+exports[`child #create should replace child arrays in an array 2`] = `
+Array [
+  true,
+  true,
+  true,
+]
+`;
+
+exports[`child #update should rise an error if model does not exists 1`] = `
+Object {
+  "a": Object {
+    "args": Array [
+      1,
+      2,
+      3,
+    ],
+    "hello": "child",
+  },
+}
+`;
+
+exports[`child #update should rise an error if model does not exists 2`] = `
+Array [
+  [Error: Child model does not exists or have incorrect type],
+]
+`;
+
+exports[`child #update should rise an error if model does not exists 3`] = `
+Object {
+  "a": Object {},
+}
+`;
+
+exports[`child #update should rise an error if model does not exists 4`] = `
+Array [
+  [Error: Child model does not exists or have incorrect type],
+]
+`;
+
+exports[`child #update should update child model 1`] = `
+Object {
+  "a": Object {
+    "args": Array [
+      1,
+      2,
+      3,
+    ],
+    "hello": "child",
+    "hey": "there",
+  },
+}
+`;

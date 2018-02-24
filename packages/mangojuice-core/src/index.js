@@ -1,24 +1,17 @@
 import Process from './classes/Process';
-import Command from './classes/Command';
 import LogicBase from './classes/LogicBase';
 import DefaultLogger from './classes/DefaultLogger';
-import cmd from './core/cmd/cmd';
-import cancel from './core/cmd/cancel';
-import defineCommand from './core/cmd/defineCommand';
-import ensureCommand from './core/cmd/ensureCommand';
-import child from './core/logic/child';
-import depends from './core/logic/depends';
-import observe from './core/logic/observe';
-import { handle, handleAfter, handleBefore } from './core/logic/handle';
-import logicOf from './core/logic/logicOf';
-import procOf from './core/logic/procOf';
-import decorateLogic from './core/logic/decorateLogic';
-import delay from './core/task/delay';
-import task from './core/task/task';
-import run from './core/run/run';
-import bind from './core/run/bind';
-import mount from './core/run/mount';
-import hydrate from './core/run/hydrate';
+import child from './core/child';
+import message from './core/message';
+import context from './core/context';
+import observe from './core/observe';
+import handle from './core/handle';
+import debounce from './core/debounce';
+import throttle from './core/throttle';
+import logicOf from './core/logicOf';
+import procOf from './core/procOf';
+import task from './core/task';
+import run from './core/run';
 import * as utils from './core/utils';
 import * as config from './config';
 
@@ -26,29 +19,21 @@ import * as config from './config';
 export {
   // Classes
   Process,
-  Command,
   LogicBase,
   DefaultLogger,
-  // Core
-  cmd,
-  cancel,
-  defineCommand,
-  ensureCommand,
+  // Commands
   child,
-  depends,
+  context,
+  debounce,
+  throttle,
+  message,
+  task,
+  // Core
   observe,
   handle,
-  handleAfter,
-  handleBefore,
   logicOf,
   procOf,
-  decorateLogic,
-  delay,
-  task,
   run,
-  bind,
-  mount,
-  hydrate,
   utils,
   config
 };

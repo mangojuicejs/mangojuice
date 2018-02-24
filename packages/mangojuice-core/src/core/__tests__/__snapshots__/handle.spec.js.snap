@@ -1,0 +1,38 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`handle should NOT catch messages emitted by sibling logic 1`] = `
+Object {
+  "sibling": Object {},
+  "test": Object {},
+}
+`;
+
+exports[`handle should cancel the handler 1`] = `Object {}`;
+
+exports[`handle should catch messages emitted by children logic 1`] = `
+Object {
+  "test": Object {},
+}
+`;
+
+exports[`handle should catch messages emitted by children logic 2`] = `
+Array [
+  Array [
+    Message {
+      "hello": "there",
+    },
+  ],
+]
+`;
+
+exports[`handle should catch messages emitted by the logic 1`] = `Object {}`;
+
+exports[`handle should catch messages emitted by the logic 2`] = `
+Array [
+  Array [
+    Message {
+      "hello": "there",
+    },
+  ],
+]
+`;

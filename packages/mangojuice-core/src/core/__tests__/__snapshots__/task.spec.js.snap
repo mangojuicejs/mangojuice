@@ -1,0 +1,448 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`task should NOT cancel prev executing task in multithread mode 1`] = `
+Object {
+  "hello": "there!there!there!",
+}
+`;
+
+exports[`task should NOT cancel prev executing task in multithread mode 2`] = `
+Array [
+  TaskCmd {
+    "execEvery": true,
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  TaskCmd {
+    "execEvery": true,
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "hello": "there!",
+  },
+  TaskCmd {
+    "execEvery": true,
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "hello": "there!there!",
+  },
+  Object {
+    "hello": "there!there!there!",
+  },
+]
+`;
+
+exports[`task should accept arguments from a task 1`] = `
+Array [
+  Array [
+    42,
+    "forty-two",
+    Array [
+      42,
+    ],
+    Object {
+      "value": 42,
+    },
+    [Function],
+  ],
+]
+`;
+
+exports[`task should call fail handler if provided 1`] = `
+Object {
+  "fail": Array [
+    [Error: ooops],
+  ],
+}
+`;
+
+exports[`task should call fail handler if provided 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "failCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "fail": Array [
+      [Error: ooops],
+    ],
+  },
+]
+`;
+
+exports[`task should call success handler if provided 1`] = `
+Object {
+  "success": Array [
+    Object {
+      "hello": "there!",
+    },
+  ],
+}
+`;
+
+exports[`task should call success handler if provided 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "success": Array [
+      Object {
+        "hello": "there!",
+      },
+    ],
+  },
+]
+`;
+
+exports[`task should cancel a task 1`] = `Object {}`;
+
+exports[`task should cancel a task 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "failCmd": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  TaskCmd {
+    "cancelTask": true,
+    "executor": [Function],
+    "task": [Function],
+  },
+]
+`;
+
+exports[`task should cancel a task with subtasks 1`] = `Object {}`;
+
+exports[`task should cancel a task with subtasks 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "failCmd": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  TaskCmd {
+    "cancelTask": true,
+    "executor": [Function],
+    "task": [Function],
+  },
+]
+`;
+
+exports[`task should cancel prev executing task by default 1`] = `
+Object {
+  "success": Array [
+    Object {
+      "hello": "there!",
+    },
+  ],
+}
+`;
+
+exports[`task should cancel prev executing task by default 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  TaskCmd {
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  TaskCmd {
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "success": Array [
+      Object {
+        "hello": "there!",
+      },
+    ],
+  },
+]
+`;
+
+exports[`task should emit update event yielded from subtask 1`] = `
+Array [
+  Array [
+    Message {
+      "hey": "there!",
+    },
+  ],
+]
+`;
+
+exports[`task should emit update event yielded from task 1`] = `
+Array [
+  Array [
+    Message {
+      "hey": "there!",
+    },
+  ],
+]
+`;
+
+exports[`task should handle error in non-generator task function 1`] = `
+Object {
+  "fail": Array [
+    [Error: ooops],
+  ],
+}
+`;
+
+exports[`task should handle error in non-generator task function 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "failCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "fail": Array [
+      [Error: ooops],
+    ],
+  },
+]
+`;
+
+exports[`task should support fast path with non-generator task function 1`] = `
+Object {
+  "success": Array [
+    Object {
+      "hello": "there!",
+    },
+  ],
+}
+`;
+
+exports[`task should support fast path with non-generator task function 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "successCmd": [Function],
+    "task": [Function],
+  },
+  Object {
+    "success": Array [
+      Object {
+        "hello": "there!",
+      },
+    ],
+  },
+]
+`;
+
+exports[`task yeilded array should aggregate several promises 1`] = `
+Array [
+  Array [
+    Array [
+      "a",
+      "b",
+      "c",
+    ],
+  ],
+]
+`;
+
+exports[`task yeilded array should noop with no args 1`] = `
+Array [
+  Array [
+    Array [],
+  ],
+]
+`;
+
+exports[`task yeilded array should support an array of generators 1`] = `
+Array [
+  Array [
+    Array [
+      1,
+    ],
+  ],
+]
+`;
+
+exports[`task yeilded generator should wrap children generators 1`] = `
+Array [
+  Array [
+    "yay",
+    "yay",
+    "yay",
+  ],
+  Array [
+    Array [
+      "yay",
+      "yay",
+      "yay",
+    ],
+  ],
+]
+`;
+
+exports[`task yeilded invalid shuold throw an error 1`] = `
+Array [
+  [TypeError: You may only yield a function, promise, generator, array, object or message but the following object was passed: "null"],
+]
+`;
+
+exports[`task yeilded object should aggregate several promises 1`] = `
+Array [
+  Array [
+    Object {
+      "a": "a",
+      "b": "b",
+      "c": "c",
+    },
+  ],
+]
+`;
+
+exports[`task yeilded object should ignore non-thunkable properties 1`] = `
+Array [
+  Array [
+    Object {
+      "address": "aaa",
+      "age": 2,
+      "falsey": false,
+      "name": Object {
+        "first": "tobi",
+      },
+      "now": 2017-03-01T19:00:00.000Z,
+      "nully": null,
+      "tobi": Pet {
+        "name": "tobi",
+        "something": [Function],
+      },
+      "undefiney": undefined,
+    },
+  ],
+]
+`;
+
+exports[`task yeilded object should noop with no args 1`] = `
+Array [
+  Array [
+    Object {},
+  ],
+]
+`;
+
+exports[`task yeilded object should preserve key order 1`] = `
+Array [
+  Array [
+    "a,b,c",
+    "a,b,c",
+  ],
+]
+`;
+
+exports[`task yeilded promise when a promise is rejected should throw and resume 1`] = `
+Array [
+  Array [
+    [Error: boom],
+  ],
+]
+`;
+
+exports[`task yeilded promise with one promise yield should work 1`] = `
+Array [
+  Array [
+    1,
+  ],
+]
+`;
+
+exports[`task yeilded promise with several promise yields should work 1`] = `
+Array [
+  Array [
+    1,
+    2,
+    3,
+  ],
+]
+`;
+
+exports[`task yeilded thunk when an error is passed then thrown should only catch the first error only 1`] = `
+Object {
+  "fail": Array [
+    [Error: first],
+  ],
+}
+`;
+
+exports[`task yeilded thunk when the function throws should be caught 1`] = `
+Array [
+  Array [
+    [Error: boom],
+  ],
+]
+`;
+
+exports[`task yeilded thunk with many arguments should return an array 1`] = `
+Array [
+  Array [
+    "stdout",
+  ],
+]
+`;
+
+exports[`task yeilded thunk with one yield should work 1`] = `
+Array [
+  Array [
+    1,
+  ],
+]
+`;
+
+exports[`task yeilded thunk with several yields should work 1`] = `
+Array [
+  Array [
+    1,
+    2,
+    3,
+  ],
+]
+`;
+
+exports[`task yielded recsive object/array should aggregate arrays within arrays 1`] = `
+Array [
+  Array [
+    Array [
+      "a",
+      Array [
+        "b",
+        "c",
+      ],
+    ],
+  ],
+]
+`;
+
+exports[`task yielded recsive object/array should aggregate objects within objects 1`] = `
+Array [
+  Array [
+    Object {
+      "0": "a",
+      "1": Object {
+        "0": "b",
+        "1": "c",
+      },
+    },
+  ],
+]
+`;

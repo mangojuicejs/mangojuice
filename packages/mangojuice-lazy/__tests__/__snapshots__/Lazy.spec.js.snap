@@ -1,0 +1,362 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Lazy block loading should NOT fill model with actual data even if the model was detached 1`] = `
+Array [
+  Array [
+    undefined,
+    Object {
+      "__lazy": true,
+    },
+  ],
+  Object {
+    "__lazy": true,
+  },
+]
+`;
+
+exports[`Lazy block loading should NOT fill model with actual data even if the model was detached 2`] = `
+Object {
+  "__lazy": true,
+}
+`;
+
+exports[`Lazy block loading should resolve block when lazy message executed 1`] = `
+Array [
+  Array [
+    undefined,
+    Object {
+      "__lazy": true,
+    },
+  ],
+  Object {
+    "__lazy": true,
+  },
+  Object {
+    "args": Array [],
+    "c": null,
+    "e": 0,
+    "f": 4,
+    "g": 6,
+  },
+]
+`;
+
+exports[`Lazy block loading should resolve block when lazy message executed 2`] = `
+Object {
+  "args": Array [],
+  "c": null,
+  "e": 0,
+  "f": 4,
+  "g": 6,
+}
+`;
+
+exports[`Lazy block loading should resolve block when lazy message executed 3`] = `
+Array [
+  Array [
+    Message {
+      "args": Array [
+        1,
+        2,
+        3,
+      ],
+    },
+  ],
+]
+`;
+
+exports[`Lazy block loading should resolve block when view reuqested 1`] = `
+Array [
+  Array [
+    undefined,
+    Object {
+      "__lazy": true,
+    },
+  ],
+  Object {
+    "__lazy": true,
+  },
+  Object {
+    "args": Array [],
+    "c": null,
+    "e": 0,
+    "f": 4,
+    "g": 6,
+  },
+]
+`;
+
+exports[`Lazy block loading should resolve block when view reuqested 2`] = `
+Object {
+  "args": Array [],
+  "c": null,
+  "e": 0,
+  "f": 4,
+  "g": 6,
+}
+`;
+
+exports[`Lazy block loading should resolve multiple lazy children 1`] = `
+Array [
+  Object {
+    "anotherChild": ChildCmd {
+      "createArgs": Array [
+        "ccc",
+      ],
+      "logicClass": [Function],
+    },
+    "child": Array [
+      ChildCmd {
+        "createArgs": Array [
+          "a",
+          "b",
+          "c",
+        ],
+        "logicClass": [Function],
+      },
+      ChildCmd {
+        "createArgs": Array [
+          "aaa",
+        ],
+        "logicClass": [Function],
+      },
+    ],
+  },
+  Array [
+    undefined,
+    Object {
+      "__lazy": true,
+    },
+  ],
+  Object {
+    "__lazy": true,
+  },
+  Array [
+    undefined,
+    Object {
+      "__lazy": true,
+    },
+  ],
+  Object {
+    "__lazy": true,
+  },
+  Array [
+    undefined,
+    Object {
+      "__lazy": true,
+    },
+  ],
+  Object {
+    "__lazy": true,
+  },
+  Object {
+    "anotherChild": ChildCmd {
+      "logicClass": [Function],
+      "updateMsg": Message {
+        "args": Array [
+          1,
+          2,
+          3,
+        ],
+        "name": "TestMessage",
+      },
+    },
+  },
+  Object {
+    "child": Array [
+      ChildCmd {
+        "logicClass": [Function],
+        "updateMsg": Message {
+          "args": Array [
+            1,
+            2,
+            3,
+          ],
+          "name": "TestMessage",
+        },
+      },
+      ChildCmd {
+        "logicClass": [Function],
+        "updateMsg": Message {
+          "args": Array [
+            133,
+          ],
+          "name": "TestMessage",
+        },
+      },
+    ],
+  },
+  Object {
+    "args": Array [
+      "ccc",
+    ],
+    "c": null,
+    "e": 0,
+    "f": 4,
+    "g": 6,
+  },
+  Object {
+    "args": Array [
+      "a",
+      "b",
+      "c",
+    ],
+    "c": null,
+    "e": 0,
+    "f": 4,
+    "g": 6,
+  },
+  Object {
+    "args": Array [
+      "aaa",
+    ],
+    "c": null,
+    "e": 0,
+    "f": 4,
+    "g": 6,
+  },
+]
+`;
+
+exports[`Lazy block loading should resolve multiple lazy children 2`] = `
+Object {
+  "anotherChild": Object {
+    "args": Array [
+      "ccc",
+    ],
+    "c": null,
+    "e": 0,
+    "f": 4,
+    "g": 6,
+  },
+  "child": Array [
+    Object {
+      "args": Array [
+        "a",
+        "b",
+        "c",
+      ],
+      "c": null,
+      "e": 0,
+      "f": 4,
+      "g": 6,
+    },
+    Object {
+      "args": Array [
+        "aaa",
+      ],
+      "c": null,
+      "e": 0,
+      "f": 4,
+      "g": 6,
+    },
+  ],
+}
+`;
+
+exports[`Lazy block loading should works on re-render after resolve 1`] = `
+Array [
+  Object {
+    "child": ChildCmd {
+      "createArgs": Array [
+        "a",
+        "b",
+        "c",
+      ],
+      "logicClass": [Function],
+    },
+  },
+  Array [
+    undefined,
+    Object {
+      "__lazy": true,
+    },
+  ],
+  Object {
+    "__lazy": true,
+  },
+  Object {
+    "child": ChildCmd {
+      "logicClass": [Function],
+      "updateMsg": Message {
+        "args": Array [
+          1,
+          2,
+          3,
+        ],
+        "name": "TestMessage",
+      },
+    },
+  },
+  Object {
+    "args": Array [
+      "a",
+      "b",
+      "c",
+    ],
+    "c": null,
+    "e": 0,
+    "f": 4,
+    "g": 6,
+  },
+  Object {
+    "child": ChildCmd {
+      "logicClass": [Function],
+      "updateMsg": Message {
+        "args": Array [
+          "111",
+        ],
+      },
+    },
+  },
+]
+`;
+
+exports[`Lazy block loading should works on re-render after resolve 2`] = `
+Object {
+  "args": Array [
+    "a",
+    "b",
+    "c",
+  ],
+  "c": null,
+  "e": 0,
+  "f": 4,
+  "g": 6,
+}
+`;
+
+exports[`Lazy block loading should works on re-render after resolve 3`] = `
+Array [
+  Array [
+    Message {
+      "args": Array [
+        1,
+        2,
+        3,
+      ],
+    },
+  ],
+  Array [
+    Message {
+      "args": Array [
+        "111",
+      ],
+    },
+  ],
+]
+`;
+
+exports[`Lazy block loading shuold do nothing if view is not triggered 1`] = `
+Array [
+  Array [
+    undefined,
+    Object {
+      "__lazy": true,
+    },
+  ],
+  Object {
+    "__lazy": true,
+  },
+]
+`;

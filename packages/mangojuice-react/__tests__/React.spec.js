@@ -1,4 +1,6 @@
 import AbstractTests from 'mangojuice-react-core/tests';
-import React from 'mangojuice-react';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import Subscribe from 'mangojuice-react';
 
-AbstractTests(React, React.Mounter, 'React');
+AbstractTests(React, ReactDOM, Subscribe, 'React');
