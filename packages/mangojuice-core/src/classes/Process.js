@@ -64,7 +64,8 @@ function forEachChildren(proc, iterator) {
  */
 function bindChild(proc, model, key, childCmd) {
   const { logicClass, updateMsg, createArgs } = childCmd;
-  let actualModel = originalModel = model[key];
+  const originalModel = model[key];
+  let actualModel = originalModel || {};
   let currProc = procOf(actualModel);
 
   // Protect update of the model of the same type

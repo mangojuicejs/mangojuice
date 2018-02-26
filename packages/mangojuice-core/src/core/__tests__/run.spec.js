@@ -26,12 +26,17 @@ describe('run', () => {
   });
 
   it('should rehydrate the provided model', async () => {
+    const handler = jest.fn();
     class Test {
-      create() { return { a: 123 } }
+      create() {
+        handler(this.model.b);
+        return { a: 123 }
+      }
     }
 
     const model = run(Test, { model: { b: 321 } });
 
+    expect(handler.mock.calls).toMatchSnapshot();
     expect(procOf(model) instanceof Process).toEqual(true);
     expect(model).toEqual({ a: 123, b: 321 });
   });
