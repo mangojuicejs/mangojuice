@@ -13,6 +13,7 @@ import message from '../core/message';
 import {
   nextId,
   is,
+  identity,
   maybeMap,
   maybeForEach,
   memoize,

@@ -24,6 +24,23 @@ describe('task', () => {
     expect(commands).toMatchSnapshot();
   });
 
+  it('should use identity success command by default', async () => {
+    class TestLogic {
+      create() {
+        return task(this.testTask)
+      }
+      *testTask() {
+        yield utils.delay(50);
+        return { hello: 'there!' };
+      }
+    }
+
+    const { app, commands } = await runWithTracking({ app: { Logic: TestLogic } });
+
+    expect(app.model).toMatchSnapshot();
+    expect(commands).toMatchSnapshot();
+  });
+
   it('should call fail handler if provided', async () => {
     class TestLogic {
       create() {

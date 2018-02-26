@@ -247,6 +247,24 @@ Array [
 ]
 `;
 
+exports[`task should use identity success command by default 1`] = `
+Object {
+  "hello": "there!",
+}
+`;
+
+exports[`task should use identity success command by default 2`] = `
+Array [
+  TaskCmd {
+    "executor": [Function],
+    "task": [Function],
+  },
+  Object {
+    "hello": "there!",
+  },
+]
+`;
+
 exports[`task yeilded array should aggregate several promises 1`] = `
 Array [
   Array [

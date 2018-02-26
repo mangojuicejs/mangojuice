@@ -1,5 +1,5 @@
 import Message from './Message';
-import { sym, is, fastTry, ensureError, extend, noop, CANCEL } from '../core/utils';
+import { sym, is, fastTry, ensureError, extend, noop, CANCEL, identity } from '../core/utils';
 
 
 /**
@@ -64,7 +64,9 @@ extend(AsyncTask.prototype, /** @lends AsyncTask.prototype */{
   },
 
   handleSuccess(result) {
-    this.execCommand(this.taskObj.successCmd, result);
+    const { successCmd } = this.taskObj;
+    const actualSuccessCmd = successCmd || identity;
+    this.execCommand(actualSuccessCmd, result);
   },
 
   handleFail(error) {
