@@ -17,7 +17,7 @@ import Process from '../classes/Process';
  */
 function run(block, opts = {}) {
   const ProcessClass = opts.Process || Process;
-  const model = opts.model || {};
+  const model = opts.model;
   const proc = new ProcessClass({
     logger: opts.logger,
     logicClass: block.Logic || block,
@@ -25,9 +25,9 @@ function run(block, opts = {}) {
   });
 
   proc.bind(model);
-  proc.run();
+  proc.run(!!model);
 
-  return model;
+  return proc.model;
 }
 
 export default run;

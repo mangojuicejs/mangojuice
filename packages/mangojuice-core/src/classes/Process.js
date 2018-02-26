@@ -1,5 +1,6 @@
 import TaskCmd from './TaskCmd';
 import Message from './Message';
+import MemoizedFieldCmd from './MemoizedFieldCmd';
 import ContextCmd from './ContextCmd';
 import ContextLogic from './ContextLogic';
 import ChildCmd from './ChildCmd';
@@ -49,46 +50,6 @@ function forEachChildren(proc, iterator) {
   }
 }
 
-function updateChildLogic(proc, model, childCmd) {
-  const { logicClass, updateMsg, createArgs } = childCmd;
-  let currProc = procOf(model);
-
-  // Protect update of the model of the same type
-  if (updateMsg && (!currProc || !(currProc.logic instanceof logicClass))) {
-    proc.logger.onCatchError(new Error('Child model does not exists or have incorrect type'), proc);
-    return;
-  }
-
-  // Re-run prepare with new config args if proc already running
-  // with the same logic class, otherwise destroy the logic
-  if (currProc) {
-    if (!updateMsg) {
-      currProc.destroy();
-      currProc = null;
-    } else {
-      runLogicUpdate(currProc, updateMsg);
-    }
-  }
-
-  // Run new process for given child definition if no proc was
-  // binded to the model or if it was destroyed
-  if (!currProc) {
-    currProc = new proc.constructor({
-      createArgs,
-      logicClass,
-      parent: proc,
-      logger: proc.logger,
-      contexts: proc.contexts,
-      internalContext: proc.internalContext
-    });
-    currProc.bind(model);
-    currProc.run();
-    proc.children[currProc.id] = currProc;
-  }
-
-  return currProc;
-}
-
 /**
  * Create process and bind the process to child model
  * with given name. If model field is empty then do nothing.
@@ -102,11 +63,47 @@ function updateChildLogic(proc, model, childCmd) {
  * @return {Boolean}
  */
 function bindChild(proc, model, key, childCmd) {
-  const currModel = model[key] || {};
-  const nextProc = updateChildLogic(proc, currModel, childCmd);
-  if (nextProc) {
-    model[key] = currModel;
+  const { logicClass, updateMsg, createArgs } = childCmd;
+  let actualModel = originalModel = model[key];
+  let currProc = procOf(actualModel);
+
+  // Protect update of the model of the same type
+  if (updateMsg && (!currProc || !(currProc.logic instanceof logicClass))) {
+    proc.logger.onCatchError(new Error('Child model does not exists or have incorrect type'), proc);
+    return;
   }
+
+  // Re-run prepare with new config args if proc already running
+  // with the same logic class, otherwise destroy the logic
+  if (currProc) {
+    if (!updateMsg) {
+      currProc.destroy();
+      currProc = null;
+      actualModel = {};
+    } else {
+      runLogicUpdate(currProc, updateMsg);
+    }
+  }
+
+  // Run new process for given child definition if no proc was
+  // binded to the model or if it was destroyed
+  if (!currProc) {
+    const shouldRehydrate = actualModel && actualModel === originalModel;
+    currProc = new proc.constructor({
+      createArgs,
+      logicClass,
+      parent: proc,
+      logger: proc.logger,
+      contexts: proc.contexts,
+      internalContext: proc.internalContext
+    });
+    model[key] = actualModel;
+    currProc.bind(actualModel);
+    currProc.run(shouldRehydrate);
+    proc.children[currProc.id] = currProc;
+  }
+
+  return currProc;
 }
 
 /**
@@ -117,21 +114,29 @@ function bindChild(proc, model, key, childCmd) {
  * @param  {Process} proc
  * @param  {string} fieldName
  * @param  {function} computeVal
- * @return {Memoize}
  */
 function bindComputedFieldCmd(proc, model, key, computeVal) {
   const { logger } = proc;
-  const get = memoize(() => safeExecFunction(logger, computeVal));
-  proc.computedFields[key] = get;
 
+  // Create getter function
+  const isMemoized = computeVal instanceof MemoizedFieldCmd;
+  const computeFn = isMemoized ? computeVal.computeFn : computeVal;
+  const safeComputeValue = () => safeExecFunction(logger, computeFn)
+  const getter = isMemoized ? memoize(safeComputeValue) : safeComputeValue;
+
+  // Register memoized field in the process to be able to reset
+  // when the model changed
+  if (isMemoized) {
+    proc.computedFields[key] = getter;
+  }
+
+  // Set the getter in the model
   Object.defineProperty(model, key, {
     enumerable: true,
     configurable: true,
     set: noop,
-    get
+    get: getter
   });
-
-  return get;
 }
 
 /**
@@ -143,11 +148,12 @@ function bindComputedFieldCmd(proc, model, key, computeVal) {
  * @param  {Object} model
  */
 function bindModel(proc, model) {
-  proc.model = model || {};
-  proc.logic.model = proc.model;
+  const actualModel = model || {};
+  proc.model = actualModel;
+  proc.logic.model = actualModel;
 
-  if (!model.__proc) {
-    Object.defineProperty(model, '__proc', {
+  if (!actualModel.__proc) {
+    Object.defineProperty(actualModel, '__proc', {
       value: proc,
       enumerable: false,
       configurable: true
@@ -175,18 +181,25 @@ function bindContext(proc, model, key, contextCmd) {
  * it from scratch.
  * @param  {Process} proc
  */
-function runLogicFunc(proc, name, args) {
-  const { exec, logic } = proc;
-  const commandFactory = () => logic[name] && logic[name].apply(logic, args);
-  exec(commandFactory);
-}
-
-function runLogicCreate(proc) {
-  runLogicFunc(proc, 'create', proc.createArgs);
+function runLogicCreate(proc, rehydrate) {
+  const { exec, logic, createArgs, model } = proc;
+  if (logic.create) {
+    const commandFactory = () => {
+      logic.model = !rehydrate ? undefined : model;
+      const res = logic.create.apply(logic, createArgs);
+      logic.model = model;
+      return res;
+    };
+    exec(commandFactory);
+  }
 }
 
 function runLogicUpdate(proc, msg) {
-  runLogicFunc(proc, 'update', [msg]);
+  const { exec, logic } = proc;
+  if (logic.update) {
+    const commandFactory = () => logic.update.call(logic, msg);
+    exec(commandFactory);
+  }
 }
 
 /**
@@ -345,7 +358,7 @@ function updateModelField(proc, model, key, update) {
   } else if (update instanceof ContextCmd) {
     if (!update.createArgs) return false;
     bindContext(proc, model, key, update);
-  } else if (is.func(update)) {
+  } else if (is.func(update) || update instanceof MemoizedFieldCmd) {
     bindComputedFieldCmd(proc, model, key, update);
   } else if (is.array(update)) {
     const nextModel = model[key] && model[key].slice(0, update.length) || [];
@@ -554,9 +567,9 @@ extend(Process.prototype, /** @lends Process.prototype */{
    * init commands defined in config.
    * Also run all model observers created by {@link observe}
    */
-  run() {
+  run(rehydrate) {
     this.internalContext.processes[this.id] = this;
-    runLogicCreate(this);
+    runLogicCreate(this, rehydrate);
     runModelObservers(this);
   },
 
@@ -638,13 +651,11 @@ extend(Process.prototype, /** @lends Process.prototype */{
    */
   exec(cmd) {
     if (!cmd || this.destroyed) return;
-
     if (is.func(cmd)) {
       const safeCommandCreate = () => cmd.call(this.logic);
       const nextCommand = safeExecFunction(this.logger, safeCommandCreate);
       return this.exec(nextCommand);
     }
-
     doExecCmd(this, cmd);
   },
 

@@ -25,7 +25,7 @@ describe('run', () => {
     expect(model).toEqual({ a: 123 });
   });
 
-  it('should attach to provided model', async () => {
+  it('should rehydrate the provided model', async () => {
     class Test {
       create() { return { a: 123 } }
     }

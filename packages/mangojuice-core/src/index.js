@@ -4,6 +4,7 @@ import DefaultLogger from './classes/DefaultLogger';
 import child from './core/child';
 import message from './core/message';
 import context from './core/context';
+import memoized from './core/memoized';
 import observe from './core/observe';
 import handle from './core/handle';
 import debounce from './core/debounce';
@@ -24,6 +25,7 @@ export {
   // Commands
   child,
   context,
+  memoized,
   debounce,
   throttle,
   message,

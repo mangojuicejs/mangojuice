@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`memoized should call memoized compute field only on first get 1`] = `
+Object {
+  "a": 123,
+}
+`;
+
+exports[`memoized should call non-memoized compute field on each get 1`] = `
+Object {
+  "a": 123,
+}
+`;
+
+exports[`memoized should reset cached value when model changed 1`] = `
+Object {
+  "a": 2,
+  "b": 1,
+}
+`;
+
+exports[`memoized should reset cached value when model changed 2`] = `
+Object {
+  "a": 11,
+  "b": 10,
+}
+`;
